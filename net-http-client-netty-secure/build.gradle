@@ -1,0 +1,7 @@
+dependencies {
+    api project(':net-http-client-netty')
+    api libs.net.security
+    api libs.netty.codec.http2
+    api libs.netty.handler.proxy
+    testImplementation project(':net-http-netty-boringssl')
+}

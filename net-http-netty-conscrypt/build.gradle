@@ -1,0 +1,5 @@
+dependencies {
+    api project(':net-http-server-netty-secure')
+    api project(':net-http-client-netty-secure')
+    api libs.conscrypt
+}

@@ -1,0 +1,8 @@
+dependencies {
+    api project(':net-http-server-netty-secure')
+    api project(':net-http-client-netty-secure')
+    runtimeOnly(variantOf(libs.netty.boringssl) { classifier('linux-x86_64') })
+    runtimeOnly(variantOf(libs.netty.boringssl) { classifier('linux-aarch_64') })
+    runtimeOnly(variantOf(libs.netty.boringssl) { classifier('osx-x86_64') })
+    runtimeOnly(variantOf(libs.netty.boringssl) { classifier('osx-aarch_64') })
+}

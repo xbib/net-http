@@ -1,0 +1,33 @@
+apply plugin: 'application'
+
+dependencies {
+    api project(':net-http-server-netty-secure')
+    api project(':net-http-server-application-config')
+    api project(':net-http-template-groovy')
+    api libs.jdbc.query
+    implementation libs.settings.datastructures.json
+    implementation libs.settings.datastructures.yaml
+    implementation libs.webjars.bootstrap
+    implementation libs.webjars.jquery
+    implementation libs.webjars.fontawesome
+    runtimeOnly libs.net.bouncycastle
+    runtimeOnly libs.oracle
+}
+
+application {
+    mainClass.set('org.xbib.net.http.server.application.web.Bootstrap')
+    applicationDefaultJvmArgs = [
+            '-Dfile.encoding=UTF-8',
+            '-Duser.language=de',
+            '-Duser.country=DE',
+            '-Djava.awt.headless=true',
+            '-Djava.util.logging.config.file=src/main/resources/logging.properties',
+            '-Dapplication.home=src/main/application',
+            '-Dapplication.profile=dev',
+            '-Dapplication.name=web',
+            '-Ddatabase.url=jdbc:derby:sample',
+            '-Ddatabase.flavor=derby',
+            '-Ddatabase.user=derby',
+            '-Ddatabase.password=derby'
+    ]
+}

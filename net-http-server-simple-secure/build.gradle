@@ -1,0 +1,11 @@
+dependencies {
+    api project(':net-http-server-simple')
+    api libs.net.security
+    testImplementation libs.net.bouncycastle
+}
+
+test {
+    systemProperty 'application.name', 'test'
+    systemProperty 'application.home', 'src/test/resources'
+    systemProperty 'application.profile', 'test'
+}

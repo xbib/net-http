@@ -1,0 +1,5 @@
+dependencies {
+    api project(':net-http-server-netty')
+    api project(':net-http-client-netty')
+    api(variantOf(libs.netty.kqueue) { classifier('osx-x86_64') })
+}

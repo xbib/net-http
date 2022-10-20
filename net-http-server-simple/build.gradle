@@ -1,0 +1,9 @@
+dependencies {
+    api project(':net-http-server')
+}
+
+test {
+    systemProperty 'application.name', 'test'
+    systemProperty 'application.home', 'src/test/resources'
+    systemProperty 'application.profile', 'test'
+}

@@ -1,0 +1,2 @@
+org.xbib.net.http.client.netty.secure.http1.Https1ChannelInitializer
+org.xbib.net.http.client.netty.secure.http2.Https2ChannelInitializer

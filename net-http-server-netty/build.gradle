@@ -1,0 +1,12 @@
+dependencies {
+    api project(':net-http-server')
+    api libs.netty.codec.http2
+    testImplementation project(':net-http-client-netty')
+    testImplementation project(':net-http-template-groovy')
+}
+
+test {
+    systemProperty 'application.name', 'test'
+    systemProperty 'application.home', 'src/test/resources'
+    systemProperty 'application.profile', 'test'
+}

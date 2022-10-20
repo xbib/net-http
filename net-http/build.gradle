@@ -1,0 +1,4 @@
+dependencies {
+    api libs.net
+    api libs.net.mime
+}

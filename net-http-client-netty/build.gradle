@@ -1,0 +1,5 @@
+dependencies {
+    api project(':net-http-client')
+    api libs.netty.codec.http2
+    api libs.netty.handler.proxy
+}

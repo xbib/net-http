@@ -1,0 +1,70 @@
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            version('gradle', '7.5.1')
+            version('junit', '5.9.1')
+            version('net', '3.0.0')
+            version('netty', '4.1.84.Final')
+            version('netty-tcnative', '2.0.54.Final')
+            version('datastructures', '1.0.1')
+            version('groovy', '4.0.4')
+            version('config', '5.0.0')
+            library('junit-jupiter-api', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('junit')
+            library('junit-jupiter-params', 'org.junit.jupiter', 'junit-jupiter-params').versionRef('junit')
+            library('junit-jupiter-engine', 'org.junit.jupiter', 'junit-jupiter-engine').versionRef('junit')
+            library('junit4', 'junit', 'junit').version('4.13.2')
+            library('hamcrest', 'org.hamcrest', 'hamcrest-library').version('2.2')
+            library('net', 'org.xbib', 'net').versionRef('net')
+            library('net-mime', 'org.xbib', 'net-mime').versionRef('net')
+            library('net-security', 'org.xbib', 'net-security').versionRef('net')
+            library('net-bouncycastle', 'org.xbib', 'net-bouncycastle').versionRef('net')
+            library('netty-codec-http2', 'io.netty', 'netty-codec-http2').versionRef('netty')
+            library('netty-handler', 'io.netty', 'netty-handler').versionRef('netty')
+            library('netty-handler-proxy', 'io.netty', 'netty-handler-proxy').versionRef('netty')
+            library('netty-epoll', 'io.netty', 'netty-transport-native-epoll').versionRef('netty')
+            library('netty-kqueue', 'io.netty', 'netty-transport-native-kqueue').versionRef('netty')
+            library('netty-boringssl', 'io.netty', 'netty-tcnative-boringssl-static').versionRef('netty-tcnative')
+            library('bouncycastle', 'org.bouncycastle', 'bcpkix-jdk18on').version('1.71')
+            library('conscrypt', 'org.conscrypt', 'conscrypt-openjdk-uber').version('2.5.2')
+            library('jackson', 'com.fasterxml.jackson.core', 'jackson-databind').version('2.12.6')
+            library('guice', 'org.xbib', 'guice').version('4.4.2')
+            library('javassist', 'org.javassist', 'javassist').version('3.28.0-GA')
+            library('jna', 'net.java.dev.jna', 'jna').version('5.10.0')
+            library('config', 'org.xbib', 'config').versionRef('config')
+            library('settings-datastructures-json', 'org.xbib', 'settings-datastructures-json').versionRef('config')
+            library('settings-datastructures-yaml', 'org.xbib', 'settings-datastructures-yaml').versionRef('config')
+            library('datastructures-common', 'org.xbib', 'datastructures-common').versionRef('datastructures')
+            library('datastructures-json-tiny', 'org.xbib', 'datastructures-json-tiny').versionRef('datastructures')
+            library('datastructures-yaml-tiny', 'org.xbib', 'datastructures-yaml-tiny').versionRef('datastructures')
+            library('groovy-templates', 'org.apache.groovy', 'groovy-templates').versionRef('groovy')
+            library('jdbc-query', 'org.xbib', 'jdbc-query').version('0.0.5')
+            library('jdbc-connection-pool', 'org.xbib', 'jdbc-connection-pool').version('0.0.5')
+            library('event', 'org.xbib', 'event').version('0.0.1')
+            library('oracle', 'com.oracle.database.jdbc', 'ojdbc11').version('21.4.0.0')
+            library('webjars-bootstrap', 'org.webjars.bower', 'bootstrap').version('3.4.1')
+            library('webjars-jquery', 'org.webjars.bower', 'jquery').version('3.5.1')
+            library('webjars-fontawesome', 'org.webjars', 'font-awesome').version('5.14.0')
+            plugin('publish', 'com.gradle.plugin-publish').version('0.18.0')
+        }
+    }
+}
+
+include 'net-http'
+include 'net-http-client'
+include 'net-http-client-simple'
+include 'net-http-client-netty'
+include 'net-http-client-netty-secure'
+include 'net-http-netty-boringssl'
+include 'net-http-netty-conscrypt'
+include 'net-http-netty-epoll'
+include 'net-http-netty-kqueue'
+include 'net-http-server'
+include 'net-http-server-netty'
+include 'net-http-server-netty-secure'
+include 'net-http-server-nio'
+include 'net-http-server-simple'
+include 'net-http-server-simple-secure'
+include 'net-http-template-groovy'
+include 'net-http-server-application-web'
+include 'net-http-server-application-config'
+include 'net-http-server-application-database'

@@ -1,0 +1,13 @@
+dependencies {
+    api project(':net-http-server-netty')
+    api libs.net.security
+    testImplementation project(':net-http-client-netty-secure')
+    testImplementation project(':net-http-netty-boringssl')
+    testImplementation libs.net.bouncycastle
+}
+
+test {
+    systemProperty 'application.name', 'test'
+    systemProperty 'application.home', 'src/test/resources'
+    systemProperty 'application.profile', 'test'
+}

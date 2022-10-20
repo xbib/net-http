@@ -1,0 +1,2 @@
+org.xbib.settings.datastructures.json.JsonSettingsLoader
+org.xbib.settings.datastructures.yaml.YamlSettingsLoader

@@ -1,0 +1,2 @@
+org.xbib.net.security.DefaultCertificateProvider
+org.xbib.net.bouncycastle.BouncyCastleCertificateProvider
