@@ -62,12 +62,13 @@ public class DatabaseApplicationModule extends BaseApplicationModule {
             }
         });
         if (!properties.containsKey("url")) {
-            throw new IllegalArgumentException(" no database.url in system properties given");
+            throw new IllegalArgumentException("no database.url in system properties given");
         }
         if (!properties.containsKey("user")) {
             logger.log(Level.WARNING, "no database.user in system properties given");
         }
         PoolConfig config = new PoolConfig(properties);
+        config.setUrl(properties.getProperty("url"));
         config.setPoolName("net-http-database");
         config.setMaximumPoolSize(getAsInt(properties, "poolsize", 4));
         config.setMaxLifetime(getAsLong(properties, "maxlifetime", 600L * 1000L)); // 10 minutes

@@ -1,6 +1,9 @@
 package org.xbib.net.http.server;
 
-import org.xbib.net.Handler;
+import java.io.IOException;
 
-public interface HttpHandler extends Handler<HttpServerContext> {
+@FunctionalInterface
+public interface HttpHandler {
+
+    void handle(HttpServerContext httpServerContext) throws IOException;
 }

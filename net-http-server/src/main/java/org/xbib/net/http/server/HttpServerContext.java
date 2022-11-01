@@ -1,7 +1,6 @@
 package org.xbib.net.http.server;
 
 import org.xbib.net.Attributes;
-import org.xbib.net.Context;
 import org.xbib.net.URL;
 import org.xbib.net.buffer.DataBuffer;
 import org.xbib.net.http.server.route.HttpRouteResolver;
@@ -13,7 +12,11 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
-public interface HttpServerContext extends Context<HttpRequestBuilder, HttpResponseBuilder> {
+public interface HttpServerContext {
+
+    HttpRequestBuilder request();
+
+    HttpResponseBuilder response();
 
     void setResolverResult(HttpRouteResolver.Result<HttpService> result);
 
