@@ -72,6 +72,8 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     protected int bufferSize;
 
+    protected Long length;
+
     protected BaseHttpResponseBuilder() {
         reset();
     }
@@ -111,6 +113,11 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         }
         this.status = status;
         return this;
+    }
+
+    @Override
+    public HttpResponseStatus getResponseStatus() {
+        return status;
     }
 
     @Override
@@ -261,9 +268,17 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
     }
 
     @Override
+    public Long getLength() {
+        return length != null ? length :
+                headers.containsHeader(HttpHeaderNames.CONTENT_LENGTH) ?
+                Long.parseLong(headers.get(HttpHeaderNames.CONTENT_LENGTH)) : null;
+    }
+
+    @Override
     public abstract HttpResponse build();
 
     public void buildHeaders(long contentLength) {
+        this.length = contentLength;
         if (!headers.containsHeader(HttpHeaderNames.CONTENT_TYPE)) {
             if (contentType == null) {
                 contentType = HttpHeaderValues.APPLICATION_OCTET_STREAM;

@@ -36,7 +36,7 @@ artifacts {
 }
 
 tasks.withType(JavaCompile) {
-    options.compilerArgs.add('-Xlint:all')
+    options.compilerArgs.add('-Xlint:all,-exports')
     options.encoding = 'UTF-8'
 }
 

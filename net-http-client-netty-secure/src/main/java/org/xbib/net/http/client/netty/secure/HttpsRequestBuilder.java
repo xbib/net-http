@@ -7,6 +7,9 @@ public class HttpsRequestBuilder extends HttpRequestBuilder {
 
     SSLSession sslSession;
 
+    public HttpsRequestBuilder() {
+    }
+
     public HttpsRequestBuilder setSSLSession(SSLSession sslSession) {
         this.sslSession = sslSession;
         return this;

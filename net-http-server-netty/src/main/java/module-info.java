@@ -11,9 +11,9 @@ module org.xbib.net.http.server.netty {
     exports org.xbib.net.http.server.netty.buffer;
     exports org.xbib.net.http.server.netty.http1;
     exports org.xbib.net.http.server.netty.http2;
-    requires transitive org.xbib.net;
-    requires transitive org.xbib.net.http;
-    requires transitive org.xbib.net.http.server;
+    requires org.xbib.net;
+    requires org.xbib.net.http;
+    requires org.xbib.net.http.server;
     requires io.netty.buffer;
     requires io.netty.common;
     requires io.netty.transport;

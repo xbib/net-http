@@ -12,14 +12,6 @@ subprojects {
     }
 
 
-    tasks.withType(Checkstyle) {
-        ignoreFailures = true
-        reports {
-            xml.enabled = true
-            html.enabled = true
-        }
-    }
-
     tasks.withType(Pmd) {
         ignoreFailures = true
         reports {
@@ -28,11 +20,6 @@ subprojects {
         }
     }
 
-    checkstyle {
-        //configFile = rootProject.file('config/checkstyle/checkstyle.xml')
-        ignoreFailures = true
-        showViolations = true
-    }
 
     spotbugs {
         effort = "max"

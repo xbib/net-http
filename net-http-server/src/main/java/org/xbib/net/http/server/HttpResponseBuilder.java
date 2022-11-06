@@ -22,6 +22,8 @@ public interface HttpResponseBuilder {
 
     HttpResponseBuilder setResponseStatus(HttpResponseStatus status);
 
+    HttpResponseStatus getResponseStatus();
+
     HttpResponseBuilder setContentType(String contentType);
 
     HttpResponseBuilder setCharset(Charset charset);
@@ -59,6 +61,8 @@ public interface HttpResponseBuilder {
     HttpResponseBuilder write(InputStream inputStream, int bufferSize);
 
     HttpResponseBuilder write(FileChannel fileChannel, int bufferSize);
+
+    Long getLength();
 
     void reset();
 
