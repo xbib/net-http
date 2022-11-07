@@ -7,9 +7,9 @@ module org.xbib.net.http.netty.boringssl {
     exports org.xbib.net.http.netty.boringssl;
     requires org.xbib.net;
     requires org.xbib.net.http;
+    requires org.xbib.net.http.client.netty.secure;
     requires org.xbib.net.http.server;
     requires org.xbib.net.http.server.netty.secure;
-    requires org.xbib.net.http.client.netty.secure;
     requires io.netty.handler;
     requires io.netty.codec.http2;
     provides ClientSecureSocketProvider with BoringSSLClientSecureSocketProvider;
