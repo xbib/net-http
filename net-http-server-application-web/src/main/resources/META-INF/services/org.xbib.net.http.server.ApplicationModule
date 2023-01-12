@@ -1,3 +1,2 @@
 org.xbib.net.http.server.application.config.ConfigApplicationModule
 org.xbib.net.http.template.groovy.GroovyTemplateApplicationModule
-org.xbib.net.http.server.application.database.DatabaseApplicationModule
