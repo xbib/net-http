@@ -29,12 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class HttpsAddress extends HttpAddress {
-
-    private static final Logger logger = Logger.getLogger(HttpsAddress.class.getName());
 
     private final SSLContext sslContext;
 
@@ -84,7 +80,7 @@ public class HttpsAddress extends HttpAddress {
         return sslContext;
     }
 
-    public static class Builder {
+    public static class Builder extends HttpAddress.Builder {
 
         private static TrustManagerFactory TRUST_MANAGER_FACTORY;
 
@@ -98,14 +94,6 @@ public class HttpsAddress extends HttpAddress {
                 TRUST_MANAGER_FACTORY = null;
             }
         }
-
-        private String host;
-
-        private int port = -1;
-
-        private boolean isSecure = true;
-
-        private HttpVersion httpVersion = HttpVersion.HTTP_1_1;
 
         private TrustManagerFactory trustManagerFactory;
 
@@ -126,23 +114,27 @@ public class HttpsAddress extends HttpAddress {
             this.ciphers = DEFAULT_JDK_CIPHERS;
         }
 
+        @Override
         public Builder setHost(String host) {
             this.host = host;
             return this;
         }
 
+        @Override
         public Builder setPort(int port) {
             this.port = port;
             return this;
         }
 
+        @Override
         public Builder setSecure(boolean secure) {
             this.isSecure = secure;
             return this;
         }
 
-        public Builder setVersion(HttpVersion httpVersion) {
-            this.httpVersion = httpVersion;
+        @Override
+        public Builder setVersion(HttpVersion version) {
+            this.version = version;
             return this;
         }
 
@@ -220,7 +212,7 @@ public class HttpsAddress extends HttpAddress {
 
         public HttpsAddress build() throws KeyStoreException {
             Objects.requireNonNull(host);
-            Objects.requireNonNull(httpVersion);
+            Objects.requireNonNull(version);
             Objects.requireNonNull(privateKey);
             Objects.requireNonNull(certChain);
             if (certChain.isEmpty()) {
@@ -236,7 +228,7 @@ public class HttpsAddress extends HttpAddress {
                             certChain)
                     .withTrustMaterial(trustManagerFactory)
                     .build();
-            return new HttpsAddress(host, port, httpVersion, isSecure, hostNames, sslFactory.getSslContext());
+            return new HttpsAddress(host, port, version, isSecure, hostNames, sslFactory.getSslContext());
         }
     }
 

@@ -1,5 +1,8 @@
 package org.xbib.net.http;
 
+import java.security.KeyStoreException;
+import java.util.Objects;
+import javax.net.ssl.SSLException;
 import org.xbib.net.Address;
 import org.xbib.net.NetworkUtils;
 import org.xbib.net.SocketConfig;
@@ -15,21 +18,15 @@ import java.util.Set;
  */
 public class HttpAddress implements Address {
 
-    private final String host;
-
-    private final Integer port;
-
-    private final HttpVersion version;
-
-    private final Boolean secure;
-
-    private final Set<String> hostNames;
+    private final Builder builder;
 
     private InetAddress inetAddress;
 
     private InetSocketAddress inetSocketAddress;
 
-    private SocketConfig socketConfig;
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static HttpAddress http1(String host) {
         return new HttpAddress(host, 80, HttpVersion.HTTP_1_1, false);
@@ -74,30 +71,36 @@ public class HttpAddress implements Address {
     public HttpAddress(String host, Integer port, HttpVersion version, boolean secure) {
         this(host, port, version, secure, Set.of());
     }
+
     public HttpAddress(String host, Integer port, HttpVersion version,
                        boolean secure, Set<String> hostNames) {
-        this.host = host;
-        this.port = (port == null || port == -1) ? secure ? 443 : 80 : port;
-        this.version = version;
-        this.secure = secure;
-        this.hostNames = hostNames;
-        this.socketConfig = new SocketConfig();
+        this(builder()
+                .setHost(host)
+                .setPort((port == null || port == -1) ? secure ? 443 : 80 : port)
+                .setVersion(version)
+                .setSecure(secure)
+                .setHostNames(hostNames)
+                .setSocketConfig(new SocketConfig()));
+    }
+
+    public HttpAddress(Builder builder) {
+        this.builder = builder;
     }
 
     @Override
     public String getHost() {
-        return host;
+        return builder.host;
     }
 
     @Override
     public Integer getPort() {
-        return port;
+        return builder.port;
     }
 
     @Override
     public InetAddress getInetAddress() throws IOException {
         if (inetAddress == null) {
-            this.inetAddress = NetworkUtils.resolveInetAddress(host, null);
+            this.inetAddress = NetworkUtils.resolveInetAddress(builder.host, null);
         }
         return inetAddress;
     }
@@ -106,7 +109,7 @@ public class HttpAddress implements Address {
     public InetSocketAddress getInetSocketAddress() throws IOException {
         if (inetSocketAddress == null) {
             InetAddress inetAddress = getInetAddress();
-            this.inetSocketAddress = new InetSocketAddress(inetAddress.getHostAddress(), port);
+            this.inetSocketAddress = new InetSocketAddress(inetAddress.getHostAddress(), builder.port);
         }
         return inetSocketAddress;
     }
@@ -114,60 +117,113 @@ public class HttpAddress implements Address {
     @Override
     public URL base() {
         return isSecure() ?
-                URL.https().host(host).port(port).build() :
-                URL.http().host(host).port(port).build();
+                URL.https().host(builder.host).port(builder.port).build() :
+                URL.http().host(builder.host).port(builder.port).build();
     }
 
     @Override
     public boolean isSecure() {
-        return secure;
-    }
-
-    public void setSocketConfig(SocketConfig socketConfig) {
-        this.socketConfig = socketConfig;
+        return builder.isSecure;
     }
 
     @Override
     public SocketConfig getSocketConfig() {
-        return socketConfig;
+        return builder.socketConfig;
     }
 
     public Set<String> getHostNames() {
-        return hostNames;
+        return builder.hostNames;
     }
 
     public HttpVersion getVersion() {
-        return version;
+        return builder.version;
     }
 
     public String hostAndPort() {
-        return host + ":" + port;
+        return builder.host + ":" + builder.port;
     }
 
     public String hostAddressAndPort() throws IOException {
-        return getInetAddress().getHostAddress() + ":" + port;
+        return getInetAddress().getHostAddress() + ":" + builder.port;
     }
 
     public String canonicalHostAndPort() throws IOException {
-        return getInetAddress().getCanonicalHostName() + ":" + port;
+        return getInetAddress().getCanonicalHostName() + ":" + builder.port;
     }
 
     @Override
     public String toString() {
-        return "[" + version + "]" + (secure ? "[SECURE]" : "") + host + ":" + port;
+        return "[" + builder.version + "]" + (builder.isSecure ? "[SECURE]" : "") + builder.host + ":" + builder.port;
     }
 
     @Override
     public boolean equals(Object object) {
         return object instanceof HttpAddress &&
-                host.equals(((HttpAddress) object).host) &&
-                (port != null && port.equals(((HttpAddress) object).port)) &&
-                version.equals(((HttpAddress) object).version) &&
-                secure.equals(((HttpAddress) object).secure);
+                builder.host.equals(((HttpAddress) object).builder.host) &&
+                (builder.port != null && builder.port.equals(((HttpAddress) object).builder.port)) &&
+                builder.version.equals(((HttpAddress) object).builder.version) &&
+                builder.isSecure.equals(((HttpAddress) object).builder.isSecure);
     }
 
     @Override
     public int hashCode() {
-        return host.hashCode() ^ port ^ version.hashCode() ^ secure.hashCode();
+        return builder.host.hashCode() ^ builder.port ^ builder.version.hashCode() ^ builder.isSecure.hashCode();
+    }
+
+    public static class Builder {
+
+        protected String host;
+
+        protected Integer port;
+
+        protected Boolean isSecure;
+
+        protected HttpVersion version;
+
+        protected Set<String> hostNames;
+
+        protected SocketConfig socketConfig;
+
+        protected Builder() {
+            this.port = -1;
+            this.isSecure = false;
+            this.version = HttpVersion.HTTP_1_1;
+        }
+
+        public Builder setHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder setPort(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public Builder setSecure(boolean secure) {
+            this.isSecure = secure;
+            return this;
+        }
+
+        public Builder setVersion(HttpVersion httpVersion) {
+            this.version = httpVersion;
+            return this;
+        }
+
+        public Builder setHostNames(Set<String> hostNames) {
+            this.hostNames = hostNames;
+            return this;
+        }
+
+        public Builder setSocketConfig(SocketConfig socketConfig) {
+            this.socketConfig = socketConfig;
+            return this;
+        }
+
+        public HttpAddress build() throws KeyStoreException, SSLException {
+            Objects.requireNonNull(host);
+            Objects.requireNonNull(version);
+            return new HttpAddress(this);
+        }
     }
 }

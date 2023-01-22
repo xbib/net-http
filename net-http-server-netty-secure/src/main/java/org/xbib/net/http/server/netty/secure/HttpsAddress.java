@@ -93,7 +93,7 @@ public class HttpsAddress extends HttpAddress {
         return sslContext;
     }
 
-    public static class Builder {
+    public static class Builder extends HttpAddress.Builder {
 
         private static TrustManagerFactory TRUST_MANAGER_FACTORY;
 
@@ -119,14 +119,6 @@ public class HttpsAddress extends HttpAddress {
                 TRUST_MANAGER_FACTORY = null;
             }
         }
-
-        private String host;
-
-        private int port = -1;
-
-        private boolean isSecure = true;
-
-        private HttpVersion httpVersion = HttpVersion.HTTP_1_1;
 
         private TrustManagerFactory trustManagerFactory;
 
@@ -154,32 +146,34 @@ public class HttpsAddress extends HttpAddress {
 
         private boolean enableOcsp;
 
-        private Set<String> hostNames;
-
-        private Builder() {
+        protected Builder() {
             this.trustManagerFactory = TRUST_MANAGER_FACTORY;
             this.sslProvider = OpenSsl.isAvailable() ? SslProvider.OPENSSL : SslProvider.JDK;
             this.ciphers = OpenSsl.isAvailable() ? DEFAULT_OPENSSL_CIPHERS : DEFAULT_JDK_CIPHERS;
             this.cipherSuiteFilter = SupportedCipherSuiteFilter.INSTANCE;
         }
 
+        @Override
         public Builder setHost(String host) {
             this.host = host;
             return this;
         }
 
+        @Override
         public Builder setPort(int port) {
             this.port = port;
             return this;
         }
 
+        @Override
         public Builder setSecure(boolean secure) {
             this.isSecure = secure;
             return this;
         }
 
-        public Builder setVersion(HttpVersion httpVersion) {
-            this.httpVersion = httpVersion;
+        @Override
+        public Builder setVersion(HttpVersion version) {
+            this.version = version;
             return this;
         }
 
@@ -313,9 +307,10 @@ public class HttpsAddress extends HttpAddress {
             return this;
         }
 
+        @Override
         public HttpsAddress build() throws KeyStoreException, SSLException {
             Objects.requireNonNull(host);
-            Objects.requireNonNull(httpVersion);
+            Objects.requireNonNull(version);
             Objects.requireNonNull(privateKey);
             Objects.requireNonNull(certChain);
             if (certChain.isEmpty()) {
@@ -334,14 +329,14 @@ public class HttpsAddress extends HttpAddress {
                 sslContextBuilder.sslContextProvider(sslContextProvider);
             }
             if (applicationProtocolConfig == null) {
-                if (httpVersion.equals(HttpVersion.HTTP_2_0)) {
+                if (version.equals(HttpVersion.HTTP_2_0)) {
                     // OpenSSL does not support FATAL_ALERT behaviour
                     applicationProtocolConfig = new ApplicationProtocolConfig(ApplicationProtocolConfig.Protocol.ALPN,
                             ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
                             ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
                             ApplicationProtocolNames.HTTP_2, ApplicationProtocolNames.HTTP_1_1);
                 }
-                if (httpVersion.equals(HttpVersion.HTTP_1_1)) {
+                if (version.equals(HttpVersion.HTTP_1_1)) {
                     applicationProtocolConfig = new ApplicationProtocolConfig(ApplicationProtocolConfig.Protocol.ALPN,
                             ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
                             ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
@@ -360,7 +355,7 @@ public class HttpsAddress extends HttpAddress {
                             " session timeout = " + sslContext.sessionTimeout() +
                             " cipher suite = " + sslContext.cipherSuites()
                     );
-            return new HttpsAddress(host, port, httpVersion, isSecure, hostNames, sslContext);
+            return new HttpsAddress(host, port, version, isSecure, hostNames, sslContext);
         }
     }
 
