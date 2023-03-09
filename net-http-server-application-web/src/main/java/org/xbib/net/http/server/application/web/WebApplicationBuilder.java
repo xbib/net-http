@@ -1,7 +1,6 @@
 package org.xbib.net.http.server.application.web;
 
 import org.xbib.net.http.server.BaseApplicationBuilder;
-import org.xbib.net.http.server.Application;
 
 import org.xbib.settings.Settings;
 
@@ -11,12 +10,16 @@ public class WebApplicationBuilder extends BaseApplicationBuilder {
 
     protected String name;
 
-    protected Settings settings;
-
-    protected WebApplicationBuilder() throws Exception {
+    protected WebApplicationBuilder() {
         super();
         this.profile = System.getProperty("application.profile");
         this.name = System.getProperty("application.name");
+    }
+
+    @Override
+    public WebApplicationBuilder setSettings(Settings settings) {
+        super.setSettings(settings);
+        return this;
     }
 
     public WebApplicationBuilder setProfile(String profile) {
@@ -29,13 +32,8 @@ public class WebApplicationBuilder extends BaseApplicationBuilder {
         return this;
     }
 
-    public WebApplicationBuilder setSettings(Settings settings) {
-        this.settings = settings;
-        return this;
-    }
-
     @Override
-    public Application build() {
+    public WebApplication build() {
         WebApplication webApplication = new WebApplication(this);
         setupApplication(webApplication);
         return webApplication;

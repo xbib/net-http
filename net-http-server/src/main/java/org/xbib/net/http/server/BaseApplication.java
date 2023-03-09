@@ -14,6 +14,7 @@ import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.util.BlockingThreadPoolExecutor;
 import org.xbib.net.http.server.validate.HttpRequestValidator;
 import org.xbib.net.util.NamedThreadFactory;
+import org.xbib.settings.Settings;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -55,7 +56,7 @@ public class BaseApplication implements Application {
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
         this.executor = new BlockingThreadPoolExecutor(builder.blockingThreadCount, builder.blockingQueueCount,
-                new NamedThreadFactory("org-xbib-net-hhtp-server-application"));
+                new NamedThreadFactory("org-xbib-net-http-server-application"));
         this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
                         logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
         this.httpRequestValidator = buildRequestValidator();
@@ -84,6 +85,11 @@ public class BaseApplication implements Application {
 
     public String getContextPath() {
         return builder.contextPath;
+    }
+
+    @Override
+    public Settings getSettings() {
+        return builder.settings;
     }
 
     public HttpRouter getRouter() {

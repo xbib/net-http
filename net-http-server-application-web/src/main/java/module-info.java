@@ -9,7 +9,6 @@ module org.xbib.net.http.server.application.web {
     requires org.xbib.net.http.server.netty.secure;
     requires org.xbib.net.http.template.groovy;
     requires org.xbib.datastructures.tiny;
-    requires org.xbib.datastructures.json.tiny;
     requires org.xbib.jdbc.query;
     requires org.xbib.config;
     requires java.logging;

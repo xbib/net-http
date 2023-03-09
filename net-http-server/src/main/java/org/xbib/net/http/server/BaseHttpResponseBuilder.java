@@ -80,7 +80,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     public void reset() {
         this.version = HttpVersion.HTTP_1_1;
-        this.status = null;
+        this.status = HttpResponseStatus.OK;
         this.headers = new HttpHeaders();
         this.trailingHeaders = new HttpHeaders();
         this.contentType = HttpHeaderValues.APPLICATION_OCTET_STREAM;
@@ -302,6 +302,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (httpServerConfig != null && httpServerConfig.getServerName() != null) {
             headers.add(HttpHeaderNames.SERVER, httpServerConfig.getServerName());
         }
+        logger.log(Level.FINER, "headers built: " + headers);
     }
 
     public CharBuffer wrapHeaders() {

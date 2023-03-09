@@ -10,11 +10,15 @@ import org.xbib.net.http.server.session.IncomingSessionHandler;
 import org.xbib.net.http.server.session.OutgoingSessionHandler;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.file.FileJsonSessionCodec;
+import org.xbib.settings.Settings;
 
 public class WebApplication extends BaseApplication {
 
+    private final WebApplicationBuilder builder;
+
     protected WebApplication(WebApplicationBuilder builder) {
         super(builder);
+        this.builder = builder;
     }
 
     public static WebApplicationBuilder builder() {

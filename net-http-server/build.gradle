@@ -1,3 +1,6 @@
 dependencies {
     api project(':net-http')
+    api libs.config
+    implementation libs.settings.datastructures.json
+    implementation libs.settings.datastructures.yaml
 }

@@ -30,16 +30,12 @@ public class ConfigApplicationModule extends BaseApplicationModule {
 
     private Settings settings;
 
-    public ConfigApplicationModule() {
+    public ConfigApplicationModule(Application application, String name, Settings settings) {
+        super(application, name, settings);
     }
 
     @Override
-    public String getName() {
-        return "config";
-    }
-
-    @Override
-    public void onOpen(Application application) throws Exception {
+    public void onOpen(Application application, Settings settings) {
         String profile = System.getProperty("application.profile");
         if (profile == null) {
             profile = "developer";

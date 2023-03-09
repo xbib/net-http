@@ -26,7 +26,5 @@ public interface ApplicationBuilder {
 
     ApplicationBuilder setZoneId(ZoneId zoneId);
 
-    ApplicationBuilder addModule(ApplicationModule module);
-
     Application build();
 }

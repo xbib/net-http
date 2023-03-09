@@ -1,12 +1,13 @@
 package org.xbib.net.http.server;
 
 import org.xbib.net.http.server.session.Session;
+import org.xbib.settings.Settings;
 
-public interface ApplicationModule extends Comparable<ApplicationModule> {
+public interface ApplicationModule {
 
     String getName();
 
-    void onOpen(Application application) throws Exception;
+    void onOpen(Application application, Settings settings) throws Exception;
 
     void onOpen(Application application, HttpServerContext httpServerContext);
 

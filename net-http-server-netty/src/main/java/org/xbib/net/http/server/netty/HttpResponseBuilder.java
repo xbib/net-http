@@ -124,12 +124,17 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         return this;
     }
 
+    public void flush() {
+        internalBufferWrite(Unpooled.buffer(0));
+    }
+
+    public void close() {
+        ctx.close();
+    }
+
     @Override
     public HttpResponse build() {
         Objects.requireNonNull(ctx);
-        //if (shouldFlush()) {
-        //    internalFlush();
-        //}
         if (body != null) {
             internalWrite(body);
         } else if (charBuffer != null && charset != null) {
@@ -141,18 +146,12 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         } else if (inputStream != null) {
             internalWrite(inputStream, bufferSize, true);
         }
+        if (shouldFlush()) {
+            // really server flush?
+            //flush();
+        }
         return new HttpResponse(this);
     }
-
-    //void internalFlush() {
-    //    logger.log(Level.FINE, "internal flush");
-    //    internalBufferWrite(Unpooled.buffer(0));
-    //}
-
-    //void internalClose() {
-    //    logger.log(Level.FINE, "internal close");
-    //    ctx.close();
-    //}
 
     private void internalWrite(String body) {
         internalWrite(dataBufferFactory.wrap(StandardCharsets.UTF_8.encode(body)));

@@ -23,13 +23,11 @@ public class HttpResponse extends BaseHttpResponse {
 
     @Override
     public void close() throws IOException {
-        //logger.log(Level.FINE, "close");
-        //builder.internalClose();
+        builder.close();
     }
 
     @Override
     public void flush() throws IOException {
-        //logger.log(Level.FINE, "flush");
-        //builder.internalFlush();
+        builder.flush();
     }
 }

@@ -82,12 +82,14 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                 context.response()
                         .addHeader(HttpHeaderNames.LOCATION, resource.getIndexFileName())
                         .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT)
-                        .build().flush(); // flush is important
+                        .build()
+                        .flush(); // write headers
             } else {
                 // send forbidden, we do not allow directory access
                 context.response()
                         .setResponseStatus(HttpResponseStatus.FORBIDDEN)
-                        .build().flush(); // fluish is important
+                        .build()
+                        .flush(); // write status
             }
             context.done();
         } else {
@@ -291,7 +293,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                         HttpServerContext context,
                         long offset, long size) throws IOException {
         if (resource instanceof HttpServerResource) {
-            logger.log(Level.FINE, "we have a server resource, render by resource");
+            logger.log(Level.FINER, "we have a server resource, render by resource");
             ((HttpServerResource) resource).render(context);
             return;
         }

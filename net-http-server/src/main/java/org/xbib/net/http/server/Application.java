@@ -3,6 +3,7 @@ package org.xbib.net.http.server;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.session.SessionListener;
+import org.xbib.settings.Settings;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -25,6 +26,8 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
     Path getHome();
 
     String getContextPath();
+
+    Settings getSettings();
 
     Collection<ApplicationModule> getModules();
 

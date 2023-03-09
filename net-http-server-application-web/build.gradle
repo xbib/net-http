@@ -5,8 +5,6 @@ dependencies {
     api project(':net-http-server-application-config')
     api project(':net-http-template-groovy')
     api libs.jdbc.query
-    implementation libs.settings.datastructures.json
-    implementation libs.settings.datastructures.yaml
     implementation libs.webjars.bootstrap
     implementation libs.webjars.jquery
     implementation libs.webjars.fontawesome

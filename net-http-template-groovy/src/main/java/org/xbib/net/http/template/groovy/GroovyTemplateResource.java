@@ -98,10 +98,10 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
         Template template = templates.get(templatePath);
         Logger templateLogger = Logger.getLogger("template." + getName().replace('/', '.'));
         Binding binding = new Binding();
-        binding.setVariable("variables", binding.getVariables());
         httpServerContext.attributes().forEach(binding::setVariable);
         binding.setVariable("logger", templateLogger);
         binding.setVariable("log", templateLogger);
+        application.getModules().forEach(m -> binding.setVariable(m.getName(), m));
         DefaultTemplateResolver templateResolver = httpServerContext.attributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver != null) {
             // handle programmatic locale change plus template making under lock so no other request/response can interrupt us

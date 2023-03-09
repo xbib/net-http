@@ -1,14 +1,29 @@
 package org.xbib.net.http.server;
 
 import org.xbib.net.http.server.session.Session;
+import org.xbib.settings.Settings;
 
 public abstract class BaseApplicationModule implements ApplicationModule {
 
-    public BaseApplicationModule() {
+    protected final Application application;
+
+    protected final String name;
+
+    protected final Settings settings;
+
+    public BaseApplicationModule(Application application, String name, Settings settings) {
+        this.application = application;
+        this.name = name;
+        this.settings = settings;
     }
 
     @Override
-    public void onOpen(Application application) throws Exception {
+    public String getName() {
+        return name != null ? name : settings.get("name", "undefined");
+    }
+
+    @Override
+    public void onOpen(Application application, Settings settings) throws Exception {
     }
 
     @Override
@@ -37,10 +52,5 @@ public abstract class BaseApplicationModule implements ApplicationModule {
 
     @Override
     public void onClose(Application application) {
-    }
-
-    @Override
-    public int compareTo(ApplicationModule o) {
-        return getName().compareTo(o.getName());
     }
 }

@@ -9,13 +9,14 @@ import org.xbib.net.http.server.BaseApplicationModule;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.HttpService;
+import org.xbib.settings.Settings;
 
 import javax.sql.DataSource;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DatabaseApplicationModule extends BaseApplicationModule {
+public class DatabaseApplicationModule<A extends Application> extends BaseApplicationModule {
 
     private static final Logger logger = Logger.getLogger(DatabaseApplicationModule.class.getName());
 
@@ -23,16 +24,12 @@ public class DatabaseApplicationModule extends BaseApplicationModule {
 
     private DatabaseProvider databaseProvider;
 
-    public DatabaseApplicationModule() {
+    public DatabaseApplicationModule(Application application, String name, Settings settings) {
+        super(application, name, settings);
     }
 
     @Override
-    public String getName() {
-        return "database";
-    }
-
-    @Override
-    public void onOpen(Application application) throws Exception {
+    public void onOpen(Application application, Settings settings) throws Exception {
         this.dataSource = createDataSource();
         String flavor = System.getProperty("database.flavor");
         this.databaseProvider = flavor != null ?

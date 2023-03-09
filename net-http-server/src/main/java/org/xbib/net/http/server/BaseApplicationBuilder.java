@@ -1,7 +1,12 @@
 package org.xbib.net.http.server;
 
+import org.xbib.config.ConfigLoader;
+import org.xbib.config.ConfigLogger;
+import org.xbib.config.ConfigParams;
+import org.xbib.config.SystemConfigLogger;
 import org.xbib.datastructures.common.ImmutableSet;
 import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.settings.Settings;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,6 +14,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.logging.Level;
@@ -17,6 +24,17 @@ import java.util.logging.Logger;
 public class BaseApplicationBuilder implements ApplicationBuilder {
 
     private static final Logger logger = Logger.getLogger(BaseApplicationBuilder.class.getName());
+
+    private static final ConfigLogger bootLogger;
+
+    static {
+        // early loading of boot logger during static initialization block
+        ServiceLoader<ConfigLogger> serviceLoader = ServiceLoader.load(ConfigLogger.class);
+        Optional<ConfigLogger> optionalBootLogger = serviceLoader.findFirst();
+        bootLogger = optionalBootLogger.orElse(new SystemConfigLogger());
+    }
+
+    protected ClassLoader classLoader;
 
     protected int blockingThreadCount;
 
@@ -36,11 +54,18 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     protected ZoneId zoneId;
 
-    protected List<ApplicationModule> applicationModuleList;
-
     protected Set<String> staticFileSuffixes;
 
+    protected ConfigParams configParams;
+
+    protected ConfigLoader configLoader;
+
+    protected Settings settings;
+
+    protected List<ApplicationModule> applicationModuleList;
+
     protected BaseApplicationBuilder() {
+        this.classLoader = getClass().getClassLoader();
         this.blockingThreadCount = Runtime.getRuntime().availableProcessors();
         this.blockingQueueCount = Integer.MAX_VALUE;
         this.home = Paths.get(System.getProperties().containsKey("application.home") ? System.getProperty("application.home") : ".");
@@ -50,6 +75,11 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         this.locale = Locale.getDefault();
         this.zoneId = ZoneId.systemDefault();
         this.applicationModuleList = new ArrayList<>();
+    }
+
+    public BaseApplicationBuilder setSettings(Settings settings) {
+        this.settings = settings;
+        return this;
     }
 
     @Override
@@ -77,19 +107,19 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     @Override
-    public BaseApplicationBuilder setSecret(String secret) {
+    public ApplicationBuilder setSecret(String secret) {
         this.secret = secret;
         return this;
     }
 
     @Override
-    public BaseApplicationBuilder setSessionsEnabled(boolean sessionsEnabled) {
+    public ApplicationBuilder setSessionsEnabled(boolean sessionsEnabled) {
         this.sessionsEnabled = sessionsEnabled;
         return this;
     }
 
     @Override
-    public BaseApplicationBuilder setRouter(HttpRouter router) {
+    public ApplicationBuilder setRouter(HttpRouter router) {
         this.router = router;
         return this;
     }
@@ -106,21 +136,17 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         return this;
     }
 
-    @Override
-    public ApplicationBuilder addModule(ApplicationModule module) {
-        if (module != null) {
-            applicationModuleList.add(module);
-            logger.log(Level.FINE, "module " + module + " added");
-        }
-        return this;
-    }
-
     public ApplicationBuilder addStaticSuffixes(String... suffixes) {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         for (String suffix : suffixes) {
             builder.add(suffix);
         }
         this.staticFileSuffixes = builder.build(new String[]{});
+        return this;
+    }
+
+    public ApplicationBuilder registerModule(ApplicationModule applicationModule) {
+        applicationModuleList.add(applicationModule);
         return this;
     }
 
@@ -132,19 +158,41 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     protected void setupApplication(Application application) {
-        ServiceLoader<ApplicationModule> serviceLoader = ServiceLoader.load(ApplicationModule.class);
-        for (ApplicationModule module : serviceLoader) {
-            applicationModuleList.add(module);
-            logger.log(Level.FINE, "module " + module + " added");
+        String profile = System.getProperty("application.profile");
+        if (profile == null) {
+            profile = "developer";
         }
-        applicationModuleList.forEach(module -> {
-            try {
-                module.onOpen(application);
-                logger.log(Level.FINE, "module " + module + " opened");
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
+        String[] args = profile.split(";");
+        this.configParams = new ConfigParams()
+                .withArgs(args)
+                .withDirectoryName("application")
+                .withFileNamesWithoutSuffix(args[0])
+                .withSystemEnvironment()
+                .withSystemProperties();
+        this.configLoader = ConfigLoader.getInstance()
+                .withLogger(bootLogger);
+        this.settings = configLoader.load(configParams);
+        for (Map.Entry<String, Settings> entry : settings.getGroups("module").entrySet()) {
+            String moduleName = entry.getKey();
+            Settings moduleSettings = entry.getValue();
+            if (moduleSettings.getAsBoolean("enabled", true)) {
+                try {
+                    String className = moduleSettings.get("class");
+                    @SuppressWarnings("unchecked")
+                    Class<ApplicationModule> clazz =
+                        (Class<ApplicationModule>) Class.forName(className, true, classLoader);
+                    ApplicationModule applicationModule = clazz.getConstructor(Application.class, String.class, Settings.class)
+                            .newInstance(application, moduleName, moduleSettings);
+                    applicationModuleList.add(applicationModule);
+                    applicationModule.onOpen(application, moduleSettings);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                    throw new IllegalArgumentException("class not found or not loadable: " + e.getMessage());
+                }
+            } else {
+                logger.log(Level.WARNING, "disabled module: " + moduleName);
             }
-        });
+        }
         if (router != null) {
             router.setApplication(application);
         }
