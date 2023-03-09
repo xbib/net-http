@@ -188,6 +188,7 @@ public class HttpAddress implements Address {
             this.port = -1;
             this.isSecure = false;
             this.version = HttpVersion.HTTP_1_1;
+            this.socketConfig = new SocketConfig();
         }
 
         public Builder setHost(String host) {
