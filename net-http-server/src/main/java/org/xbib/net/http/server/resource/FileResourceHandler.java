@@ -46,10 +46,14 @@ public class FileResourceHandler extends AbstractResourceHandler {
         Resource resource = null;
         if (pathSpec.endsWith("/")) {
             if (indexFileName != null) {
-                    resource = new FileResource(httpServerContext, pathSpec + indexFileName);
+                resource = new FileResource(httpServerContext, pathSpec + indexFileName);
             }
         } else {
             resource = new FileResource(httpServerContext, pathSpec);
+            if (resource.isDirectory() && resource.isExistsIndexFile()) {
+                logger.log(Level.FINER, "we have a directory and existing index file, so we redirect internally");
+                resource = new FileResource(httpServerContext, pathSpec + indexFileName);
+            }
         }
         return resource;
     }
@@ -92,7 +96,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
         private final boolean isExistsIndexFile;
 
-        private final String contentType;
+        private final String mimeType;
 
         private final String name;
 
@@ -107,7 +111,6 @@ public class FileResourceHandler extends AbstractResourceHandler {
             if (root == null) {
                 throw new IllegalArgumentException("no home path set for template resource resolving");
             }
-            logger.log(Level.FINE, "root = " + root);
             if (resourcePath.startsWith("file:")) {
                 this.path = Paths.get(URI.create(resourcePath));
                 this.name = path.getFileName().toString();
@@ -119,7 +122,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
                 this.name = normalizedPath;
                 this.path = httpServerContext.resolve(webRoot).resolve(normalizedPath);
             }
-            this.contentType = mimeTypeService.getContentType(resourcePath);
+            this.mimeType = mimeTypeService.getContentType(resourcePath);
             this.url = URL.create(path.toUri().toString());
             this.baseName = basename(name);
             this.suffix = suffix(name);
@@ -136,7 +139,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
                 this.length = Files.size(path);
                 httpServerContext.done();
             } else {
-                this.lastModified = Instant.now();
+                this.lastModified = Instant.ofEpochMilli(0L);
                 this.length = 0;
             }
         }
@@ -183,7 +186,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
         @Override
         public String getMimeType() {
-            return contentType;
+            return mimeType;
         }
 
         @Override
@@ -210,7 +213,9 @@ public class FileResourceHandler extends AbstractResourceHandler {
         public String toString() {
             return "[FileResource:resourcePath=" + resourcePath +
                     ",url=" + url +
+                    ",mimeType=" + mimeType +
                     ",lastmodified=" + lastModified +
+                    ",isexists=" + isExists +
                     ",length=" + length +
                     ",isDirectory=" + isDirectory() + "]";
         }

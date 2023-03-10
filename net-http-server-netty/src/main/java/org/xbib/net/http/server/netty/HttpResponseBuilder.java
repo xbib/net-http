@@ -129,6 +129,7 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     }
 
     public void close() {
+        logger.log(Level.FINER, "closing channel " + ctx.channel());
         ctx.close();
     }
 
@@ -218,9 +219,11 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
             if (headers.containsHeader(HttpHeaderNames.CONTENT_LENGTH)) {
                 if (!keepAlive) {
+                    logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                     channelFuture.addListener(CLOSE);
                 }
             } else {
+                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                 channelFuture.addListener(CLOSE);
             }
         });
@@ -231,7 +234,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             logger.log(Level.WARNING, "channel not writeable: " + ctx.channel());
             return;
         }
-        // TODO we write a single chunk, but we should use chunked output here.
         ByteBuf buffer;
         int count;
         try {
@@ -246,7 +248,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             return;
         }
         if (count < bufferSize) {
-            // not chunked, no headers (???)
             internalBufferWrite(buffer, count);
         } else {
             // chunked
@@ -269,14 +270,15 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             }
             defaultHttpResponse.headers().set(headers);
             ctx.write(defaultHttpResponse);
-            //ctx.write(buffer); ???
             ctx.write(new ChunkedStream(inputStream, bufferSize));
             ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
             if (headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
                 if (!keepAlive) {
+                    logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                     channelFuture.addListener(CLOSE);
                 }
             } else {
+                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                 channelFuture.addListener(CLOSE);
             }
         }

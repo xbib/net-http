@@ -80,7 +80,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     public void reset() {
         this.version = HttpVersion.HTTP_1_1;
-        this.status = HttpResponseStatus.OK;
+        this.status = null; // must be undefined here
         this.headers = new HttpHeaders();
         this.trailingHeaders = new HttpHeaders();
         this.contentType = HttpHeaderValues.APPLICATION_OCTET_STREAM;
@@ -107,11 +107,11 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder setResponseStatus(HttpResponseStatus status) {
-        if (this.status != null) {
-            logger.log(Level.WARNING, "status rejected: " + status + " status is already " + this.status);
-            return this;
+        if (this.status == null) {
+            this.status = status;
+        } else {
+            logger.log(Level.WARNING, "ignoring status = " + status + " because already set: " + this.status);
         }
-        this.status = status;
         return this;
     }
 
@@ -129,20 +129,18 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
     public BaseHttpResponseBuilder setHeader(CharSequence name, String value) {
         if (HttpHeaderNames.CONTENT_TYPE.equalsIgnoreCase(name.toString())) {
             setContentType(value);
-        } else {
-            if (!headers.containsHeader(name)) {
-                headers.set(name, value);
-            } else {
-                logger.log(Level.WARNING, "header rejected: " + name + " = " + value);
-            }
         }
+        if (headers.containsHeader(name)) {
+            logger.log(Level.WARNING, "header already exist: " + headers.get(name) + " overwriting with " + value);
+        }
+        headers.set(name, value);
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder addHeader(CharSequence name, String value) {
         if (headers.containsHeader(name)) {
-            logger.log(Level.WARNING, "duplicate header: " + name + " old value = " + headers.get(name) + " new value = " + value);
+            logger.log(Level.WARNING, "header already exist: " + headers.get(name) + " adding " + value);
         }
         headers.add(name, value);
         return this;
@@ -288,6 +286,10 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
             }
             headers.add(HttpHeaderNames.CONTENT_TYPE, contentType);
         }
+        if (status == null) {
+            logger.log(Level.WARNING, "no status code set by handlers, assuming OK");
+            status = HttpResponseStatus.OK;
+        }
         if (status.code() >= 200 && status.code() != 204) {
             if (!headers.containsHeader(HttpHeaderNames.CONTENT_LENGTH)) {
                 headers.add(HttpHeaderNames.CONTENT_LENGTH, Long.toString(contentLength));
@@ -302,11 +304,15 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (httpServerConfig != null && httpServerConfig.getServerName() != null) {
             headers.add(HttpHeaderNames.SERVER, httpServerConfig.getServerName());
         }
-        logger.log(Level.FINER, "headers built: " + headers);
+        logger.log(Level.FINER, "done: status = " + status + " headers = " + headers);
     }
 
     public CharBuffer wrapHeaders() {
         StringBuilder sb = new StringBuilder();
+        if (status == null) {
+            logger.log(Level.WARNING, "no status code set by handlers, assuming OK");
+            setResponseStatus(HttpResponseStatus.OK);
+        }
         sb.append(version.text()).append(SPACE).append(status.code()).append(SPACE).append(status.reasonPhrase()).append(CRLF);
         for (Pair<String, String> e : headers.entries()) {
             sb.append(e.getKey().toLowerCase(Locale.ROOT)).append(COLON).append(SPACE).append(e.getValue()).append(CRLF);

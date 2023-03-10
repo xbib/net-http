@@ -165,75 +165,48 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         return ZonedDateTime.now().format(formatter);
     }
 
+    public String longDateTimeNow() {
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.LONG)
+                .withLocale(application.getLocale())
+                .withZone(application.getZoneId());
+        return ZonedDateTime.now().format(formatter);
+    }
+
+    public String mediumDateTimeNow() {
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.MEDIUM)
+                .withLocale(application.getLocale())
+                .withZone(application.getZoneId());
+        return ZonedDateTime.now().format(formatter);
+    }
+
+    public String shortDateTimeNow() {
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)
+                .withLocale(application.getLocale())
+                .withZone(application.getZoneId());
+        return ZonedDateTime.now().format(formatter);
+    }
+
     public String bootstrapCss() {
-        return contextPath("webjars/bootstrap/3.4.1/dist/css/bootstrap.min.css");
+        return contextPath("webjars/bootstrap/5.2.2/dist/css/bootstrap.min.css");
     }
 
     public String bootstrapJs() {
-        return contextPath("webjars/bootstrap/3.4.1/dist/js/bootstrap.min.js");
+        return contextPath("webjars/bootstrap/5.2.2/dist/js/bootstrap.min.js");
     }
 
     public String jqueryJs() {
-        return contextPath("webjars/jquery/3.5.1/dist/jquery.min.js");
+        return contextPath("webjars/jquery/3.6.3/dist/jquery.min.js");
     }
 
     public String fontawesomeCss() {
-        return contextPath("webjars/font-awesome/5.14.0/css/all.min.css");
+        return contextPath("webjars/font-awesome/6.3.0/css/all.min.css");
     }
 
     public String fontawesomeJs() {
-        return contextPath("webjars/font-awesome/5.14.0/js/all.min.js");
+        return contextPath("webjars/font-awesome/6.3.0/js/all.min.js");
     }
 
-    public String popperJs() {
-        return contextPath("webjars/popper.js/1.14.4/umd/popper.min.js");
-    }
-
-    public String fileinputCss() {
-        return contextPath("webjars/bootstrap-fileinput/4.4.8/css/fileinput.min.css");
-    }
-
-    public String fileinputJs() {
-        return contextPath("webjars/bootstrap-fileinput/4.4.8/js/fileinput.min.js");
-    }
-
-    public String fileinputLocale(String locale) {
-        return contextPath("webjars/bootstrap-fileinput/4.4.8/js/locales/" + locale + ".js");
-    }
-
-    public String fileinputTheme(String theme) {
-        return contextPath("webjars/bootstrap-fileinput/4.4.8/themes/" + theme + "/theme.min.js");
-    }
-
-    public String datatablesCss() {
-        return contextPath("webjars/datatables/1.10.19/css/jquery.dataTables.min.css");
-    }
-
-    public String datatablesJs() {
-        return contextPath("webjars/datatables/1.10.19/js/jquery.dataTables.min.js");
-    }
-
-    public String bootstrapTableCss() {
-        return contextPath("webjars/bootstrap-table/1.15.4/dist/bootstrap-table.min.css");
-    }
-
-    public String bootstrapTableLocale(String locale) {
-        return contextPath("webjars/bootstrap-table/1.15.4/dist/locale/bootstrap-table-${locale}.min.js");
-    }
-
-    public String bootstrapTableJs() {
-        return contextPath("webjars//bootstrap-table/1.15.4/dist/bootstrap-table.min.js");
-    }
-
-    public String bootstrapTableAutoRefreshJs() {
-        return contextPath("webjars/bootstrap-table/1.15.4/dist/extensions/auto-refresh/bootstrap-table-auto-refresh.min.js");
-    }
-
-    public String bootstrapHoverDropdownJs() {
-        return contextPath("webjars/bootstrap-hover-dropdown/2.2.1/bootstrap-hover-dropdown.min.js");
-    }
-
-    public String bootstrapValidatorJs() {
-        return contextPath("webjars/bootstrap-validator/0.11.9/js/validator.js");
-    }
 }

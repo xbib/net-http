@@ -70,13 +70,13 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
         private final long length;
 
-        private final String contentType;
+        private final String mimeType;
 
         private URL url;
 
         ClassLoaderResource(HttpServerContext httpServerContext) throws IOException {
-            String effectivePath = httpServerContext.request().getRequestPath().substring(1); // httpServerContext.getEffectiveRequestPath();
-            this.contentType = mimeTypeService.getContentType(effectivePath);
+            String effectivePath = httpServerContext.request().getRequestPath().substring(1);
+            this.mimeType = mimeTypeService.getContentType(effectivePath);
             this.resourcePath = effectivePath.startsWith("/") ? effectivePath.substring(1) : effectivePath;
             String path = prefix != null ? (prefix.endsWith("/") ? prefix : prefix + "/") : "/";
             path = resourcePath.startsWith("/") ? path + resourcePath.substring(1) : path + resourcePath;
@@ -161,7 +161,7 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
         @Override
         public String getMimeType() {
-            return contentType;
+            return mimeType;
         }
 
         @Override
@@ -178,6 +178,7 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
         public String toString() {
             return "[ClassLoaderResource:resourcePath=" + resourcePath +
                     ",url=" + url +
+                    ",mimeType=" + mimeType +
                     ",lastmodified=" + lastModified +
                     ",length=" + length +
                     ",isDirectory=" + isDirectory() + "]";

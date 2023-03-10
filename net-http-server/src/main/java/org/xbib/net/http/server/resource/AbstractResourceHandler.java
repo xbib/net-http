@@ -57,7 +57,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     public void handle(HttpServerContext context) throws IOException {
         logger.log(Level.FINE, "handle: before creating resource " + this.getClass().getName());
         Resource resource = createResource(context);
-        logger.log(Level.FINE, "handle: resource = " + (resource != null ? resource.getClass().getName() : null));
+        logger.log(Level.FINE, "handle: resource = " + (resource != null ? resource.getClass().getName() + " " + resource : null));
         if (resource == null || !resource.isExists()) {
             logger.log(Level.FINER, "resource does not exist: " + resource);
             throw new HttpException("resource not found", context, HttpResponseStatus.NOT_FOUND);
@@ -74,14 +74,14 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                 logger.log(Level.FINER, "client must add a /, external redirect to = " + loc);
                 context.response()
                         .addHeader(HttpHeaderNames.LOCATION, loc)
-                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT)
+                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT) // 307
                         .build().flush(); // flush is important
             } else if (resource.isExistsIndexFile()) {
                 // external redirect to default index file in this directory
                 logger.log(Level.FINER, "external redirect to default index file in this directory: " + resource.getIndexFileName());
                 context.response()
                         .addHeader(HttpHeaderNames.LOCATION, resource.getIndexFileName())
-                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT)
+                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT) // 307
                         .build()
                         .flush(); // write headers
             } else {
@@ -102,14 +102,14 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     private void generateCacheableResource(HttpServerContext context, Resource resource) throws IOException {
         // if resource is length of 0, there is nothing to send. Do not send any content,
         if (resource.getLength() == 0) {
+            logger.log(Level.FINE, "the resource length is 0, do nothing");
             context.response().build().flush();
             return;
         }
         HttpHeaders headers = context.request().getHeaders();
         logger.log(Level.FINE, "before generating resource, the response headers are " + context.response().getHeaders());
         String contentType = resource.getMimeType();
-        context.response()
-                .addHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
+        context.response().addHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
         // heuristic for inline disposition
         String disposition = "inline";
         if (!contentType.startsWith("text") && !contentType.startsWith("image")) {
