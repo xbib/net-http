@@ -58,8 +58,15 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         logger.log(Level.FINE, "handle: before creating resource " + this.getClass().getName());
         Resource resource = createResource(context);
         logger.log(Level.FINE, "handle: resource = " + (resource != null ? resource.getClass().getName() + " " + resource : null));
-        if (resource == null || !resource.isExists()) {
-            logger.log(Level.FINER, "resource does not exist: " + resource);
+        if (resource instanceof HtmlTemplateResource) {
+            logger.log(Level.FINE, "handle: HTML template resource, generate cacheable resource, parameter = " +
+                    context.httpRequest().getParameter());
+            generateCacheableResource(context, resource);
+            logger.log(Level.FINE, "handle: done");
+            return;
+        }
+        if (resource == null) {
+            logger.log(Level.FINER, "resource is null: " + resource);
             throw new HttpException("resource not found", context, HttpResponseStatus.NOT_FOUND);
         } else if (resource.isDirectory()) {
             logger.log(Level.FINER, "we have a directory request");
@@ -77,13 +84,9 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                         .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT) // 307
                         .build().flush(); // flush is important
             } else if (resource.isExistsIndexFile()) {
-                // external redirect to default index file in this directory
-                logger.log(Level.FINER, "external redirect to default index file in this directory: " + resource.getIndexFileName());
-                context.response()
-                        .addHeader(HttpHeaderNames.LOCATION, resource.getIndexFileName())
-                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT) // 307
-                        .build()
-                        .flush(); // write headers
+                // internal redirect to default index file in this directory
+                logger.log(Level.FINER, "internal redirect to default index file in this directory: " + resource.getIndexFileName());
+                generateCacheableResource(context, resource);
             } else {
                 // send forbidden, we do not allow directory access
                 context.response()

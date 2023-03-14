@@ -50,25 +50,22 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             logger.log(Level.WARNING, "template engine is null");
             return;
         }
-        //
         Path templatePath = getPath();
-        logger.log(Level.FINE, "templatePath = " + getPath());
+        HttpService service = httpServerContext.attributes().get(HttpService.class, "service");
+        GroovyTemplateService groovyTemplateService = (GroovyTemplateService) service;
+        if (groovyTemplateService.getTemplateName() != null) {
+            templatePath = application.resolve(groovyTemplateService.getTemplateName());
+            logger.log(Level.FINE, "templatePath after application.resolve() = " + templatePath);
+        } else {
+            logger.log(Level.FINE, "the GroovyTemplateService does not have a template name set");
+        }
+        logger.log(Level.FINE, "templatePath = " + templatePath);
         GroovyHttpResonseStatusTemplateResource resource = httpServerContext.attributes().get(GroovyHttpResonseStatusTemplateResource.class, "_resource");
-        if (templatePath == null && isExists() && resource != null) {
+        if (resource != null) {
             logger.log(Level.FINE, "Groovy HTTP status response rendering");
             String indexFileName = resource.getIndexFileName();
             if (indexFileName != null) {
                 templatePath = application.resolve(indexFileName);
-            }
-            if (templatePath == null) {
-                HttpService service = httpServerContext.attributes().get(HttpService.class, "service");
-                GroovyTemplateService groovyTemplateService = (GroovyTemplateService) service;
-                if (groovyTemplateService.getTemplateName() != null) {
-                    templatePath = application.resolve(groovyTemplateService.getTemplateName());
-                    logger.log(Level.FINE, "templatePath after application.resolve() = " + templatePath);
-                } else {
-                    logger.log(Level.FINE, "the GroovyTemplateService does not have a template name set");
-                }
             }
         }
         // override if 'templatePath' attribute is set
@@ -84,8 +81,12 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             templatePath = application.resolve(getIndexFileName());
         }
         if (isDirectory()) {
-            logger.log(Level.WARNING, "unable to render a directory, this is forbidden");
-            throw new HttpException("forbidden", httpServerContext, HttpResponseStatus.FORBIDDEN);
+            if (isExistsIndexFile()) {
+                templatePath = getPath().resolve(getIndexFileName());
+            } else {
+                logger.log(Level.WARNING, "unable to render a directory without index file name, this is forbidden");
+                throw new HttpException("forbidden", httpServerContext, HttpResponseStatus.FORBIDDEN);
+            }
         }
         logger.log(Level.FINE, "rendering groovy template " + templatePath);
         templates.computeIfAbsent(templatePath, path -> {

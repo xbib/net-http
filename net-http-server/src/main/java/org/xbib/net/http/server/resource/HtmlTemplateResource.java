@@ -17,7 +17,7 @@ public class HtmlTemplateResource implements HttpServerResource {
 
     private final HtmlTemplateResourceHandler templateResourceHandler;
 
-    private final Path path;
+    private Path path;
 
     private final String resourcePath;
 
@@ -54,6 +54,7 @@ public class HtmlTemplateResource implements HttpServerResource {
         logger.log(Level.FINE, "resource path = " + resourcePath);
         this.path = resourcePath.length() > 0 ? root.resolve(resourcePath) : root;
         logger.log(Level.FINE, "path = " + path);
+        logger.log(Level.FINE, "index file name = " + indexFileName);
         this.url = URL.create(path.toUri().toString());
         logger.log(Level.FINE, "uri = " + url);
         this.name = path.getFileName().toString();
@@ -61,9 +62,11 @@ public class HtmlTemplateResource implements HttpServerResource {
         this.suffix = AbstractResourceHandler.suffix(name);
         this.isExists = Files.exists(path);
         this.isDirectory = Files.isDirectory(path);
-        logger.log(Level.FINE, "exists = " + isExists + " isDirectory = " + isDirectory);
+        logger.log(Level.FINE, "exists = " + isExists);
+        logger.log(Level.FINE, "isDirectory = " + isDirectory);
         if (isDirectory && getIndexFileName() != null) {
-            this.isExistsIndexFile = Files.exists(path.resolve(indexFileName));
+            this.path = path.resolve(indexFileName);
+            this.isExistsIndexFile = Files.exists(path);
             httpServerContext.done();
         } else {
             this.isExistsIndexFile = false;

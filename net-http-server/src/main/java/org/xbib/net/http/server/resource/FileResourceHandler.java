@@ -80,7 +80,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
     protected class FileResource implements Resource {
 
-        private final Path path;
+        private Path path;
 
         private final String resourcePath;
 
@@ -123,17 +123,19 @@ public class FileResourceHandler extends AbstractResourceHandler {
                 this.path = httpServerContext.resolve(webRoot).resolve(normalizedPath);
             }
             this.mimeType = mimeTypeService.getContentType(resourcePath);
-            this.url = URL.create(path.toUri().toString());
-            this.baseName = basename(name);
-            this.suffix = suffix(name);
-            this.isExists = Files.exists(path);
-            this.isDirectory = Files.isDirectory(path);
-            if (isDirectory && getIndexFileName() != null) {
-                this.isExistsIndexFile = Files.exists(path.resolve(indexFileName));
-                httpServerContext.done();
+            if (Files.isDirectory(path) && getIndexFileName() != null) {
+                // internal redirect to indexFileName
+                this.path = path.resolve(indexFileName);
+                this.isExistsIndexFile = Files.exists(path);
             } else {
                 this.isExistsIndexFile = false;
             }
+            this.url = URL.create(path.toUri().toString());
+            this.baseName = basename(name);
+            this.suffix = suffix(name);
+            this.isDirectory = Files.isDirectory(path);
+            logger.log(Level.INFO, "resource path =" + resourcePath + " path = " + path + " isDirectory = " + isDirectory);
+            this.isExists = Files.exists(path);
             if (isExists) {
                 this.lastModified = Files.getLastModifiedTime(path).toInstant();
                 this.length = Files.size(path);
