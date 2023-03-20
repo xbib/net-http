@@ -14,9 +14,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class MemoryPropertiesSessionCodec implements Codec<Session> {
 
-    private final ReentrantReadWriteLock lock;
-
     private static final Map<String, Object> store = new HashMap<>();
+
+    private final String name;
+
+    private final ReentrantReadWriteLock lock;
 
     private final SessionListener sessionListener;
 
@@ -24,18 +26,20 @@ public class MemoryPropertiesSessionCodec implements Codec<Session> {
 
     private final Duration sessionDuration;
 
-    public MemoryPropertiesSessionCodec(SessionListener sessionListener,
+    public MemoryPropertiesSessionCodec(String name,
+                                        SessionListener sessionListener,
                                         int sessionCacheSize,
                                         Duration sessionDuration) {
-        this.lock = new ReentrantReadWriteLock();
+        this.name = name;
         this.sessionListener = sessionListener;
         this.sessionCacheSize = sessionCacheSize;
         this.sessionDuration = sessionDuration;
+        this.lock = new ReentrantReadWriteLock();
     }
 
     @Override
     public Session create(String key) throws IOException {
-        return new BaseSession(sessionListener, sessionCacheSize, key, true, sessionDuration);
+        return new BaseSession(sessionListener, sessionCacheSize, name, key, true, sessionDuration);
     }
 
     @Override
@@ -66,7 +70,7 @@ public class MemoryPropertiesSessionCodec implements Codec<Session> {
     }
 
     private Session toSession(String key, Properties properties) {
-        Session session = new BaseSession(sessionListener, sessionCacheSize, key, false, sessionDuration);
+        Session session = new BaseSession(sessionListener, sessionCacheSize, name, key, false, sessionDuration);
         properties.forEach((k, v) -> session.put(k.toString(), v));
         return session;
     }

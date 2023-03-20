@@ -4,7 +4,6 @@ import org.xbib.config.ConfigLoader;
 import org.xbib.config.ConfigLogger;
 import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
-import org.xbib.datastructures.common.ImmutableSet;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.settings.Settings;
 
@@ -136,12 +135,8 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         return this;
     }
 
-    public ApplicationBuilder addStaticSuffixes(String... suffixes) {
-        ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-        for (String suffix : suffixes) {
-            builder.add(suffix);
-        }
-        this.staticFileSuffixes = builder.build(new String[]{});
+    public ApplicationBuilder setStaticSuffixes(String... suffixes) {
+        this.staticFileSuffixes = Set.of(suffixes);
         return this;
     }
 
@@ -152,12 +147,13 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     @Override
     public Application build() {
+        prepareApplication();
         Application application = new BaseApplication(this);
         setupApplication(application);
         return application;
     }
 
-    protected void setupApplication(Application application) {
+    protected void prepareApplication() {
         String name = System.getProperty("application.name");
         if (name == null) {
             name = "application";
@@ -176,6 +172,15 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         this.configLoader = ConfigLoader.getInstance()
                 .withLogger(bootLogger);
         this.settings = configLoader.load(configParams);
+        if (staticFileSuffixes == null) {
+            staticFileSuffixes = DEFAULT_SUFFIXES;
+        }
+    }
+
+    protected void setupApplication(Application application) {
+        if (router != null) {
+            router.setApplication(application);
+        }
         for (Map.Entry<String, Settings> entry : settings.getGroups("module").entrySet()) {
             String moduleName = entry.getKey();
             Settings moduleSettings = entry.getValue();
@@ -197,22 +202,8 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
                 logger.log(Level.WARNING, "disabled module: " + moduleName);
             }
         }
-        if (router != null) {
-            router.setApplication(application);
-        }
-        if (staticFileSuffixes == null) {
-            staticFileSuffixes = DEFAULT_SUFFIXES;
-        }
     }
 
-    private static final Set<String> DEFAULT_SUFFIXES = ImmutableSet.<String>builder()
-            .add("css")
-            .add("js")
-            .add("ico")
-            .add("png")
-            .add("jpg")
-            .add("jpeg")
-            .add("gif")
-            .add("woff2")
-            .build(new String[]{});
+    private static final Set<String> DEFAULT_SUFFIXES =
+            Set.of("css", "js", "ico", "png", "jpg", "jpeg", "gif", "woff2");
 }

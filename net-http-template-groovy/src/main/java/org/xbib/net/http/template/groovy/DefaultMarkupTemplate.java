@@ -3,6 +3,8 @@ package org.xbib.net.http.template.groovy;
 import groovy.text.markup.BaseTemplate;
 import groovy.text.markup.MarkupTemplateEngine;
 import groovy.text.markup.TemplateConfiguration;
+
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.URL;
@@ -27,13 +29,13 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
 
     private static final Logger logger = Logger.getLogger(DefaultMarkupTemplate.class.getName());
 
-    private final Application application;
+    protected final Application application;
 
-    private final HttpRequest request;
+    protected final Session session;
 
-    private final HttpResponseBuilder responseBuilder;
+    protected final HttpRequest request;
 
-    private final Session session;
+    protected final HttpResponseBuilder responseBuilder;
 
     public DefaultMarkupTemplate(MarkupTemplateEngine templateEngine,
                                  Map<String,?> model,
@@ -41,9 +43,13 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
                                  TemplateConfiguration configuration) {
         super(templateEngine, model, modelTypes, configuration);
         this.application = (Application) model.get("application");
-        this.request = (HttpRequest) model.get("request");
-        this.responseBuilder = (HttpResponseBuilder) model.get("responsebuilder");
+        Objects.requireNonNull(this.application, "application must not be null");
         this.session = (Session) model.get("session");
+        Objects.requireNonNull(this.session, "session must not be null");
+        this.request = (HttpRequest) model.get("request");
+        Objects.requireNonNull(this.request, "request must not be null");
+        this.responseBuilder = (HttpResponseBuilder) model.get("responsebuilder");
+        Objects.requireNonNull(this.responseBuilder, "response must not be null");
     }
 
     public void responseStatus(HttpResponseStatus responseStatus) {
@@ -67,23 +73,23 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         responseBuilder.setHeader(HttpHeaderNames.CONTENT_LENGTH, Integer.toString(contentLength));
     }
 
-    public void sendPermanentRedirect(String url) {
-        responseBuilder.setResponseStatus(HttpResponseStatus.MOVED_PERMANENTLY);
+    public void movedPermanently(String url) {
+        responseBuilder.setResponseStatus(HttpResponseStatus.MOVED_PERMANENTLY); // 301
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
     }
 
-    public void sendRedirect(String url) {
-        responseBuilder.setResponseStatus(HttpResponseStatus.FOUND);
+    public void found(String url) {
+        responseBuilder.setResponseStatus(HttpResponseStatus.FOUND); // 302
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
     }
 
     public void seeOther(String url) {
-        responseBuilder.setResponseStatus(HttpResponseStatus.SEE_OTHER);
+        responseBuilder.setResponseStatus(HttpResponseStatus.SEE_OTHER); // 303
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
     }
 
     public void temporaryRedirect(String url) {
-        responseBuilder.setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT);
+        responseBuilder.setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT); // 307
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
     }
 

@@ -18,6 +18,8 @@ public class BaseSession implements Session {
 
     private final SessionListener sessionListener;
 
+    private final String name;
+
     private final String id;
 
     private final Duration lifetime;
@@ -30,11 +32,13 @@ public class BaseSession implements Session {
 
     public BaseSession(SessionListener sessionListener,
                        int cacheSize,
+                       String name,
                        String id,
                        boolean create,
                        Duration lifetime) {
         this.cacheSize = cacheSize;
         this.sessionListener = sessionListener;
+        this.name = name;
         this.id = id;
         this.lifetime = lifetime;
         this.map = new LinkedHashMap<>();
@@ -47,6 +51,12 @@ public class BaseSession implements Session {
             }
         }
     }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
     @Override
     public String id() {
         return id;

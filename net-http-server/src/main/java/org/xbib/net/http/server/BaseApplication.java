@@ -41,6 +41,8 @@ public class BaseApplication implements Application {
 
     private final HttpRequestValidator httpRequestValidator;
 
+    protected final String sessionName;
+
     private final HttpHandler incomingCookieHandler;
 
     private final HttpHandler outgoingCookieHandler;
@@ -59,6 +61,7 @@ public class BaseApplication implements Application {
                 new NamedThreadFactory("org-xbib-net-http-server-application"));
         this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
                         logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
+        this.sessionName = getSettings().get("session.name", "SESS");
         this.httpRequestValidator = buildRequestValidator();
         this.incomingCookieHandler = buildIncomingCookieHandler();
         this.outgoingCookieHandler = buildOutgoingCookieHandler();
@@ -121,7 +124,14 @@ public class BaseApplication implements Application {
 
     @Override
     public void dispatch(HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder) {
-        Future<?> future = executor.submit(() -> getRouter().route(requestBuilder, responseBuilder));
+        Future<?> future = executor.submit(() -> {
+            try {
+                getRouter().route(requestBuilder, responseBuilder);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                throw t;
+            }
+        });
         logger.log(Level.FINE, "dispatching " + future);
     }
 
@@ -132,7 +142,12 @@ public class BaseApplication implements Application {
         Future<?> future = executor.submit(() -> {
             HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
             httpServerContext.attributes().put("responsebuilder", httpResponseBuilder);
-            getRouter().routeStatus(httpResponseStatus, httpServerContext);
+            try {
+                getRouter().routeStatus(httpResponseStatus, httpServerContext);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                throw t;
+            }
         });
         logger.log(Level.FINE, "dispatching status " + future);
     }
@@ -166,7 +181,7 @@ public class BaseApplication implements Application {
     }
 
     protected Codec<Session> buildSessionCodec(HttpServerContext httpServerContext) {
-        return new MemoryPropertiesSessionCodec(this, 1024, Duration.ofDays(1));
+        return new MemoryPropertiesSessionCodec(sessionName,this, 1024, Duration.ofDays(1));
     }
 
     protected HttpHandler buildIncomingSessionHandler(HttpServerContext httpServerContext) {
@@ -175,7 +190,7 @@ public class BaseApplication implements Application {
         return new IncomingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
-                "SESS",
+                sessionName,
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
@@ -188,7 +203,7 @@ public class BaseApplication implements Application {
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
-                "SESS",
+                sessionName,
                 Duration.ofDays(1),
                 sessionCodec,
                 getStaticFileSuffixes(),
@@ -202,13 +217,13 @@ public class BaseApplication implements Application {
 
     @Override
     public void onCreated(Session session) {
-        logger.log(Level.INFO, "session created = " + session);
+        logger.log(Level.FINE, "session name = " + sessionName + " created = " + session);
         builder.applicationModuleList.forEach(module -> module.onOpen(this, session));
     }
 
     @Override
     public void onDestroy(Session session) {
-        logger.log(Level.INFO, "session destroyed = " + session);
+        logger.log(Level.FINE, "session name = " + sessionName + " destroyed = " + session);
         builder.applicationModuleList.forEach(module -> module.onClose(this, session));
     }
 

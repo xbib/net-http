@@ -49,23 +49,24 @@ public class HtmlTemplateResource implements HttpServerResource {
         if (root == null) {
             throw new IllegalArgumentException("no home path set for template resource resolving");
         }
+        logger.log(Level.FINE, "class = " + getClass().getName());
         logger.log(Level.FINE, "root = " + root);
         this.resourcePath = httpServerContext.request().getRequestPath().substring(1);
         logger.log(Level.FINE, "resource path = " + resourcePath);
         this.path = resourcePath.length() > 0 ? root.resolve(resourcePath) : root;
         logger.log(Level.FINE, "path = " + path);
         logger.log(Level.FINE, "index file name = " + indexFileName);
-        this.url = URL.create(path.toUri().toString());
-        logger.log(Level.FINE, "uri = " + url);
         this.name = path.getFileName().toString();
         this.baseName = AbstractResourceHandler.basename(name);
         this.suffix = AbstractResourceHandler.suffix(name);
         if (Files.isDirectory(path)) {
             if (getIndexFileName() != null) {
                 Path indexPath = path.resolve(indexFileName);
+                logger.log(Level.FINE, "index path = " + indexPath);
                 if (Files.exists(indexPath)) {
                     this.isExistsIndexFile = true;
                     this.path = indexPath;
+                    logger.log(Level.FINE, "index file path found = " + path);
                     this.isDirectory = false;
                 } else {
                     this.isExistsIndexFile = false;
@@ -82,6 +83,8 @@ public class HtmlTemplateResource implements HttpServerResource {
         this.isExists = Files.exists(path);
         logger.log(Level.FINE, "exists = " + isExists);
         logger.log(Level.FINE, "isDirectory = " + isDirectory);
+        this.url = URL.create(path.toUri().toString());
+        logger.log(Level.FINE, "url = " + url);
         if (isExists) {
             this.lastModified = Files.getLastModifiedTime(path).toInstant();
         } else {

@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
-import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.persist.Codec;
 import org.xbib.net.http.server.session.BaseSession;
 import org.xbib.net.http.server.session.Session;
@@ -25,6 +24,8 @@ import org.xbib.net.http.server.session.SessionListener;
 import org.xbib.net.util.JsonUtil;
 
 public class JdbcSessionCodec implements Codec<Session>, Closeable {
+
+    private final String name;
 
     private final SessionListener sessionListener;
 
@@ -44,7 +45,7 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
-    public JdbcSessionCodec(HttpServerContext httpServerContext,
+    public JdbcSessionCodec(String name,
                             SessionListener sessionListener,
                             int sessionCacheSize,
                             Duration sessionDuration,
@@ -53,6 +54,7 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
                             String writeSessionStringStatement,
                             String deleteSessionStringStatement,
                             String purgeSessionStringStatement) {
+        this.name = name;
         this.sessionListener = sessionListener;
         this.sessionCacheSize = sessionCacheSize;
         this.sessionDuration = sessionDuration;
@@ -67,7 +69,7 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
 
     @Override
     public Session create(String key) throws IOException {
-        return new BaseSession(sessionListener, sessionCacheSize, key, true, sessionDuration);
+        return new BaseSession(sessionListener, sessionCacheSize, name, key, true, sessionDuration);
     }
 
     @Override
@@ -76,7 +78,7 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
         try {
             Map<String, Object> map = JsonUtil.toMap(readString(key));
             if (map != null) {
-                session = new BaseSession(sessionListener, sessionCacheSize, key, false, sessionDuration);
+                session = new BaseSession(sessionListener, sessionCacheSize, name, key, false, sessionDuration);
                 session.putAll(map);
                 return session;
             }

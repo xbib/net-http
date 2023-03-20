@@ -27,6 +27,8 @@ public class FileJsonSessionCodec implements Codec<Session> {
 
     private static final Logger logger = Logger.getLogger(FileJsonSessionCodec.class.getName());
 
+    private final String name;
+
     private final ReentrantReadWriteLock lock;
 
     private final SessionListener sessionListener;
@@ -37,10 +39,13 @@ public class FileJsonSessionCodec implements Codec<Session> {
 
     private final Duration sessionDuration;
 
-    public FileJsonSessionCodec(SessionListener sessionListener,
+    public FileJsonSessionCodec(String name,
+                                SessionListener sessionListener,
                                 int sessionCacheSize,
                                 Duration sessionDuration,
-                                Path path) {
+                                Path path
+                                ) {
+        this.name = name;
         this.sessionListener = sessionListener;
         this.path = path;
         this.sessionCacheSize = sessionCacheSize;
@@ -56,7 +61,7 @@ public class FileJsonSessionCodec implements Codec<Session> {
 
     @Override
     public Session create(String key) throws IOException {
-        return new BaseSession(sessionListener, sessionCacheSize, key, true, sessionDuration);
+        return new BaseSession(sessionListener, sessionCacheSize, name, key, true, sessionDuration);
     }
 
     @Override
@@ -66,7 +71,7 @@ public class FileJsonSessionCodec implements Codec<Session> {
         try {
             readLock.lock();
             PercentEncoder percentEncoder = PercentEncoders.getUnreservedEncoder(StandardCharsets.UTF_8);
-            session = new BaseSession(sessionListener, sessionCacheSize, key, false, sessionDuration);
+            session = new BaseSession(sessionListener, sessionCacheSize, name, key, false, sessionDuration);
             Map<String, Object> map = JsonUtil.toMap(Files.readString(path.resolve(percentEncoder.encode(key))));
             session.putAll(map);
             return session;

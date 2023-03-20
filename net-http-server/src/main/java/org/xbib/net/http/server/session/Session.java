@@ -5,6 +5,8 @@ import java.util.Map;
 
 public interface Session extends Map<String, Object> {
 
+    String name();
+
     String id();
 
     void invalidate();

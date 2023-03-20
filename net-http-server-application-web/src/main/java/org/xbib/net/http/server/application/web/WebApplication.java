@@ -10,15 +10,11 @@ import org.xbib.net.http.server.session.IncomingSessionHandler;
 import org.xbib.net.http.server.session.OutgoingSessionHandler;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.file.FileJsonSessionCodec;
-import org.xbib.settings.Settings;
 
 public class WebApplication extends BaseApplication {
 
-    private final WebApplicationBuilder builder;
-
     protected WebApplication(WebApplicationBuilder builder) {
         super(builder);
-        this.builder = builder;
     }
 
     public static WebApplicationBuilder builder() {
@@ -30,7 +26,7 @@ public class WebApplication extends BaseApplication {
     }
 
     protected Codec<Session> buildSessionCodec(HttpServerContext httpServerContext) {
-        return new FileJsonSessionCodec(this, 1024, Duration.ofDays(1),
+        return new FileJsonSessionCodec(sessionName, this, 1024, Duration.ofDays(1),
                 Paths.get("/var/tmp/session"));
     }
 
@@ -40,7 +36,7 @@ public class WebApplication extends BaseApplication {
         return new IncomingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
-                "SESSION",
+                sessionName,
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
@@ -53,7 +49,7 @@ public class WebApplication extends BaseApplication {
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
-                "SESSION",
+                sessionName,
                 Duration.ofDays(1),
                 sessionCodec,
                 getStaticFileSuffixes(),

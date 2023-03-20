@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -26,7 +27,7 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
                                       ThreadFactory threadFactory) {
         super(nThreads, nThreads, keepAliveTime, timeUnit, createBlockingQueue(maxQueue), threadFactory);
         logger.log(Level.INFO, "blocking threadpool executor up with nThreads = " + nThreads +
-                " keepALiveTime = " + keepAliveTime +
+                " keepAliveTime = " + keepAliveTime +
                 " time unit = " + timeUnit +
                 " maxQueue = " + maxQueue +
                 " thread factory = " + threadFactory);
@@ -42,7 +43,7 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     protected void afterExecute(Runnable runnable, Throwable terminationCause) {
         super.afterExecute(runnable, terminationCause);
-        logger.log(Level.FINE, "after dispatching " + runnable);
+        logger.log(Level.FINE, "after dispatching " + runnable + " terminationCause = " + terminationCause);
         Throwable throwable = terminationCause;
         if (throwable == null && runnable instanceof Future<?>) {
             try {

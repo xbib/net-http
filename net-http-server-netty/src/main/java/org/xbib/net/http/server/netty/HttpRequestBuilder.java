@@ -15,16 +15,17 @@ import java.nio.charset.Charset;
 
 public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
-    FullHttpRequest fullHttpRequest;
+    protected FullHttpRequest fullHttpRequest;
 
-    ByteBuffer byteBuffer;
+    protected ByteBuffer byteBuffer;
 
     protected HttpRequestBuilder() {
     }
 
     public HttpRequestBuilder setFullHttpRequest(FullHttpRequest fullHttpRequest) {
         if (fullHttpRequest != null) {
-            this.fullHttpRequest = fullHttpRequest;
+            // retain request so we can read the body later without refCnt=0 error
+            this.fullHttpRequest = fullHttpRequest.retain();
             setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
             setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
             setRequestURI(fullHttpRequest.uri());

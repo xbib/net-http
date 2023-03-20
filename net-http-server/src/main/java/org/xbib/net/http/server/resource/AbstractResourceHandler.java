@@ -59,8 +59,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         Resource resource = createResource(context);
         logger.log(Level.FINE, "handle: resource = " + (resource != null ? resource.getClass().getName() + " " + resource : null));
         if (resource instanceof HtmlTemplateResource) {
-            logger.log(Level.FINE, "handle: HTML template resource, generate cacheable resource, parameter = " +
-                    context.httpRequest().getParameter());
+            logger.log(Level.FINE, "handle: HTML template resource, generate cacheable resource");
             generateCacheableResource(context, resource);
             logger.log(Level.FINE, "handle: done");
             return;
