@@ -16,37 +16,39 @@ import java.util.Objects;
 
 public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
-    HttpServerContext httpServerContext;
+    protected HttpServerContext httpServerContext;
 
-    HttpAddress httpAddress;
+    protected HttpAddress httpAddress;
 
-    InetSocketAddress localAddress;
+    protected InetSocketAddress localAddress;
 
-    InetSocketAddress remoteAddress;
+    protected InetSocketAddress remoteAddress;
 
-    URL serverURL;
+    protected URL serverURL;
 
-    URL baseURL;
+    protected URL baseURL;
 
-    String requestPath;
+    protected String requestPath;
 
-    Parameter parameter;
+    protected Parameter parameter;
 
-    Integer sequenceId;
+    protected Integer sequenceId;
 
-    Integer streamId;
+    protected Integer streamId;
 
-    Long requestId;
+    protected Long requestId;
 
-    HttpVersion httpVersion;
+    protected HttpVersion httpVersion;
 
-    HttpMethod httpMethod;
+    protected HttpMethod httpMethod;
 
-    HttpHeaders httpHeaders;
+    protected HttpHeaders httpHeaders;
 
-    String requestURI;
+    protected String requestURI;
 
-    ByteBuffer byteBuffer;
+    protected ByteBuffer byteBuffer;
+
+    protected boolean done;
 
     protected BaseHttpRequestBuilder() {
         this.httpHeaders = new HttpHeaders();
@@ -54,12 +56,18 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder setContext(HttpServerContext httpServerContext) {
+        if (done) {
+            return this;
+        }
         this.httpServerContext = httpServerContext;
         return this;
     }
 
     @Override
     public BaseHttpRequestBuilder setVersion(HttpVersion httpVersion) {
+        if (done) {
+            return this;
+        }
         this.httpVersion = httpVersion;
         return this;
     }
@@ -70,6 +78,9 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder setMethod(HttpMethod httpMethod) {
+        if (done) {
+            return this;
+        }
         this.httpMethod = httpMethod;
         return this;
     }
@@ -80,6 +91,9 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder setRequestURI(String requestURI) {
+        if (done) {
+            return this;
+        }
         this.requestURI = requestURI;
         return this;
     }
@@ -91,6 +105,9 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder setHeaders(HttpHeaders httpHeaders) {
+        if (done) {
+            return this;
+        }
         this.httpHeaders = httpHeaders;
         return this;
     }
@@ -102,11 +119,17 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder addHeader(String key, String value) {
+        if (done) {
+            return this;
+        }
         this.httpHeaders.add(key, value);
         return this;
     }
 
     public BaseHttpRequestBuilder setBody(ByteBuffer byteBuffer) {
+        if (done) {
+            return this;
+        }
         this.byteBuffer = byteBuffer;
         return this;
     }
@@ -117,11 +140,17 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     @Override
     public BaseHttpRequestBuilder setBaseURL(URL baseURL) {
+        if (done) {
+            return this;
+        }
         this.baseURL = baseURL;
         return this;
     }
 
     public BaseHttpRequestBuilder setBaseURL(HttpAddress httpAddress, String uri, String hostAndPort) {
+        if (done) {
+            return this;
+        }
         Objects.requireNonNull(httpAddress);
         Objects.requireNonNull(uri);
         String scheme = httpAddress.isSecure() ? "https" : "http";
@@ -155,15 +184,21 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
         return this;
     }
 
+    @Override
     public URL getBaseURL() {
         return baseURL;
     }
 
+    @Override
     public BaseHttpRequestBuilder setRequestPath(String requestPath) {
+        if (done) {
+            return this;
+        }
         this.requestPath = requestPath;
         return this;
     }
 
+    @Override
     public String getRequestPath() {
         return requestPath;
     }
@@ -173,39 +208,66 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
         return byteBuffer != null ? charset.decode(byteBuffer) : null;
     }
 
+    @Override
+    public BaseHttpRequestBuilder setParameter(Parameter parameter) {
+        if (done) {
+            return this;
+        }
+        this.parameter = parameter;
+        return this;
+    }
+
     public BaseHttpRequestBuilder setAddress(HttpAddress httpAddress) {
+        if (done) {
+            return this;
+        }
         this.httpAddress = httpAddress;
         return this;
     }
 
     public BaseHttpRequestBuilder setLocalAddress(InetSocketAddress localAddress) {
+        if (done) {
+            return this;
+        }
         this.localAddress = localAddress;
         return this;
     }
 
     public BaseHttpRequestBuilder setRemoteAddress(InetSocketAddress remoteAddress) {
+        if (done) {
+            return this;
+        }
         this.remoteAddress = remoteAddress;
         return this;
     }
 
     public BaseHttpRequestBuilder setSequenceId(Integer sequenceId) {
+        if (done) {
+            return this;
+        }
         this.sequenceId = sequenceId;
         return this;
     }
 
     public BaseHttpRequestBuilder setStreamId(Integer streamId) {
+        if (done) {
+            return this;
+        }
         this.streamId = streamId;
         return this;
     }
 
     public BaseHttpRequestBuilder setRequestId(Long requestId) {
+        if (done) {
+            return this;
+        }
         this.requestId = requestId;
         return this;
     }
 
-    public BaseHttpRequestBuilder setParameter(Parameter parameter) {
-        this.parameter = parameter;
-        return this;
+    @Override
+    public void done() {
+        this.done = true;
     }
 
     private static String stripPort(String hostMaybePort) {

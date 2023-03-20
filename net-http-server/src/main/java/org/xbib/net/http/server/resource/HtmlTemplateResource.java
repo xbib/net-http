@@ -60,20 +60,30 @@ public class HtmlTemplateResource implements HttpServerResource {
         this.name = path.getFileName().toString();
         this.baseName = AbstractResourceHandler.basename(name);
         this.suffix = AbstractResourceHandler.suffix(name);
-        this.isExists = Files.exists(path);
-        this.isDirectory = Files.isDirectory(path);
-        logger.log(Level.FINE, "exists = " + isExists);
-        logger.log(Level.FINE, "isDirectory = " + isDirectory);
-        if (isDirectory && getIndexFileName() != null) {
-            this.path = path.resolve(indexFileName);
-            this.isExistsIndexFile = Files.exists(path);
-            httpServerContext.done();
+        if (Files.isDirectory(path)) {
+            if (getIndexFileName() != null) {
+                Path indexPath = path.resolve(indexFileName);
+                if (Files.exists(indexPath)) {
+                    this.isExistsIndexFile = true;
+                    this.path = indexPath;
+                    this.isDirectory = false;
+                } else {
+                    this.isExistsIndexFile = false;
+                    this.isDirectory = true;
+                }
+            } else {
+                this.isExistsIndexFile = false;
+                this.isDirectory = true;
+            }
         } else {
             this.isExistsIndexFile = false;
+            this.isDirectory = false;
         }
+        this.isExists = Files.exists(path);
+        logger.log(Level.FINE, "exists = " + isExists);
+        logger.log(Level.FINE, "isDirectory = " + isDirectory);
         if (isExists) {
             this.lastModified = Files.getLastModifiedTime(path).toInstant();
-            httpServerContext.done();
         } else {
             this.lastModified = Instant.now();
         }

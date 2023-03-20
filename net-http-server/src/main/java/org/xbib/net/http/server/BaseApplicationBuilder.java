@@ -158,6 +158,10 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     protected void setupApplication(Application application) {
+        String name = System.getProperty("application.name");
+        if (name == null) {
+            name = "application";
+        }
         String profile = System.getProperty("application.profile");
         if (profile == null) {
             profile = "developer";
@@ -165,7 +169,7 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         String[] args = profile.split(";");
         this.configParams = new ConfigParams()
                 .withArgs(args)
-                .withDirectoryName("application")
+                .withDirectoryName(name)
                 .withFileNamesWithoutSuffix(args[0])
                 .withSystemEnvironment()
                 .withSystemProperties();

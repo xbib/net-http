@@ -45,4 +45,6 @@ public interface HttpRequestBuilder {
     CharBuffer getBodyAsChars(Charset charset);
 
     HttpRequest build();
+
+    void done();
 }

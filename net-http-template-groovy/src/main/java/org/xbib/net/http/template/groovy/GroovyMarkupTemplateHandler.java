@@ -4,6 +4,8 @@ import groovy.text.TemplateEngine;
 import groovy.text.markup.BaseTemplate;
 import groovy.text.markup.MarkupTemplateEngine;
 import groovy.text.markup.TemplateConfiguration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.net.http.server.Application;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
@@ -14,6 +16,8 @@ import java.nio.file.Path;
 import java.util.Locale;
 
 public class GroovyMarkupTemplateHandler implements HttpHandler {
+
+    private static final Logger logger = Logger.getLogger(GroovyMarkupTemplateHandler.class.getName());
 
     private final Resolver<Path> resolver;
 
@@ -59,10 +63,12 @@ public class GroovyMarkupTemplateHandler implements HttpHandler {
         DefaultTemplateResolver templateResolver = context.attributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver == null) {
             context.attributes().put("templateresolver", this.templateResolver);
+            logger.log(Level.FINER, "setting templateresolver " + this.templateResolver);
         }
         TemplateEngine templateEngine = context.attributes().get(TemplateEngine.class, "templateengine");
         if (templateEngine == null) {
             context.attributes().put("templateengine", this.templateEngine);
+            logger.log(Level.FINER, "setting templateengine " + this.templateEngine);
         }
     }
 

@@ -68,4 +68,6 @@ public interface HttpResponseBuilder {
 
     HttpResponse build();
 
+    void done();
+
 }

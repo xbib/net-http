@@ -74,6 +74,8 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     protected Long length;
 
+    protected boolean done;
+
     protected BaseHttpResponseBuilder() {
         reset();
     }
@@ -101,12 +103,18 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder setVersion(HttpVersion version) {
+        if (done) {
+            return this;
+        }
         this.version = version;
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder setResponseStatus(HttpResponseStatus status) {
+        if (done) {
+            return this;
+        }
         if (this.status == null) {
             this.status = status;
         } else {
@@ -127,6 +135,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder setHeader(CharSequence name, String value) {
+        if (done) {
+            return this;
+        }
         if (HttpHeaderNames.CONTENT_TYPE.equalsIgnoreCase(name.toString())) {
             setContentType(value);
         }
@@ -139,6 +150,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder addHeader(CharSequence name, String value) {
+        if (done) {
+            return this;
+        }
         if (headers.containsHeader(name)) {
             logger.log(Level.WARNING, "header already exist: " + headers.get(name) + " adding " + value);
         }
@@ -148,18 +162,27 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder setTrailingHeader(CharSequence name, String value) {
+        if (done) {
+            return this;
+        }
         trailingHeaders.set(name, value);
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder setContentType(String contentType) {
+        if (done) {
+            return this;
+        }
         this.contentType = contentType;
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder setCharset(Charset charset) {
+        if (done) {
+            return this;
+        }
         this.charset = charset;
         return this;
     }
@@ -167,6 +190,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder shouldFlush(boolean shouldFlush) {
+        if (done) {
+            return this;
+        }
         this.shouldFlush = shouldFlush;
         return this;
     }
@@ -178,6 +204,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder shouldClose(boolean shouldClose) {
+        if (done) {
+            return this;
+        }
         this.shouldClose = shouldClose;
         return this;
     }
@@ -189,18 +218,27 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder setSequenceId(Integer sequenceId) {
+        if (done) {
+            return this;
+        }
         this.sequenceId = sequenceId;
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder setStreamId(Integer streamId) {
+        if (done) {
+            return this;
+        }
         this.streamId = streamId;
         return this;
     }
 
     @Override
     public BaseHttpResponseBuilder setResponseId(Long responseId) {
+        if (done) {
+            return this;
+        }
         this.responseId = responseId;
         return this;
     }
@@ -260,6 +298,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public BaseHttpResponseBuilder addCookie(Cookie cookie) {
+        if (done) {
+            return this;
+        }
         Objects.requireNonNull(cookie);
         headers.add(HttpHeaderNames.SET_COOKIE, CookieEncoder.STRICT.encode(cookie));
         return this;
@@ -274,6 +315,12 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     @Override
     public abstract HttpResponse build();
+
+    @Override
+    public void done() {
+        this.done = true;
+        logger.log(Level.FINER, "done");
+    }
 
     public void buildHeaders(long contentLength) {
         this.length = contentLength;

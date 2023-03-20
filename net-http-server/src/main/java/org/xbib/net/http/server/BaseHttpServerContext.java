@@ -130,6 +130,8 @@ public class BaseHttpServerContext implements HttpServerContext {
     @Override
     public void done() {
         this.done = true;
+        this.httpRequestBuilder.done();
+        this.httpResponseBuilder.done();
     }
 
     @Override

@@ -97,7 +97,6 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
                 URLConnection urlConnection = url.openConnection();
                 this.lastModified = Instant.ofEpochMilli(urlConnection.getLastModified());
                 this.length = urlConnection.getContentLength();
-                httpServerContext.done();
                 if (logger.isLoggable(Level.FINER)) {
                     logger.log(Level.FINER, "success: path=[" + path +
                             "] -> url=" + url + " lastModified=" + lastModified + "length=" + length);

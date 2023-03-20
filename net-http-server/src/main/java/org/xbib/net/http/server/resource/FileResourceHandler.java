@@ -139,7 +139,6 @@ public class FileResourceHandler extends AbstractResourceHandler {
             if (isExists) {
                 this.lastModified = Files.getLastModifiedTime(path).toInstant();
                 this.length = Files.size(path);
-                httpServerContext.done();
             } else {
                 this.lastModified = Instant.ofEpochMilli(0L);
                 this.length = 0;

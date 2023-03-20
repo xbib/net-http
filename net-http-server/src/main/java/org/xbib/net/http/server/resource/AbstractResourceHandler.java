@@ -98,6 +98,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         } else {
             logger.log(Level.FINE, "handle: generate cacheable resource");
             generateCacheableResource(context, resource);
+            context.done();
         }
         logger.log(Level.FINE, "handle: done");
     }
@@ -191,7 +192,6 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                 send(resource, HttpResponseStatus.OK, contentType, context, 0L, -1L);
             }
         }
-        context.done();
     }
 
     private void performRangeResponse(HttpServerContext context,

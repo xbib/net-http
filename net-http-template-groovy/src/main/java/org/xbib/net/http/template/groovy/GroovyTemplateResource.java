@@ -120,13 +120,11 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
                 }
                 Writable writable = template.make(binding.getVariables());
                 httpServerContext.attributes().put("writable", writable);
-                httpServerContext.done();
             } catch (Exception e) {
                 // in case there is not template with negotiated locale
                 templateResolver.setLocale(application.getLocale());
                 Writable writable = template.make(binding.getVariables());
                 httpServerContext.attributes().put("writable", writable);
-                httpServerContext.done();
             } finally {
                 lock.unlock();
             }
@@ -134,7 +132,6 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             // for Groovy template engines without a resolver
             Writable writable = template.make(binding.getVariables());
             httpServerContext.attributes().put("writable", writable);
-            httpServerContext.done();
         }
         logger.log(Level.FINER, "rendering done: " + httpServerContext.isDone());
     }
