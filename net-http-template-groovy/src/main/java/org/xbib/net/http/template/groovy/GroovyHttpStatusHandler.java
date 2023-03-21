@@ -28,8 +28,4 @@ public class GroovyHttpStatusHandler extends GroovyTemplateResourceHandler imple
         return new GroovyHttpResonseStatusTemplateResource(this, httpServerContext,
                 templateName, httpResponseStatus, message);
     }
-
-    public String getTemplateName() {
-        return templateName;
-    }
 }
