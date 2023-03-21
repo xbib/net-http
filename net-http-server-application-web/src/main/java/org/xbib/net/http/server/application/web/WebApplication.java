@@ -2,6 +2,8 @@ package org.xbib.net.http.server.application.web;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+
+import org.xbib.net.http.cookie.SameSite;
 import org.xbib.net.http.server.BaseApplication;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
@@ -10,6 +12,7 @@ import org.xbib.net.http.server.session.IncomingSessionHandler;
 import org.xbib.net.http.server.session.OutgoingSessionHandler;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.file.FileJsonSessionCodec;
+import org.xbib.net.util.RandomUtil;
 
 public class WebApplication extends BaseApplication {
 
@@ -40,7 +43,8 @@ public class WebApplication extends BaseApplication {
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
-                "e_user_id");
+                "e_user_id",
+                () -> RandomUtil.randomString(16));
     }
 
     protected OutgoingSessionHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
@@ -50,10 +54,13 @@ public class WebApplication extends BaseApplication {
                 getSecret(),
                 "HmacSHA1",
                 sessionName,
-                Duration.ofDays(1),
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
-                "e_user_id");
+                "e_user_id",
+                Duration.ofDays(1),
+                true,
+                false,
+                SameSite.LAX);
     }
 }

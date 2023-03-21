@@ -21,9 +21,9 @@ import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.xbib.net.util.RandomUtil;
 
 public class IncomingSessionHandler implements HttpHandler {
 
@@ -46,13 +46,16 @@ public class IncomingSessionHandler implements HttpHandler {
      */
     private final Set<String> suffixes;
 
+    Supplier<String> sessionIdGenerator;
+
     public IncomingSessionHandler(String sessionSecret,
                                   String sessionCookieAlgorithm,
                                   String sessionCookieName,
                                   Codec<Session> sessionCodec,
                                   Set<String> suffixes,
                                   String sessionUserName,
-                                  String sessionEffectiveUserName) {
+                                  String sessionEffectiveUserName,
+                                  Supplier<String> sessionIdGenerator) {
         this.sessionSecret = sessionSecret;
         this.sessionCookieAlgorithm = sessionCookieAlgorithm;
         this.sessionCookieName = sessionCookieName;
@@ -60,6 +63,7 @@ public class IncomingSessionHandler implements HttpHandler {
         this.suffixes = suffixes;
         this.sessionUserName = sessionUserName;
         this.sessionEffectiveUserName = sessionEffectiveUserName;
+        this.sessionIdGenerator = sessionIdGenerator;
     }
 
     @Override
@@ -76,6 +80,7 @@ public class IncomingSessionHandler implements HttpHandler {
                     if (session == null) {
                         try {
                             Map<String, Object> payload = decodeCookie(cookie);
+                            logger.log(Level.FINER, "cookie decoded");
                             session = toSession(payload);
                             UserProfile userProfile = newUserProfile(payload, session);
                             if (userProfile != null) {
@@ -96,14 +101,14 @@ public class IncomingSessionHandler implements HttpHandler {
         }
         if (session == null) {
             try {
-                session = sessionCodec.create(RandomUtil.randomString(32));
+                session = sessionCodec.create(sessionIdGenerator.get());
             } catch (IOException e) {
                 logger.log(Level.SEVERE, e.getMessage(), e);
                 throw new HttpException("unable to create session", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         }
         context.attributes().put("session", session);
-
+        logger.log(Level.FINER, "incoming session " + session.id());
     }
 
     private Map<String, Object> decodeCookie(Cookie cookie) throws IOException,

@@ -2,6 +2,7 @@ package org.xbib.net.http.server.netty;
 
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
+import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpMethod;
@@ -24,7 +25,7 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     public HttpRequestBuilder setFullHttpRequest(FullHttpRequest fullHttpRequest) {
         if (fullHttpRequest != null) {
-            // retain request so we can read the body later without refCnt=0 error
+            // retain request, so we can read the body later without refCnt=0 error
             this.fullHttpRequest = fullHttpRequest.retain();
             setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
             setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
@@ -98,6 +99,10 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     public HttpRequestBuilder setRequestId(Long requestId) {
         super.setRequestId(requestId);
         return this;
+    }
+
+    protected Parameter getParameter() {
+        return super.parameter;
     }
 
     @Override

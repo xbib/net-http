@@ -1,5 +1,6 @@
 package org.xbib.net.http.server;
 
+import org.xbib.net.http.cookie.SameSite;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpResponseStatus;
@@ -14,6 +15,7 @@ import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.util.BlockingThreadPoolExecutor;
 import org.xbib.net.http.server.validate.HttpRequestValidator;
 import org.xbib.net.util.NamedThreadFactory;
+import org.xbib.net.util.RandomUtil;
 import org.xbib.settings.Settings;
 
 import java.io.Closeable;
@@ -194,7 +196,8 @@ public class BaseApplication implements Application {
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
-                "e_user_id");
+                "e_user_id",
+                () -> RandomUtil.randomString(16));
     }
 
     protected HttpHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
@@ -204,11 +207,15 @@ public class BaseApplication implements Application {
                 getSecret(),
                 "HmacSHA1",
                 sessionName,
-                Duration.ofDays(1),
                 sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
-                "e_user_id");
+                "e_user_id",
+                Duration.ofDays(1),
+                true,
+                false,
+                SameSite.LAX
+        );
     }
 
     protected HttpResponseRenderer buildResponseRenderer() {

@@ -44,28 +44,31 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         super(templateEngine, model, modelTypes, configuration);
         this.application = (Application) model.get("application");
         Objects.requireNonNull(this.application, "application must not be null");
-        this.session = (Session) model.get("session");
-        Objects.requireNonNull(this.session, "session must not be null");
-        this.request = (HttpRequest) model.get("request");
-        Objects.requireNonNull(this.request, "request must not be null");
         this.responseBuilder = (HttpResponseBuilder) model.get("responsebuilder");
         Objects.requireNonNull(this.responseBuilder, "response must not be null");
+        this.request = (HttpRequest) model.get("request");
+        // request can be null in error templates
+        this.session = (Session) model.get("session");
+        // session can be null in error templates
     }
 
-    public void responseStatus(HttpResponseStatus responseStatus) {
+    public void setResponseStatus(HttpResponseStatus responseStatus) {
         responseBuilder.setResponseStatus(responseStatus);
     }
 
-    public void contentType(String contentType) {
+    public void setContentType(String contentType) {
         responseBuilder.setHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
     }
 
     public boolean isContentType(String contentType) {
-        return request.getHeaders().containsHeader(HttpHeaderNames.CONTENT_TYPE) && contentType != null &&
+        return request != null &&
+                request.getHeaders() != null &&
+                request.getHeaders().containsHeader(HttpHeaderNames.CONTENT_TYPE) &&
+                contentType != null &&
                 request.getHeaders().get(HttpHeaderNames.CONTENT_TYPE).startsWith(contentType);
     }
 
-    public void contentDisposition(String contentDisposition) {
+    public void setContentDisposition(String contentDisposition) {
         responseBuilder.setHeader(HttpHeaderNames.CONTENT_DISPOSITION, contentDisposition);
     }
 

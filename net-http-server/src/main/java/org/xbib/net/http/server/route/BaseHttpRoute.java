@@ -63,10 +63,9 @@ public class BaseHttpRoute implements HttpRoute {
 
     @Override
     public boolean matches(ParameterBuilder parameterBuilder, HttpRoute requestedRoute) {
-        if (!(requestedRoute instanceof BaseHttpRoute)) {
+        if (!(requestedRoute instanceof BaseHttpRoute baseHttpRoute)) {
             return false;
         }
-        BaseHttpRoute baseHttpRoute = (BaseHttpRoute) requestedRoute;
         if (!httpAddress.equals(baseHttpRoute.getHttpAddress())) {
             return false;
         }

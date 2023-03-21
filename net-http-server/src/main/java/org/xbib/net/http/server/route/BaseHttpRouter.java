@@ -20,10 +20,12 @@ import org.xbib.net.http.server.Application;
 import org.xbib.net.http.server.HttpDomain;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.HttpService;
+import org.xbib.net.http.server.handler.InternalServerErrorHandler;
 
 import static org.xbib.net.http.HttpResponseStatus.NOT_FOUND;
 
@@ -105,6 +107,7 @@ public class BaseHttpRouter implements HttpRouter {
             }
             if (httpRouteResolverResults.isEmpty()) {
                 logger.log(Level.FINE, "route resolver results is empty, generating a not found message");
+                httpServerContext.setResolverResult(null);
                 routeStatus(NOT_FOUND, httpServerContext);
                 return;
             }
@@ -113,7 +116,8 @@ public class BaseHttpRouter implements HttpRouter {
                     // first: create the final request
                     httpServerContext.setResolverResult(httpRouteResolverResult);
                     HttpService httpService = httpRouteResolverResult.getValue();
-                    application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService, httpServerContext.httpRequest()));
+                    HttpRequest httpRequest = httpServerContext.httpRequest();
+                    application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService, httpRequest));
                     // second: security check, authentication etc.
                     if (httpService.getSecurityDomain() != null) {
                         logger.log(Level.FINEST, () -> "handling security domain service " + httpService);
@@ -125,11 +129,12 @@ public class BaseHttpRouter implements HttpRouter {
                     if (httpServerContext.isDone() || httpServerContext.isFailed()) {
                         break;
                     }
-                    // accept service and execute service
+                    // after security checks, accept service, open and execute service
                     httpServerContext.attributes().put("service", httpService);
                     application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService));
                     logger.log(Level.FINEST, () -> "handling service " + httpService);
                     httpService.handle(httpServerContext);
+                    // if service signals that work is done, break
                     if (httpServerContext.isDone() || httpServerContext.isFailed()) {
                         break;
                     }
@@ -155,10 +160,17 @@ public class BaseHttpRouter implements HttpRouter {
 
     @Override
     public void routeStatus(HttpResponseStatus httpResponseStatus, HttpServerContext httpServerContext) {
+        logger.log(Level.FINER, "routing status " + httpResponseStatus);
         try {
             HttpHandler httpHandler = getHandler(httpResponseStatus);
+            if (httpHandler == null) {
+                logger.log(Level.FINER, "handler for " + httpResponseStatus + " not present, using default error handler");
+                httpHandler = new InternalServerErrorHandler();
+            }
             httpServerContext.response().reset();
             httpHandler.handle(httpServerContext);
+            httpServerContext.done();
+            logger.log(Level.FINER, "routing status " + httpResponseStatus + " done");
         } catch (IOException ioe) {
             throw new IllegalStateException("unable to route response status, reason: " + ioe.getMessage(), ioe);
         }

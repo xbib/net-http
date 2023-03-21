@@ -2,13 +2,11 @@ package org.xbib.net.http.template.groovy;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.xbib.net.URL;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.Application;
 import org.xbib.net.http.server.HttpServerContext;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 class GroovyHttpResonseStatusTemplateResource extends GroovyTemplateResource {
 
@@ -48,33 +46,8 @@ class GroovyHttpResonseStatusTemplateResource extends GroovyTemplateResource {
     }
 
     @Override
-    public Path getPath() {
-        return null;
-    }
-
-    @Override
     public String getName() {
         return "status-resource";
-    }
-
-    @Override
-    public String getBaseName() {
-        return null;
-    }
-
-    @Override
-    public String getSuffix() {
-        return null;
-    }
-
-    @Override
-    public String getResourcePath() {
-        return null;
-    }
-
-    @Override
-    public URL getURL() {
-        return null;
     }
 
     @Override

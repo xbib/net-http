@@ -1,6 +1,5 @@
 package org.xbib.net.http.server;
 
-import java.util.Map;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.ParameterBuilder;
@@ -23,10 +22,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 
 public class BaseHttpServerContext implements HttpServerContext {
+
+    private static final Logger logger = Logger.getLogger(BaseHttpServerContext.class.getName());
 
     private static final String PATH_SEPARATOR = "/";
 
@@ -84,16 +87,26 @@ public class BaseHttpServerContext implements HttpServerContext {
     @Override
     public void setResolverResult(HttpRouteResolver.Result<HttpService> pathResolverResult) {
         this.pathResolverResult = pathResolverResult;
-        this.attributes.put("context", pathResolverResult.getContext());
-        this.attributes.put("handler", pathResolverResult.getValue());
-        this.attributes.put("pathparams", pathResolverResult.getParameter());
-        String contextPath = pathResolverResult.getContext() != null ?
-                PATH_SEPARATOR + String.join(PATH_SEPARATOR, pathResolverResult.getContext()) : null;
-        setContextPath(contextPath);
-        setContextURL(request().getBaseURL().resolve(contextPath != null ? contextPath + "/" : ""));
-        this.httpRequest = createRequest(httpRequestBuilder);
-        this.attributes.put("request", httpRequest);
-        this.next = false;
+        if (pathResolverResult != null) {
+            attributes.put("context", pathResolverResult.getContext());
+            attributes.put("handler", pathResolverResult.getValue());
+            attributes.put("pathparams", pathResolverResult.getParameter());
+            String contextPath = pathResolverResult.getContext() != null ?
+                    PATH_SEPARATOR + String.join(PATH_SEPARATOR, pathResolverResult.getContext()) : null;
+            setContextPath(contextPath);
+            setContextURL(request().getBaseURL().resolve(contextPath != null ? contextPath + "/" : ""));
+        } else {
+            // path resolver result null means "404 not found". Set default values.
+            attributes.put("context", null);
+            attributes.put("handler", null);
+            attributes.put("pathparams", null);
+            setContextPath(PATH_SEPARATOR);
+            setContextURL(request().getBaseURL());
+        }
+        httpRequest = createRequest();
+        logger.log(Level.FINER, "request = " + httpRequest);
+        attributes.put("request", httpRequest);
+        next = false;
     }
 
     public void setContextPath(String contextPath) {
@@ -114,6 +127,7 @@ public class BaseHttpServerContext implements HttpServerContext {
         return contextURL;
     }
 
+    @Override
     public Path resolve(String path) {
         return application.resolve(path);
     }
@@ -187,8 +201,8 @@ public class BaseHttpServerContext implements HttpServerContext {
         httpResponseBuilder.write(fileChannel, bufferSize);
     }
 
-    protected HttpRequest createRequest(HttpRequestBuilder requestBuilder) {
-        HttpHeaders headers = requestBuilder.getHeaders();
+    protected HttpRequest createRequest() {
+        HttpHeaders headers = httpRequestBuilder.getHeaders();
         String mimeType = headers.get(CONTENT_TYPE);
         Charset charset = StandardCharsets.UTF_8;
         if (mimeType != null) {
@@ -198,30 +212,40 @@ public class BaseHttpServerContext implements HttpServerContext {
         // helper URL to collect parameters in request URI
         URL url = URL.builder()
                 .charset(charset, CodingErrorAction.REPLACE)
-                .path(requestBuilder.getRequestURI())
+                .path(httpRequestBuilder.getRequestURI())
                 .build();
-        ParameterBuilder formParameters = Parameter.builder().domain("FORM");
+        ParameterBuilder formParameterBuilder = Parameter.builder().domain("FORM");
         // https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4
-        if (HttpMethod.POST.equals(requestBuilder.getMethod()) &&
+        if (HttpMethod.POST.equals(httpRequestBuilder.getMethod()) &&
                 (mimeType != null && mimeType.contains(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED))) {
             Charset htmlCharset = getCharset(mimeType, StandardCharsets.ISO_8859_1);
-            CharBuffer charBuffer = requestBuilder.getBodyAsChars(htmlCharset);
+            CharBuffer charBuffer = httpRequestBuilder.getBodyAsChars(htmlCharset);
             if (charBuffer != null) {
-                formParameters.addPercentEncodedBody(charBuffer.toString());
+                formParameterBuilder.addPercentEncodedBody(charBuffer.toString());
             }
         }
         CookieBox cookieBox = attributes.get(CookieBox.class, "incomingcookies");
-        ParameterBuilder cookieParameters = Parameter.builder().domain("COOKIE");
+        ParameterBuilder cookieParameterBuilder = Parameter.builder().domain("COOKIE");
         if (cookieBox != null) {
-            cookieBox.forEach(c -> cookieParameters.add(c.name(), c.value()));
+            cookieBox.forEach(c -> cookieParameterBuilder.add(c.name(), c.value()));
         }
-        parameterBuilder.add(url.getQueryParams());
-        parameterBuilder.add(formParameters.build());
-        parameterBuilder.add(cookieParameters.build());
-        parameterBuilder.add(pathResolverResult.getParameter());
-        requestBuilder.setParameter(parameterBuilder.build());
-        requestBuilder.setContext(this);
-        return requestBuilder.build();
+        Parameter queryParameter = url.getQueryParams();
+        logger.log(Level.FINER, "adding query parameters = " + queryParameter.getDomain() + " " + queryParameter.allToString());
+        parameterBuilder.add(queryParameter);
+        Parameter formParameter = formParameterBuilder.build();
+        logger.log(Level.FINER, "adding form parameters = " + formParameter.getDomain() + " " + formParameter.allToString());
+        parameterBuilder.add(formParameter);
+        Parameter cookieParameter = cookieParameterBuilder.build();
+        logger.log(Level.FINER, "adding cookie parameters = " + cookieParameter.getDomain() + " " + cookieParameter.allToString());
+        parameterBuilder.add(cookieParameter);
+        if (pathResolverResult != null) {
+            Parameter pathParameter = pathResolverResult.getParameter();
+            logger.log(Level.FINER, "adding path parameters = " + pathParameter.getDomain() + " " + pathParameter.allToString());
+            parameterBuilder.add(pathParameter);
+        }
+        httpRequestBuilder.setParameter(parameterBuilder.build());
+        httpRequestBuilder.setContext(this);
+        return httpRequestBuilder.build();
     }
 
     private static Charset getCharset(String contentTypeValue, Charset defaultCharset) {

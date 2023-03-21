@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class HttpRequest extends BaseHttpRequest {
@@ -47,7 +48,10 @@ public class HttpRequest extends BaseHttpRequest {
 
     @Override
     public String toString() {
-        return "HttpRequest[request=" + builder.fullHttpRequest + "]";
+        return "HttpRequest[request=" + builder.fullHttpRequest +
+                ",parameter=" + builder.getParameter() +
+                ",body=" + builder.fullHttpRequest.content().toString(StandardCharsets.UTF_8) +
+                "]";
     }
 
     public ByteBuf getByteBuf() {

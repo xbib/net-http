@@ -29,7 +29,7 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
     @Override
     public void resolve(HttpRoute httpRoute, ResultListener<T> listener) {
         for (Map.Entry<HttpRoute, T> entry : builder.routes) {
-            ParameterBuilder parameterBuilder = Parameter.builder();
+            ParameterBuilder parameterBuilder = Parameter.builder().domain("PATH");
             boolean match = entry.getKey().matches(parameterBuilder, httpRoute);
             if (match && listener != null) {
                 List<String> list = Arrays.stream(httpRoute.getPath().replaceFirst(builder.prefix, "").split("/"))

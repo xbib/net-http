@@ -47,22 +47,34 @@ public class OutgoingSessionHandler implements HttpHandler {
 
     private final String sessionEffectiveUserName;
 
+    private final boolean httpOnly;
+
+    private final boolean secure;
+
+    private final SameSite sameSite;
+
     public OutgoingSessionHandler(String sessionSecret,
                                   String sessionCookieAlgorithm,
                                   String sessionCookieName,
-                                  Duration sessionDuration,
                                   Codec<Session> sessionCodec,
                                   Set<String> suffixes,
                                   String sessionUserName,
-                                  String sessionEffectiveUserName) {
+                                  String sessionEffectiveUserName,
+                                  Duration sessionDuration,
+                                  boolean httpOnly,
+                                  boolean secure,
+                                  SameSite sameSite) {
         this.sessionSecret = sessionSecret;
         this.sessionCookieAlgorithm = sessionCookieAlgorithm;
         this.sessionCookieName = sessionCookieName;
-        this.sessionDuration = sessionDuration;
         this.sessionCodec = sessionCodec;
         this.suffixes = suffixes;
         this.sessionUserName = sessionUserName;
         this.sessionEffectiveUserName = sessionEffectiveUserName;
+        this.sessionDuration = sessionDuration;
+        this.httpOnly = httpOnly;
+        this.secure = secure;
+        this.sameSite = sameSite;
     }
 
     @Override
@@ -137,28 +149,32 @@ public class OutgoingSessionHandler implements HttpHandler {
         PercentEncoder percentEncoder = PercentEncoders.getCookieEncoder(StandardCharsets.ISO_8859_1);
         DefaultCookie cookie = new DefaultCookie(sessionCookieName, percentEncoder.encode(cookieValue));
         String domain = extractDomain(host);
-        if (!"localhost".equals(domain)) {
+        if ("localhost".equals(domain)) {
+            logger.log(Level.WARNING, "localhost not set as a cookie domain");
+        } else {
             cookie.setDomain('.' + domain);
         }
         cookie.setPath(path);
         cookie.setMaxAge(sessionDuration.toSeconds());
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setSameSite(SameSite.LAX);
+        cookie.setHttpOnly(httpOnly);
+        cookie.setSecure(secure);
+        cookie.setSameSite(sameSite);
         return cookie;
     }
 
     private Cookie createEmptyCookie(String host, String path) {
         DefaultCookie cookie = new DefaultCookie(sessionCookieName);
         String domain = extractDomain(host);
-        if (!"localhost".equals(domain)) {
+        if ("localhost".equals(domain)) {
+            logger.log(Level.WARNING, "localhost not set as a cookie domain");
+        } else {
             cookie.setDomain('.' + domain);
         }
         cookie.setPath(path);
         cookie.setMaxAge(0L);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setSameSite(SameSite.LAX);
+        cookie.setHttpOnly(httpOnly);
+        cookie.setSecure(secure);
+        cookie.setSameSite(sameSite);
         logger.log(Level.FINEST, "baked empty cookie");
         return cookie;
     }
