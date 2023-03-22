@@ -52,10 +52,6 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         // session can be null in error templates
     }
 
-    public void setResponseStatus(HttpResponseStatus responseStatus) {
-        responseBuilder.setResponseStatus(responseStatus);
-    }
-
     public void setContentType(String contentType) {
         responseBuilder.setHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
     }
@@ -76,6 +72,10 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         responseBuilder.setHeader(HttpHeaderNames.CONTENT_LENGTH, Integer.toString(contentLength));
     }
 
+    public void setResponseStatus(HttpResponseStatus responseStatus) {
+        responseBuilder.setResponseStatus(responseStatus);
+    }
+
     public void movedPermanently(String url) {
         responseBuilder.setResponseStatus(HttpResponseStatus.MOVED_PERMANENTLY); // 301
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
@@ -94,6 +94,14 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
     public void temporaryRedirect(String url) {
         responseBuilder.setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT); // 307
         responseBuilder.setHeader(HttpHeaderNames.LOCATION, url);
+    }
+
+    public void notFound() {
+        responseBuilder.setResponseStatus(HttpResponseStatus.NOT_FOUND); // 404
+    }
+
+    public void gone() {
+        responseBuilder.setResponseStatus(HttpResponseStatus.GONE); // 410
     }
 
     public String contextPath(String rel) {
