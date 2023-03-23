@@ -50,6 +50,7 @@ public class BaseHttpRouter implements HttpRouter {
             for (HttpService httpService : domain.getServices()) {
                 logger.log(Level.FINE, "adding " + domain.getAddress() + " " + httpService.getMethods() + " " + httpService.getPathSpecification() + " " + httpService);
                 HttpRoute httpRoute = new BaseHttpRoute(domain.getAddress(), httpService.getMethods(), httpService.getPathSpecification(), false);
+                httpRouteResolverBuilder.setPrefix(httpService.getPrefix());
                 httpRouteResolverBuilder.add(httpRoute, httpService);
             }
         }

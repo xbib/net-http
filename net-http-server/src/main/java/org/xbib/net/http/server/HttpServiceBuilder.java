@@ -5,6 +5,8 @@ import org.xbib.net.http.HttpMethod;
 
 public interface HttpServiceBuilder {
 
+    HttpServiceBuilder setPrefix(String prefix);
+
     HttpServiceBuilder setPath(String path);
 
     HttpServiceBuilder setMethod(HttpMethod... method);

@@ -32,13 +32,18 @@ public class DecoratingHttpService implements HttpService {
     }
 
     @Override
-    public Collection<HttpMethod> getMethods() {
-        return delegate.getMethods();
+    public String getPrefix() {
+        return delegate.getPrefix();
     }
 
     @Override
     public String getPathSpecification() {
         return delegate.getPathSpecification();
+    }
+
+    @Override
+    public Collection<HttpMethod> getMethods() {
+        return delegate.getMethods();
     }
 
     @Override

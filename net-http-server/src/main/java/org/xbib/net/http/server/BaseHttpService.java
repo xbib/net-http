@@ -26,6 +26,11 @@ public class BaseHttpService implements HttpService {
     }
 
     @Override
+    public String getPrefix() {
+        return builder.prefix;
+    }
+
+    @Override
     public String getPathSpecification() {
         return builder.pathSpec;
     }

@@ -7,6 +7,8 @@ import org.xbib.net.http.HttpMethod;
 
 public interface HttpService extends HttpHandler {
 
+    String getPrefix();
+
     String getPathSpecification();
 
     Collection<HttpMethod> getMethods();

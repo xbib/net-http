@@ -13,9 +13,11 @@ import java.util.Objects;
 
 public class BaseHttpServiceBuilder implements HttpServiceBuilder {
 
-    protected Collection<HttpMethod> methods;
+    protected String prefix;
 
     protected String pathSpec;
+
+    protected Collection<HttpMethod> methods;
 
     protected Collection<HttpHandler> handlers;
 
@@ -24,23 +26,31 @@ public class BaseHttpServiceBuilder implements HttpServiceBuilder {
     protected HttpSecurityDomain securityDomain;
 
     protected BaseHttpServiceBuilder() {
+        this.prefix = "";
+        this.pathSpec = "/**";
         this.methods = new HashSet<>();
         methods.add(HttpMethod.GET);
-        this.pathSpec = "/**";
         this.handlers = null;
         this.securityDomain = null;
     }
 
     @Override
-    public BaseHttpServiceBuilder setMethod(HttpMethod... method) {
-        this.methods = new LinkedHashSet<>(Arrays.asList(method));
+    public BaseHttpServiceBuilder setPrefix(String prefix) {
+        this.prefix = prefix;
         return this;
     }
 
+    @Override
     public BaseHttpServiceBuilder setPath(String path) {
         if (path != null) {
             this.pathSpec = PathNormalizer.normalize(path);
         }
+        return this;
+    }
+
+    @Override
+    public BaseHttpServiceBuilder setMethod(HttpMethod... method) {
+        this.methods = new LinkedHashSet<>(Arrays.asList(method));
         return this;
     }
 

@@ -91,6 +91,12 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
         }
 
         @Override
+        public HttpRouteResolver.Builder<T> setPrefix(String prefix) {
+            this.prefix = prefix;
+            return this;
+        }
+
+        @Override
         public HttpRouteResolver.Builder<T> add(HttpAddress httpAddress, HttpMethod httpMethod, String path, T value) {
             add(new BaseHttpRoute(httpAddress, Set.of(httpMethod), prefix + path, false), value);
             return this;
@@ -111,11 +117,6 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
         @Override
         public HttpRouteResolver.Builder<T> sort(boolean sort) {
             this.sort = sort;
-            return this;
-        }
-
-        public HttpRouteResolver.Builder<T> setPrefix(String prefix) {
-            this.prefix = prefix;
             return this;
         }
 
