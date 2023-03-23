@@ -18,11 +18,14 @@ import org.xbib.net.http.server.handler.VersionNotSupportedHandler;
 
 public class BaseHttpRouterBuilder implements HttpRouterBuilder {
 
+    protected String prefix;
+
     protected final Collection<HttpDomain> domains;
 
     protected final Map<Integer, HttpHandler> handlers;
 
     protected BaseHttpRouterBuilder() {
+        prefix = "";
         domains = new ArrayList<>();
         handlers = new HashMap<>();
         handlers.put(400, new BadRequestHandler());
@@ -32,6 +35,12 @@ public class BaseHttpRouterBuilder implements HttpRouterBuilder {
         handlers.put(500, new InternalServerErrorHandler());
         handlers.put(501, new NotImplementedHandler());
         handlers.put(505, new VersionNotSupportedHandler());
+    }
+
+    @Override
+    public BaseHttpRouterBuilder setPrefix(String prefix) {
+        this.prefix = prefix;
+        return this;
     }
 
     @Override

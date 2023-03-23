@@ -158,10 +158,10 @@ public class IncomingSessionHandler implements HttpHandler {
         if (m == null) {
             return userProfile;
         }
-        if (m.containsKey(sessionUserName)) {
+        if (sessionUserName != null && m.containsKey(sessionUserName)) {
             userProfile.setUserId((String) m.get(sessionUserName));
         }
-        if (m.containsKey(sessionEffectiveUserName)) {
+        if (sessionEffectiveUserName != null && m.containsKey(sessionEffectiveUserName)) {
             userProfile.setEffectiveUserId((String) m.get(sessionEffectiveUserName));
         }
         if (session != null && userProfile.getUserId() != null) {

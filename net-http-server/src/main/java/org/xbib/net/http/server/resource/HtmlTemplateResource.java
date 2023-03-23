@@ -47,7 +47,7 @@ public class HtmlTemplateResource implements HttpServerResource {
         String indexFileName = templateResourceHandler.getIndexFileName();
         Application application = httpServerContext.attributes().get(Application.class, "application");
         this.negotiateLocale = application.getSettings().getAsBoolean("negotiateLocale", false);
-        Path root = templateResourceHandler.getPrefix();
+        Path root = templateResourceHandler.getRoot();
         root = root != null ? root : application.getHome();
         if (root == null) {
             throw new IllegalArgumentException("no home path set for template resource resolving");

@@ -18,15 +18,15 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
     private final ClassLoader classLoader;
 
-    private final String prefix;
+    private final String resourcePrefix;
 
     public ClassLoaderResourceHandler(ClassLoader classLoader) {
         this(classLoader, null);
     }
 
-    public ClassLoaderResourceHandler(ClassLoader classLoader, String prefix) {
+    public ClassLoaderResourceHandler(ClassLoader classLoader, String resourcePrefix) {
         this.classLoader = classLoader;
-        this.prefix = prefix;
+        this.resourcePrefix = resourcePrefix;
     }
 
     @Override
@@ -74,11 +74,11 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
         private URL url;
 
-        ClassLoaderResource(HttpServerContext httpServerContext) throws IOException {
-            String requestPath = httpServerContext.request().getRequestPath().substring(1);
-            this.mimeType = mimeTypeService.getContentType(requestPath);
-            this.resourcePath = requestPath.startsWith("/") ? requestPath.substring(1) : requestPath;
-            String path = prefix != null ? (prefix.endsWith("/") ? prefix : prefix + "/") : "/";
+        protected ClassLoaderResource(HttpServerContext httpServerContext) throws IOException {
+            String contextPath = httpServerContext.getContextPath();
+            this.mimeType = mimeTypeService.getContentType(contextPath);
+            this.resourcePath = contextPath.startsWith("/") ? contextPath.substring(1) : contextPath;
+            String path = resourcePrefix != null ? (resourcePrefix.endsWith("/") ? resourcePrefix : resourcePrefix + "/") : "/";
             path = resourcePath.startsWith("/") ? path + resourcePath.substring(1) : path + resourcePath;
             String normalizedPath = PathNormalizer.normalize(resourcePath);
             if (normalizedPath.startsWith("/")) {
@@ -88,7 +88,7 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
             this.name = normalizedPath;
             this.baseName = basename(name);
             this.suffix = suffix(name);
-            logger.log(Level.FINER, "trying: path=" + path + " classLoader=" + classLoader);
+            logger.log(Level.FINER, "trying: path = " + path + " normalizedPath = " + normalizedPath);
             java.net.URL url = classLoader.getResource(path);
             if (url != null) {
                 this.url = URL.create(url.toString());

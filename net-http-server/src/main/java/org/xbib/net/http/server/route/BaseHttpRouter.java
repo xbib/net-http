@@ -100,7 +100,7 @@ public class BaseHttpRouter implements HttpRouter {
         requestBuilder.setRequestPath(extractPath(requestBuilder.getRequestURI()));
         HttpRoute httpRoute = new BaseHttpRoute(httpDomain.getAddress(),
                 Set.of(requestBuilder.getMethod()),
-                "",
+                builder.prefix,
                 requestBuilder.getRequestPath(),
                 true);
         httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);

@@ -107,8 +107,12 @@ public class OutgoingSessionHandler implements HttpHandler {
             try {
                 if (userProfile != null) {
                     logger.log(Level.FINE, "user profile present: " + userProfile);
-                    session.put(sessionUserName, userProfile.getUserId());
-                    session.put(sessionEffectiveUserName, userProfile.getEffectiveUserId());
+                    if (sessionUserName != null) {
+                        session.put(sessionUserName, userProfile.getUserId());
+                    }
+                    if (sessionEffectiveUserName != null) {
+                        session.put(sessionEffectiveUserName, userProfile.getEffectiveUserId());
+                    }
                 }
                 sessionCodec.write(session.id(), session);
                 Cookie cookie = encodeCookie(session, host, path);
@@ -141,8 +145,12 @@ public class OutgoingSessionHandler implements HttpHandler {
             return createEmptyCookie(host, path);
         }
         Map<String, Object> map = new HashMap<>();
-        map.put(sessionUserName, session.get(sessionUserName));
-        map.put(sessionEffectiveUserName, session.get(sessionEffectiveUserName));
+        if (sessionUserName != null) {
+            map.put(sessionUserName, session.get(sessionUserName));
+        }
+        if (sessionEffectiveUserName != null) {
+            map.put(sessionEffectiveUserName, session.get(sessionEffectiveUserName));
+        }
         String payload = CookieSignatureUtil.toString(map);
         String sig = CookieSignatureUtil.hmac(payload, sessionSecret, sessionCookieAlgorithm);
         String cookieValue = String.join(":", id, payload, sig);

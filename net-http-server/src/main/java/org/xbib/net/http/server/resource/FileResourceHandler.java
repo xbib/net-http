@@ -39,7 +39,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
     protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
         String pathSpec = httpServerContext.attributes().containsKey("templatePath") ?
                 (String) httpServerContext.attributes().get("templatePath") :
-                pathNameOfResource != null ? pathNameOfResource : httpServerContext.httpRequest().getRequestPath();
+                pathNameOfResource != null ? pathNameOfResource : httpServerContext.getContextPath();
         if (pathSpec == null || pathSpec.isEmpty()) {
             throw new IllegalArgumentException("path must not be null or empty");
         }

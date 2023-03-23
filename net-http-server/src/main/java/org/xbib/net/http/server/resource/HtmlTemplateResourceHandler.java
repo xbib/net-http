@@ -8,16 +8,16 @@ import java.nio.file.Path;
 
 public class HtmlTemplateResourceHandler extends AbstractResourceHandler {
 
-    protected final Path prefix;
+    protected final Path root;
 
     protected final String suffix;
 
     protected final String indexFileName;
 
-    public HtmlTemplateResourceHandler(Path prefix,
+    public HtmlTemplateResourceHandler(Path root,
                                        String suffix,
                                        String indexFileName) {
-        this.prefix = prefix;
+        this.root = root;
         this.suffix = suffix;
         this.indexFileName = indexFileName;
     }
@@ -47,8 +47,8 @@ public class HtmlTemplateResourceHandler extends AbstractResourceHandler {
         return 0;
     }
 
-    public Path getPrefix() {
-        return prefix;
+    public Path getRoot() {
+        return root;
     }
 
     public String getSuffix() {

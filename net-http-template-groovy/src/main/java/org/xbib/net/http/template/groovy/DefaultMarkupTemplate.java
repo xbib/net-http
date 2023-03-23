@@ -113,8 +113,14 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
     }
 
     public String urlProto(String rel, boolean absolute) {
-        URL url = request.getServerURL().resolve(rel);
-        logger.log(Level.FINE, "server URL = " + request.getServerURL() + " rel = " + rel + " --> " + url);
+        String prefix = application.getSettings().get("web.prefix", "/");
+        if (!prefix.endsWith("/")) {
+            prefix = prefix + "/";
+        }
+        URL url = request.getServerURL().resolve(prefix).resolve(rel);
+        logger.log(Level.FINE, "server base URL = " + request.getServerURL() +
+                " prefix = " + prefix +
+                " rel = " + rel + " --> " + url);
         return absolute ? url.toExternalForm() : toOrigin(url);
     }
 

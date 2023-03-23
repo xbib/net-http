@@ -76,18 +76,19 @@ public class BaseHttpService implements HttpService {
         }
         BaseHttpService endpoint = (BaseHttpService) o;
         return Objects.equals(builder.methods, endpoint.builder.methods) &&
+                Objects.equals(builder.prefix, endpoint.builder.prefix) &&
                 Objects.equals(builder.pathSpec, endpoint.builder.pathSpec) &&
                 Objects.equals(builder.handlers, endpoint.builder.handlers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(builder.methods, builder.pathSpec, builder.handlers);
+        return Objects.hash(builder.methods, builder.prefix, builder.pathSpec, builder.handlers);
     }
 
     @Override
     public String toString() {
-        return "BaseHttpService[methods=" + builder.methods + ",path=" + builder.pathSpec + ",handler=" + builder.handlers + "]";
+        return "BaseHttpService[methods=" + builder.methods + ",prefix" + builder.prefix + ",path=" + builder.pathSpec + ",handler=" + builder.handlers + "]";
     }
 
 }
