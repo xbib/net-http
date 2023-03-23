@@ -18,9 +18,9 @@ public class BaseHttpRouteResolverTest {
     public void testEmptyRouteResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> atomicInteger.incrementAndGet());
         assertEquals(1, atomicInteger.get());
@@ -31,7 +31,7 @@ public class BaseHttpRouteResolverTest {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> atomicInteger.incrementAndGet());
         assertEquals(0, atomicInteger.get());
@@ -41,9 +41,9 @@ public class BaseHttpRouteResolverTest {
     public void testEmptyRouteMatchResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -56,9 +56,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/path", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/path", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/path");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/path");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -71,9 +71,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteMismatchResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/path1", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/path1", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/path2");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/path2");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -86,9 +86,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteMismatchTooLongResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a", "", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a/b");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -101,9 +101,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteCatchAllResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/**", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/**", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/path");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/path");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -116,9 +116,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteCatchAllLongPathResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/**", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/**", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a/very/long/path");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/very/long/path");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -131,9 +131,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteJpegResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "glob:*.jpg", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "glob:*.jpg", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "abc.jpg");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "abc.jpg");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -146,9 +146,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteGlobJpegResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "glob:**.jpg", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "glob:**.jpg", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a/picture/abc.jpg");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/picture/abc.jpg");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -161,9 +161,9 @@ public class BaseHttpRouteResolverTest {
     public void testSingleRouteParameterResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/{token}", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/{token}", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/abcdef");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/abcdef");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -177,9 +177,9 @@ public class BaseHttpRouteResolverTest {
     public void testTwoRouteParameterResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/{token}/{key}", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/{token}/{key}", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/abcdef/123456");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/abcdef/123456");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
@@ -193,11 +193,11 @@ public class BaseHttpRouteResolverTest {
     public void testMultiRouteResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/**", 1)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/**", 2)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/c", 3)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/**", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/**", 2)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/c", 3)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, (int) r.getValue());
@@ -210,18 +210,16 @@ public class BaseHttpRouteResolverTest {
     public void testMultiRouteLongestFirstResolver() {
         HttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/**", 1)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/c/**", 2)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/c/d/e/f/g", 3)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/**", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/c/**", 2)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/c/d/e/f/g", 3)
                 .sort(true)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
-            switch (atomicInteger.get()) {
-                case 0:
-                    assertEquals(1, (int) r.getValue());
-                    break;
+            if (atomicInteger.get() == 0) {
+                assertEquals(1, (int) r.getValue());
             }
             atomicInteger.incrementAndGet();
         });
@@ -232,22 +230,18 @@ public class BaseHttpRouteResolverTest {
     public void testMultiRouteLongestFirstWithGlobFirstResolver() {
         HttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/**", 4)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/c/**", 3)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/a/b/c/d/e/f/g", 2)
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "glob:**", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/**", 4)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/c/**", 3)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "/a/b/c/d/e/f/g", 2)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "", "glob:**", 1)
                 .sort(true)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/a");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "", "/a");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             switch (atomicInteger.get()) {
-                case 0:
-                    assertEquals(1, (int) r.getValue());
-                    break;
-                case 1:
-                    assertEquals(4, (int) r.getValue());
-                    break;
+                case 0 -> assertEquals(1, (int) r.getValue());
+                case 1 -> assertEquals(4, (int) r.getValue());
             }
             atomicInteger.incrementAndGet();
         });
@@ -258,10 +252,9 @@ public class BaseHttpRouteResolverTest {
     public void testContextRouteResolver() {
         BaseHttpRouteResolver.Builder<Integer> builder = BaseHttpRouteResolver.builder();
         HttpRouteResolver<Integer> resolver = builder
-                .setPrefix("/app")
-                .add(HttpAddress.http1("host"), HttpMethod.POST, "/path", 1)
+                .add(HttpAddress.http1("host"), HttpMethod.POST, "/app", "/path", 1)
                 .build();
-        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/app/path");
+        HttpRoute route = new BaseHttpRoute(HttpAddress.http1("host"), HttpMethod.POST, "/app", "/app/path");
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());

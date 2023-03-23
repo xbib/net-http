@@ -11,9 +11,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
+
+    private static final Logger logger = Logger.getLogger(BaseHttpRouteResolver.class.getName());
 
     private final Builder<T> builder;
 
@@ -22,7 +26,7 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
     }
 
     /**
-     * This naive rsolver walks through all configured routes and tries to match them.
+     * This naive resolver walks through all configured routes and tries to match them.
      * @param httpRoute the route to match against
      * @param listener the listener where the results are going
      */
@@ -32,7 +36,8 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
             ParameterBuilder parameterBuilder = Parameter.builder().domain("PATH");
             boolean match = entry.getKey().matches(parameterBuilder, httpRoute);
             if (match && listener != null) {
-                List<String> list = Arrays.stream(httpRoute.getPath().replaceFirst(builder.prefix, "").split("/"))
+                String path = httpRoute.getEffectivePath();
+                List<String> list = Arrays.stream(path.split("/"))
                                 .filter(s -> !s.isEmpty()).collect(Collectors.toList());
                 listener.onResult(new Result<>(entry.getValue(), list, parameterBuilder.build()));
             }
@@ -79,32 +84,23 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
 
         private final List<Map.Entry<HttpRoute, T>> routes;
 
-        private String prefix;
-
         private boolean sort;
 
         private Builder() {
             this.comparator = new RouteComparator<>();
-            this.prefix = "";
             this.routes = new ArrayList<>();
             this.sort = false;
         }
 
         @Override
-        public HttpRouteResolver.Builder<T> setPrefix(String prefix) {
-            this.prefix = prefix;
+        public HttpRouteResolver.Builder<T> add(HttpAddress httpAddress, HttpMethod httpMethod, String prefix, String path, T value) {
+            add(new BaseHttpRoute(httpAddress, Set.of(httpMethod), prefix, path, false), value);
             return this;
         }
 
         @Override
-        public HttpRouteResolver.Builder<T> add(HttpAddress httpAddress, HttpMethod httpMethod, String path, T value) {
-            add(new BaseHttpRoute(httpAddress, Set.of(httpMethod), prefix + path, false), value);
-            return this;
-        }
-
-        @Override
-        public HttpRouteResolver.Builder<T> add(HttpAddress httpAddress, Set<HttpMethod> httpMethods, String path, T value) {
-            add(new BaseHttpRoute(httpAddress, httpMethods, prefix + path, false), value);
+        public HttpRouteResolver.Builder<T> add(HttpAddress httpAddress, Set<HttpMethod> httpMethods, String prefix, String path, T value) {
+            add(new BaseHttpRoute(httpAddress, httpMethods, prefix, path, false), value);
             return this;
         }
 

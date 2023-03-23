@@ -13,13 +13,11 @@ public interface HttpRouteResolver<T> {
 
     interface Builder<T> {
 
-        Builder<T> setPrefix(String prefix);
-
         Builder<T> add(HttpRoute route, T value);
 
-        Builder<T> add(HttpAddress httpAddress, HttpMethod httpMethod, String path, T value);
+        Builder<T> add(HttpAddress httpAddress, HttpMethod httpMethod, String prefix, String path, T value);
 
-        Builder<T> add(HttpAddress httpAddress, Set<HttpMethod> httpMethods, String path, T value);
+        Builder<T> add(HttpAddress httpAddress, Set<HttpMethod> httpMethods, String prefix, String path, T value);
 
         Builder<T> sort(boolean sort);
 

@@ -104,7 +104,6 @@ public class BaseHttpServerContext implements HttpServerContext {
             setContextURL(request().getBaseURL());
         }
         httpRequest = createRequest();
-        logger.log(Level.FINER, "request = " + httpRequest);
         attributes.put("request", httpRequest);
         next = false;
     }

@@ -11,7 +11,11 @@ public interface HttpRoute {
 
     Collection<HttpMethod> getHttpMethods();
 
+    String getPrefix();
+
     String getPath();
+
+    String getEffectivePath();
 
     boolean matches(ParameterBuilder parameterBuilder, HttpRoute requestedRoute);
 

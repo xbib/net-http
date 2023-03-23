@@ -21,24 +21,31 @@ public class BaseHttpRoute implements HttpRoute {
 
     private final Collection<HttpMethod> httpMethods;
 
+    private final String prefix;
+
     private final String path;
 
     private final List<RouteSegment> segments;
 
     private final String sortKey;
 
-    public BaseHttpRoute(HttpAddress httpAddress, HttpMethod httpMethod, String path) {
-        this(httpAddress, Set.of(httpMethod), path, false);
+    public BaseHttpRoute(HttpAddress httpAddress, HttpMethod httpMethod, String prefix, String path) {
+        this(httpAddress, Set.of(httpMethod), prefix, path, false);
     }
 
-    public BaseHttpRoute(HttpAddress httpAddress, Collection<HttpMethod> httpMethods, String path, boolean onlyStrings) {
+    public BaseHttpRoute(HttpAddress httpAddress,
+                         Collection<HttpMethod> httpMethods,
+                         String prefix,
+                         String path,
+                         boolean onlyStrings) {
         Objects.requireNonNull(httpAddress, "address");
         Objects.requireNonNull(httpMethods, "methods");
         Objects.requireNonNull(path, "path");
         this.httpAddress = httpAddress;
         this.httpMethods = httpMethods;
+        this.prefix = prefix;
         this.path = path;
-        this.segments = onlyStrings ? createStringSegments(path): createSegments(path);
+        this.segments = onlyStrings ? createStringSegments(getEffectivePath()): createSegments(getEffectivePath());
         this.sortKey = createSortKey();
     }
 
@@ -53,7 +60,20 @@ public class BaseHttpRoute implements HttpRoute {
     }
 
     @Override
+    public String getPrefix() {
+        return prefix;
+    }
+
+    @Override
     public String getPath() {
+        return path;
+    }
+
+    public String getEffectivePath() {
+        String path = getPath();
+        if (getPrefix() != null && !getPrefix().isEmpty()) {
+            path = path.replaceFirst(getPrefix(), "");
+        }
         return path;
     }
 
@@ -78,7 +98,7 @@ public class BaseHttpRoute implements HttpRoute {
         if (requestedSegments.isEmpty() && segments.isEmpty()) {
             return true;
         }
-        // special case: single segment with pattern to match, we must ignore the incoming segments
+        // special case catch all: single segment with pattern to match, we must ignore the incoming segments
         if (segments.size() == 1 && segments.get(0) instanceof PatternSegment) {
             MatchResult matchResult = segments.get(0).match(new StringSegment(requestedRoute.getPath()));
             if (matchResult == MatchResult.TRUE) {

@@ -75,9 +75,9 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
         private URL url;
 
         ClassLoaderResource(HttpServerContext httpServerContext) throws IOException {
-            String effectivePath = httpServerContext.request().getRequestPath().substring(1);
-            this.mimeType = mimeTypeService.getContentType(effectivePath);
-            this.resourcePath = effectivePath.startsWith("/") ? effectivePath.substring(1) : effectivePath;
+            String requestPath = httpServerContext.request().getRequestPath().substring(1);
+            this.mimeType = mimeTypeService.getContentType(requestPath);
+            this.resourcePath = requestPath.startsWith("/") ? requestPath.substring(1) : requestPath;
             String path = prefix != null ? (prefix.endsWith("/") ? prefix : prefix + "/") : "/";
             path = resourcePath.startsWith("/") ? path + resourcePath.substring(1) : path + resourcePath;
             String normalizedPath = PathNormalizer.normalize(resourcePath);
@@ -88,19 +88,15 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
             this.name = normalizedPath;
             this.baseName = basename(name);
             this.suffix = suffix(name);
-            if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "trying: path=" + path + " classLoader=" + classLoader);
-            }
+            logger.log(Level.FINER, "trying: path=" + path + " classLoader=" + classLoader);
             java.net.URL url = classLoader.getResource(path);
             if (url != null) {
                 this.url = URL.create(url.toString());
                 URLConnection urlConnection = url.openConnection();
                 this.lastModified = Instant.ofEpochMilli(urlConnection.getLastModified());
                 this.length = urlConnection.getContentLength();
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.log(Level.FINER, "success: path=[" + path +
-                            "] -> url=" + url + " lastModified=" + lastModified + "length=" + length);
-                }
+                logger.log(Level.FINER, "success: path=[" + path +
+                        "] -> url=" + url + " lastModified=" + lastModified + "length=" + length);
             } else {
                 this.lastModified = Instant.now();
                 this.length = 0;

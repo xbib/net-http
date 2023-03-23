@@ -48,9 +48,13 @@ public class BaseHttpRouter implements HttpRouter {
         HttpRouteResolver.Builder<HttpService> httpRouteResolverBuilder = newHttpRouteResolverBuilder();
         for (HttpDomain domain : builder.domains) {
             for (HttpService httpService : domain.getServices()) {
-                logger.log(Level.FINE, "adding " + domain.getAddress() + " " + httpService.getMethods() + " " + httpService.getPathSpecification() + " " + httpService);
-                HttpRoute httpRoute = new BaseHttpRoute(domain.getAddress(), httpService.getMethods(), httpService.getPathSpecification(), false);
-                httpRouteResolverBuilder.setPrefix(httpService.getPrefix());
+                logger.log(Level.FINER, "adding " + domain.getAddress() + " " + httpService.getMethods() +
+                        " prefix = " + httpService.getPrefix() +
+                        " path = " + httpService.getPathSpecification() + " " + httpService);
+                HttpRoute httpRoute = new BaseHttpRoute(domain.getAddress(),
+                        httpService.getMethods(),
+                        httpService.getPrefix(),
+                        httpService.getPathSpecification(), false);
                 httpRouteResolverBuilder.add(httpRoute, httpService);
             }
         }
@@ -88,13 +92,17 @@ public class BaseHttpRouter implements HttpRouter {
         Objects.requireNonNull(requestBuilder);
         Objects.requireNonNull(requestBuilder.getRequestURI());
         Objects.requireNonNull(requestBuilder.getBaseURL());
-        requestBuilder.setRequestPath(extractPath(requestBuilder.getRequestURI()));
         HttpDomain httpDomain = findDomain(requestBuilder.getBaseURL());
         if (httpDomain == null) {
             httpDomain = builder.domains.iterator().next();
         }
         List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults = new ArrayList<>();
-        HttpRoute httpRoute = new BaseHttpRoute(httpDomain.getAddress(), Set.of(requestBuilder.getMethod()), requestBuilder.getRequestPath(), true);
+        requestBuilder.setRequestPath(extractPath(requestBuilder.getRequestURI()));
+        HttpRoute httpRoute = new BaseHttpRoute(httpDomain.getAddress(),
+                Set.of(requestBuilder.getMethod()),
+                "",
+                requestBuilder.getRequestPath(),
+                true);
         httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);
         HttpServerContext httpServerContext = application.createContext(httpDomain, requestBuilder, responseBuilder);
         route(httpServerContext, httpRouteResolverResults);
