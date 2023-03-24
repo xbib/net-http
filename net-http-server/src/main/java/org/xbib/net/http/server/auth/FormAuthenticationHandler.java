@@ -49,18 +49,18 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
         userProfile = new BaseUserProfile();
         context.attributes().put("userprofile", userProfile);
         Parameter parameter = context.httpRequest().getParameter();
-        if (!parameter.containsKey("FORM", usernameParameter)) {
+        if (!parameter.containsKey(usernameParameter, Parameter.Domain.FORM)) {
             logger.log(Level.WARNING, "usernameParameter not set, unable to authenticate");
             prepareFormAuthentication(context);
             return;
         }
-        if (!parameter.containsKey("FORM", passwordParameter)) {
+        if (!parameter.containsKey(passwordParameter, Parameter.Domain.FORM)) {
             logger.log(Level.WARNING, "passwordParameter not set, unable to authenticate");
             prepareFormAuthentication(context);
             return;
         }
-        String username = parameter.getAsString("FORM", usernameParameter);
-        String password = parameter.getAsString("FORM", passwordParameter);
+        String username = parameter.getAsString(usernameParameter, Parameter.Domain.FORM);
+        String password = parameter.getAsString(passwordParameter, Parameter.Domain.FORM);
         logger.log(Level.FINE, "username and password found, ready for authentication");
         try {
             authenticate(userProfile, username, password, context.httpRequest());

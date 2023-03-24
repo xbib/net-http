@@ -3,6 +3,7 @@ package org.xbib.net.http.server.auth;
 import java.util.Collection;
 import org.xbib.net.Authenticator;
 import org.xbib.net.GroupsProvider;
+import org.xbib.net.Parameter;
 import org.xbib.net.Request;
 import org.xbib.net.SecurityRealm;
 import org.xbib.net.UserDetails;
@@ -42,8 +43,8 @@ public class LoginAuthenticationHandler implements HttpHandler {
         userProfile = new BaseUserProfile();
         try {
             authenticate(userProfile,
-                    (String) context.httpRequest().getParameter().get("DEFAULT", userParameterName),
-                    (String) context.httpRequest().getParameter().get("DEFAULT", passwordParameterName),
+                    (String) context.httpRequest().getParameter().get(userParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
+                    (String) context.httpRequest().getParameter().get(passwordParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
                     context.httpRequest());
             context.attributes().put("userprofile", userProfile);
         } catch (Exception e) {

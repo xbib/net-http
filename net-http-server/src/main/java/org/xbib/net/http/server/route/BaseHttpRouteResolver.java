@@ -15,6 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static org.xbib.net.Parameter.Domain.PATH;
+
 public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
 
     private static final Logger logger = Logger.getLogger(BaseHttpRouteResolver.class.getName());
@@ -33,7 +35,7 @@ public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {
     @Override
     public void resolve(HttpRoute httpRoute, ResultListener<T> listener) {
         for (Map.Entry<HttpRoute, T> entry : builder.routes) {
-            ParameterBuilder parameterBuilder = Parameter.builder().domain("PATH");
+            ParameterBuilder parameterBuilder = Parameter.builder().domain(PATH);
             boolean match = entry.getKey().matches(parameterBuilder, httpRoute);
             if (match && listener != null) {
                 String path = httpRoute.getEffectivePath();

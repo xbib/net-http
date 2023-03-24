@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.xbib.net.http.server.handler.UnauthorizedHandler;
 import org.xbib.net.http.server.handler.VersionNotSupportedHandler;
@@ -39,7 +40,11 @@ public class BaseHttpRouterBuilder implements HttpRouterBuilder {
 
     @Override
     public BaseHttpRouterBuilder setPrefix(String prefix) {
-        this.prefix = prefix;
+        Objects.requireNonNull(prefix);
+        // Add ending slash if missing.
+        // We require a prefix with ending slash. Otherwise, obscure things can happen in path parameter handling,
+        // if a path parameter has a common prefix with this prefix.
+        this.prefix = prefix.isEmpty() || prefix.endsWith("/") ? prefix : prefix + "/";
         return this;
     }
 

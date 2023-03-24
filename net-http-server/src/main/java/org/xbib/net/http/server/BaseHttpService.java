@@ -88,7 +88,7 @@ public class BaseHttpService implements HttpService {
 
     @Override
     public String toString() {
-        return "BaseHttpService[methods=" + builder.methods + ",prefix" + builder.prefix + ",path=" + builder.pathSpec + ",handler=" + builder.handlers + "]";
+        return "BaseHttpService[methods=" + builder.methods + ",prefix=" + builder.prefix + ",path=" + builder.pathSpec + ",handler=" + builder.handlers + "]";
     }
 
 }

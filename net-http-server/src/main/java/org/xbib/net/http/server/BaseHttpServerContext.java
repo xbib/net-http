@@ -213,7 +213,7 @@ public class BaseHttpServerContext implements HttpServerContext {
                 .charset(charset, CodingErrorAction.REPLACE)
                 .path(httpRequestBuilder.getRequestURI())
                 .build();
-        ParameterBuilder formParameterBuilder = Parameter.builder().domain("FORM");
+        ParameterBuilder formParameterBuilder = Parameter.builder().domain(Parameter.Domain.FORM);
         // https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4
         if (HttpMethod.POST.equals(httpRequestBuilder.getMethod()) &&
                 (mimeType != null && mimeType.contains(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED))) {
@@ -224,7 +224,7 @@ public class BaseHttpServerContext implements HttpServerContext {
             }
         }
         CookieBox cookieBox = attributes.get(CookieBox.class, "incomingcookies");
-        ParameterBuilder cookieParameterBuilder = Parameter.builder().domain("COOKIE");
+        ParameterBuilder cookieParameterBuilder = Parameter.builder().domain(Parameter.Domain.COOKIE);
         if (cookieBox != null) {
             cookieBox.forEach(c -> cookieParameterBuilder.add(c.name(), c.value()));
         }
