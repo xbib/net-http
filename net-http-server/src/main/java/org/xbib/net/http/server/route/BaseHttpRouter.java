@@ -73,6 +73,7 @@ public class BaseHttpRouter implements HttpRouter {
 
     @Override
     public void setApplication(Application application) {
+        Objects.requireNonNull(application);
         this.application = application;
     }
 
@@ -88,7 +89,6 @@ public class BaseHttpRouter implements HttpRouter {
 
     @Override
     public void route(HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder) {
-        Objects.requireNonNull(application);
         Objects.requireNonNull(requestBuilder);
         Objects.requireNonNull(requestBuilder.getRequestURI());
         Objects.requireNonNull(requestBuilder.getBaseURL());
@@ -139,7 +139,7 @@ public class BaseHttpRouter implements HttpRouter {
                         break;
                     }
                     // after security checks, accept service, open and execute service
-                    httpServerContext.attributes().put("service", httpService);
+                    httpServerContext.getAttributes().put("service", httpService);
                     application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService));
                     logger.log(Level.FINEST, () -> "handling service " + httpService);
                     httpService.handle(httpServerContext);
@@ -187,7 +187,7 @@ public class BaseHttpRouter implements HttpRouter {
 
     @Override
     public void routeToErrorHandler(HttpServerContext httpServerContext, Throwable t) {
-        httpServerContext.attributes().put("_throwable", t);
+        httpServerContext.getAttributes().put("_throwable", t);
         httpServerContext.fail();
         routeStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR, httpServerContext);
     }

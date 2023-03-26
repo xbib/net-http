@@ -39,5 +39,5 @@ public interface HttpRequest extends Request {
 
     InputStream getInputStream();
 
-    Attributes attributes();
+    Attributes getAttributes();
 }

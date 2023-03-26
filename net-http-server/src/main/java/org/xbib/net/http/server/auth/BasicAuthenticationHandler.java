@@ -24,7 +24,7 @@ public class BasicAuthenticationHandler extends LoginAuthenticationHandler imple
     @Override
     public void handle(HttpServerContext context) throws IOException {
         HttpRequest httpRequest = context.httpRequest();
-        UserProfile userProfile = context.attributes().get(UserProfile.class, "userprofile");
+        UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         if (userProfile != null && userProfile.getUserId() != null) {
             return;
         }
@@ -41,7 +41,7 @@ public class BasicAuthenticationHandler extends LoginAuthenticationHandler imple
             userProfile = new BaseUserProfile();
             try {
                 authenticate(userProfile, tokens[0], tokens[1], httpRequest);
-                context.attributes().put("userprofile", userProfile);
+                context.getAttributes().put("userprofile", userProfile);
                 return;
             } catch (Exception e) {
                 logger.log(Level.WARNING, "authentication error");

@@ -19,14 +19,14 @@ public class GroovyTemplateRenderer implements HttpHandler {
 
     @Override
     public void handle(HttpServerContext context) throws IOException {
-        Writable writable = context.attributes().get(Writable.class, "writable");
+        Writable writable = context.getAttributes().get(Writable.class, "writable");
         if (writable != null) {
             DataBuffer dataBuffer = context.response().getDataBufferFactory().allocateBuffer();
             try (OutputStream outputStream = dataBuffer.asOutputStream()) {
                 Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
                 writable.writeTo(writer);
             }
-            HttpResponseStatus httpResponseStatus = context.attributes().get(HttpResponseStatus.class, "_status", HttpResponseStatus.OK);
+            HttpResponseStatus httpResponseStatus = context.getAttributes().get(HttpResponseStatus.class, "_status", HttpResponseStatus.OK);
             context.response()
                     .setResponseStatus(httpResponseStatus)
                     .setHeader("content-length", Integer.toString(dataBuffer.writePosition()))

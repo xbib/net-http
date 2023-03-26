@@ -54,7 +54,7 @@ public class NettyHttpServerTest {
                                                 " parameter = " + ctx.httpRequest().getParameter().allToString() +
                                                 " local address = " + ctx.httpRequest().getLocalAddress() +
                                                 " remote address = " + ctx.httpRequest().getRemoteAddress() +
-                                                " attributes = " + ctx.attributes()
+                                                " attributes = " + ctx.getAttributes()
                                             );
                                         })
                                         .build())

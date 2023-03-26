@@ -24,6 +24,7 @@ module org.xbib.net.http.server {
     requires org.xbib.net.mime;
     requires org.xbib.net.http;
     requires org.xbib.datastructures.common;
+    requires org.xbib.datastructures.json.tiny;
     requires org.xbib.config;
     requires java.logging;
     requires java.naming;

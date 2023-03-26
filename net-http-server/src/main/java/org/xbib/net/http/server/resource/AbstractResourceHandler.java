@@ -95,22 +95,22 @@ public abstract class AbstractResourceHandler implements HttpHandler {
             }
             context.done();
         } else {
-            logger.log(Level.FINE, "handle: generate cacheable resource");
+            logger.log(Level.FINER, "handle: generate cacheable resource");
             generateCacheableResource(context, resource);
             context.done();
         }
-        logger.log(Level.FINE, "handle: done");
+        logger.log(Level.FINER, "handle: done");
     }
 
     private void generateCacheableResource(HttpServerContext context, Resource resource) throws IOException {
         // if resource is length of 0, there is nothing to send. Do not send any content,
         if (resource.getLength() == 0) {
-            logger.log(Level.FINE, "the resource length is 0, do nothing");
+            logger.log(Level.FINER, "the resource length is 0, do nothing");
             context.response().build().flush();
             return;
         }
         HttpHeaders headers = context.request().getHeaders();
-        logger.log(Level.FINE, "before generating resource, the response headers are " + context.response().getHeaders());
+        logger.log(Level.FINER, "before generating resource, the response headers are " + context.response().getHeaders());
         String contentType = resource.getMimeType();
         context.response().addHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
         // heuristic for inline disposition

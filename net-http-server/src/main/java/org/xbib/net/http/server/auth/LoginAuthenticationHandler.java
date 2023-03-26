@@ -36,7 +36,7 @@ public class LoginAuthenticationHandler implements HttpHandler {
 
     @Override
     public void handle(HttpServerContext context) throws IOException {
-        UserProfile userProfile = context.attributes().get(UserProfile.class, "userprofile");
+        UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         if (userProfile != null && userProfile.getUserId() != null) {
             return;
         }
@@ -46,7 +46,7 @@ public class LoginAuthenticationHandler implements HttpHandler {
                     (String) context.httpRequest().getParameter().get(userParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
                     (String) context.httpRequest().getParameter().get(passwordParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
                     context.httpRequest());
-            context.attributes().put("userprofile", userProfile);
+            context.getAttributes().put("userprofile", userProfile);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "authentication error");
         }

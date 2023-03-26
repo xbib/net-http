@@ -1,10 +1,13 @@
 package org.xbib.net.http.server;
 
+import java.util.Map;
+import org.xbib.datastructures.json.tiny.Json;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.ParameterBuilder;
 import org.xbib.net.URL;
 import org.xbib.net.buffer.DataBuffer;
+import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
@@ -39,13 +42,13 @@ public class BaseHttpServerContext implements HttpServerContext {
 
     private final HttpResponseBuilder httpResponseBuilder;
 
+    private final Attributes attributes;
+
     private HttpRouteResolver.Result<HttpService> pathResolverResult;
 
     private String contextPath;
 
     private URL contextURL;
-
-    private Attributes attributes;
 
     private HttpRequest httpRequest;
 
@@ -131,12 +134,8 @@ public class BaseHttpServerContext implements HttpServerContext {
         return application.resolve(path);
     }
 
-    public void setAttributes(Attributes attributes) {
-        this.attributes = attributes;
-    }
-
     @Override
-    public Attributes attributes() {
+    public Attributes getAttributes() {
         return attributes;
     }
 
@@ -221,6 +220,22 @@ public class BaseHttpServerContext implements HttpServerContext {
             CharBuffer charBuffer = httpRequestBuilder.getBodyAsChars(htmlCharset);
             if (charBuffer != null) {
                 formParameterBuilder.addPercentEncodedBody(charBuffer.toString());
+            }
+        }
+        String contentType = httpRequestBuilder.getHeaders().get(HttpHeaderNames.CONTENT_TYPE);
+        if (contentType != null && contentType.contains(HttpHeaderValues.APPLICATION_JSON)) {
+            String content = httpRequestBuilder.getBodyAsChars(StandardCharsets.UTF_8).toString();
+            try {
+                Map<String, Object> map = Json.toMap(content);
+                for (Map.Entry<String, Object> entry : map.entrySet()) {
+                    if (entry.getValue() instanceof Iterable<?> iterable) {
+                        iterable.forEach(it -> formParameterBuilder.add(entry.getKey(), it));
+                    } else {
+                        formParameterBuilder.add(entry.getKey(), entry.getValue());
+                    }
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "unable to decode json body: " + e.getMessage(), e);
             }
         }
         CookieBox cookieBox = attributes.get(CookieBox.class, "incomingcookies");

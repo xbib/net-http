@@ -29,8 +29,8 @@ public class WebRootResourceResolver implements ResourceResolver {
     public Resource resolveResource(HttpServerContext httpServerContext,
                                     String templateName,
                                     List<String> indexFiles) throws IOException {
-        String pathSpec = httpServerContext.attributes().containsKey("forwardedPath") ?
-                (String) httpServerContext.attributes().get("forwardedPath") :
+        String pathSpec = httpServerContext.getAttributes().containsKey("forwardedPath") ?
+                (String) httpServerContext.getAttributes().get("forwardedPath") :
                 templateName != null ? templateName : httpServerContext.httpRequest().getRequestPath();
         if (pathSpec == null || pathSpec.isEmpty()) {
             throw new IllegalArgumentException("path must not be null or empty");

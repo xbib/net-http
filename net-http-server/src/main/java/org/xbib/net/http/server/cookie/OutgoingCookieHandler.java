@@ -18,7 +18,7 @@ public class OutgoingCookieHandler implements HttpHandler {
 
     @Override
     public void handle(HttpServerContext context) throws HttpException {
-        CookieBox cookieBox = context.attributes().get(CookieBox.class, "outgoingcookies");
+        CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "outgoingcookies");
         if (cookieBox != null) {
             for (Cookie cookie : cookieBox) {
                 context.response().addCookie(cookie);

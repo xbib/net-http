@@ -143,7 +143,7 @@ public class BaseApplication implements Application {
                          HttpResponseStatus httpResponseStatus) {
         Future<?> future = executor.submit(() -> {
             HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
-            httpServerContext.attributes().put("responsebuilder", httpResponseBuilder);
+            httpServerContext.getAttributes().put("responsebuilder", httpResponseBuilder);
             try {
                 getRouter().routeStatus(httpResponseStatus, httpServerContext);
             } catch (Throwable t) {
@@ -159,11 +159,11 @@ public class BaseApplication implements Application {
                                            HttpRequestBuilder requestBuilder,
                                            HttpResponseBuilder responseBuilder) {
         HttpServerContext httpServerContext = new BaseHttpServerContext(this, domain, requestBuilder, responseBuilder);
-        httpServerContext.attributes().put("requestbuilder", requestBuilder);
-        httpServerContext.attributes().put("responsebuilder", responseBuilder);
+        httpServerContext.getAttributes().put("requestbuilder", requestBuilder);
+        httpServerContext.getAttributes().put("responsebuilder", responseBuilder);
         this.sessionCodec = buildSessionCodec(httpServerContext);
         if (sessionCodec != null) {
-            httpServerContext.attributes().put("sessioncodec", sessionCodec);
+            httpServerContext.getAttributes().put("sessioncodec", sessionCodec);
         }
         this.incomingSessionHandler = buildIncomingSessionHandler(httpServerContext);
         this.outgoingSessionHandler = buildOutgoingSessionHandler(httpServerContext);
@@ -188,7 +188,7 @@ public class BaseApplication implements Application {
 
     protected HttpHandler buildIncomingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.attributes().get(Codec.class, "sessioncodec");
+        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new IncomingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
@@ -202,7 +202,7 @@ public class BaseApplication implements Application {
 
     protected HttpHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.attributes().get(Codec.class, "sessioncodec");
+        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",

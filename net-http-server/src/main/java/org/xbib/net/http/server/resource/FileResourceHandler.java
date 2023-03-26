@@ -37,8 +37,8 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
     @Override
     protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        String pathSpec = httpServerContext.attributes().containsKey("templatePath") ?
-                (String) httpServerContext.attributes().get("templatePath") :
+        String pathSpec = httpServerContext.getAttributes().containsKey("templatePath") ?
+                (String) httpServerContext.getAttributes().get("templatePath") :
                 pathNameOfResource != null ? pathNameOfResource : httpServerContext.getContextPath();
         if (pathSpec == null || pathSpec.isEmpty()) {
             throw new IllegalArgumentException("path must not be null or empty");
@@ -106,7 +106,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
         protected FileResource(HttpServerContext httpServerContext, String resourcePath) throws IOException {
             this.resourcePath = resourcePath;
-            Application application = httpServerContext.attributes().get(Application.class, "application");
+            Application application = httpServerContext.getAttributes().get(Application.class, "application");
             Path root = application.getHome();
             if (root == null) {
                 throw new IllegalArgumentException("no home path set for template resource resolving");

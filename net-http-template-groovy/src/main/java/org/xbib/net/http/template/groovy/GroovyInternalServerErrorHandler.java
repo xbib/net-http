@@ -26,7 +26,7 @@ public class GroovyInternalServerErrorHandler extends GroovyTemplateResourceHand
     }
 
     private String createMessage(HttpServerContext context) throws IOException {
-        Throwable throwable = context.attributes().get(Throwable.class, "_throwable");
+        Throwable throwable = context.getAttributes().get(Throwable.class, "_throwable");
         if (throwable != null) {
             logger.log(Level.SEVERE, throwable.getMessage(), throwable);
         }

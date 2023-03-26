@@ -35,7 +35,7 @@ public class WebApplication extends BaseApplication {
 
     protected HttpHandler buildIncomingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.attributes().get(Codec.class, "sessioncodec");
+        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new IncomingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
@@ -49,7 +49,7 @@ public class WebApplication extends BaseApplication {
 
     protected OutgoingSessionHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.attributes().get(Codec.class, "sessioncodec");
+        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",

@@ -74,7 +74,7 @@ public class NettyHttpsServerMultiRequestLoadTest {
                                                     " SSL peer host = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
                                                     " base URL = " + ctx.httpRequest().getBaseURL() +
                                                     " parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                                    " attributes = " + ctx.attributes() +
+                                                    " attributes = " + ctx.getAttributes() +
                                                     " local address = " + ctx.httpRequest().getLocalAddress() +
                                                     " remote address = " + ctx.httpRequest().getRemoteAddress());
                                         })
@@ -158,7 +158,7 @@ public class NettyHttpsServerMultiRequestLoadTest {
                                                     " SSL session = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
                                                     " base URL = " + ctx.httpRequest().getBaseURL() +
                                                     " parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                                    " attributes = " + ctx.attributes() +
+                                                    " attributes = " + ctx.getAttributes() +
                                                     " local address = " + ctx.httpRequest().getLocalAddress() +
                                                     " remote address = " + ctx.httpRequest().getRemoteAddress());
                                         })

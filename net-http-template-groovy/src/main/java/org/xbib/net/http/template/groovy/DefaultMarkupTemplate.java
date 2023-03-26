@@ -45,11 +45,11 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         this.application = (Application) model.get("application");
         Objects.requireNonNull(this.application, "application must not be null");
         this.responseBuilder = (HttpResponseBuilder) model.get("responsebuilder");
-        Objects.requireNonNull(this.responseBuilder, "response must not be null");
+        Objects.requireNonNull(this.responseBuilder, "responsebuilder must not be null");
         this.request = (HttpRequest) model.get("request");
-        // request can be null in error templates
+        Objects.requireNonNull(this.request, "request must not be null");
         this.session = (Session) model.get("session");
-        // session can be null in error templates
+        // session can be null in environments without sessions
     }
 
     public void setContentType(String contentType) {
@@ -105,23 +105,27 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
     }
 
     public String contextPath(String rel) {
-        return urlProto(rel, false);
+        return url(rel, false);
     }
 
     public String url(String rel) {
-        return urlProto(rel, true);
+        return url(rel, true);
     }
 
-    public String urlProto(String rel, boolean absolute) {
+    public String url(String rel, boolean absolute) {
         String prefix = application.getSettings().get("web.prefix", "/");
         if (!prefix.endsWith("/")) {
             prefix = prefix + "/";
         }
-        URL url = request.getServerURL().resolve(prefix).resolve(rel);
-        logger.log(Level.FINE, "server base URL = " + request.getServerURL() +
-                " prefix = " + prefix +
-                " rel = " + rel + " --> " + url);
-        return absolute ? url.toExternalForm() : toOrigin(url);
+        if (request != null) {
+            URL url = request.getServerURL().resolve(prefix).resolve(rel);
+            logger.log(Level.FINE, "server base URL = " + request.getServerURL() +
+                    " prefix = " + prefix + " rel = " + rel + " --> " + url);
+            return absolute ? url.toExternalForm() : toOrigin(url);
+        } else {
+            logger.log(Level.WARNING, "request is null, returning " + prefix + rel);
+            return prefix + rel;
+        }
     }
 
     public String encodeUrl(String rel) {
@@ -213,15 +217,15 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
     }
 
     public String bootstrapCss() {
-        return contextPath("webjars/bootstrap/5.2.2/dist/css/bootstrap.min.css");
+        return contextPath("webjars/bootstrap/5.2.3/css/bootstrap.min.css");
     }
 
     public String bootstrapJs() {
-        return contextPath("webjars/bootstrap/5.2.2/dist/js/bootstrap.min.js");
+        return contextPath("webjars/bootstrap/5.2.3/js/bootstrap.min.js");
     }
 
     public String jqueryJs() {
-        return contextPath("webjars/jquery/3.6.3/dist/jquery.min.js");
+        return contextPath("webjars/jquery/3.6.4/jquery.min.js");
     }
 
     public String fontawesomeCss() {

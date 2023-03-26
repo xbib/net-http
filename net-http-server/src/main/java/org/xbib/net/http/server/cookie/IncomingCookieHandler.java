@@ -30,7 +30,7 @@ public class IncomingCookieHandler implements HttpHandler {
             cookieBox.addAll(CookieDecoder.LAX.decode(cookieString));
         }
         if (!cookieBox.isEmpty()) {
-            context.attributes().put("incomingcookies", cookieBox);
+            context.getAttributes().put("incomingcookies", cookieBox);
 
         }
     }

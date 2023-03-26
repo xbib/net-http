@@ -141,7 +141,7 @@ public final class Bootstrap {
                             " SSL session = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
                             " base URL = " + ctx.httpRequest().getBaseURL() +
                             " parameter = " + ctx.httpRequest().getParameter().allToString() +
-                            " attributes = " + ctx.attributes() +
+                            " attributes = " + ctx.getAttributes() +
                             " local address = " + ctx.httpRequest().getLocalAddress() +
                             " remote address = " + ctx.httpRequest().getRemoteAddress());
                     ctx.done();

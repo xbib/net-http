@@ -45,7 +45,7 @@ public class HtmlTemplateResource implements HttpServerResource {
                                    HttpServerContext httpServerContext) throws IOException {
         this.templateResourceHandler = templateResourceHandler;
         String indexFileName = templateResourceHandler.getIndexFileName();
-        Application application = httpServerContext.attributes().get(Application.class, "application");
+        Application application = httpServerContext.getAttributes().get(Application.class, "application");
         this.negotiateLocale = application.getSettings().getAsBoolean("negotiateLocale", false);
         Path root = templateResourceHandler.getRoot();
         root = root != null ? root : application.getHome();

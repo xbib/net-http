@@ -73,7 +73,7 @@ public class IncomingSessionHandler implements HttpHandler {
             return;
         }
         Session session = null;
-        CookieBox cookieBox = context.attributes().get(CookieBox.class, "incomingcookies");
+        CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "incomingcookies");
         if (cookieBox != null) {
             for (Cookie cookie : cookieBox) {
                 if (cookie.name().equals(sessionCookieName)) {
@@ -84,11 +84,11 @@ public class IncomingSessionHandler implements HttpHandler {
                             session = toSession(payload);
                             UserProfile userProfile = newUserProfile(payload, session);
                             if (userProfile != null) {
-                                context.attributes().put("userprofile", userProfile);
+                                context.getAttributes().put("userprofile", userProfile);
                             }
                         } catch (CookieSignatureException e) {
                             // set exception in context to discard broken cookie later and render exception message
-                            context.attributes().put("_throwable", e);
+                            context.getAttributes().put("_throwable", e);
                         } catch (Exception e) {
                             logger.log(Level.SEVERE, e.getMessage(), e);
                             throw new HttpException("unable to create session", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
@@ -107,7 +107,7 @@ public class IncomingSessionHandler implements HttpHandler {
                 throw new HttpException("unable to create session", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        context.attributes().put("session", session);
+        context.getAttributes().put("session", session);
         logger.log(Level.FINER, "incoming session " + session.id());
     }
 

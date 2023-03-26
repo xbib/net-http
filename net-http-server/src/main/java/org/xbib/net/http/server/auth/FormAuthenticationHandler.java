@@ -40,14 +40,14 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
             logger.log(Level.WARNING, "no loginPage configured");
             return;
         }
-        UserProfile userProfile = context.attributes().get(UserProfile.class, "userprofile");
+        UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         if (userProfile != null && userProfile.getUserId() != null) {
             logger.log(Level.FINE, "user id already set: " + userProfile.getUserId());
             return;
         }
         // always add an "anonymous" user profile
         userProfile = new BaseUserProfile();
-        context.attributes().put("userprofile", userProfile);
+        context.getAttributes().put("userprofile", userProfile);
         Parameter parameter = context.httpRequest().getParameter();
         if (!parameter.containsKey(usernameParameter, Parameter.Domain.FORM)) {
             logger.log(Level.WARNING, "usernameParameter not set, unable to authenticate");
@@ -76,9 +76,9 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
         // this will redirect internally to login page, and back to the original path.
         // We need a full path resolve against the server URL.
         logger.log(Level.FINE, "templatePath = " + loginPage);
-        context.attributes().put("templatePath", loginPage);
+        context.getAttributes().put("templatePath", loginPage);
         URL loc = context.getContextURL().resolve(context.httpRequest().getRequestURI()).normalize();
         logger.log(Level.FINE, "context URL = " + context.getContextURL() + " request URI = " + context.httpRequest().getRequestURI() + " loc = " + loc);
-        context.attributes().put("originalPath", loc.toExternalForm());
+        context.getAttributes().put("originalPath", loc.toExternalForm());
     }
 }

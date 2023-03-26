@@ -54,9 +54,9 @@ public class ConfigApplicationModule extends BaseApplicationModule {
 
     @Override
     public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService) {
-        httpServerContext.attributes().put("configparams", configParams);
-        httpServerContext.attributes().put("configloader", configLoader);
-        httpServerContext.attributes().put("settings", settings);
+        httpServerContext.getAttributes().put("configparams", configParams);
+        httpServerContext.getAttributes().put("configloader", configLoader);
+        httpServerContext.getAttributes().put("settings", settings);
     }
 
     @Override

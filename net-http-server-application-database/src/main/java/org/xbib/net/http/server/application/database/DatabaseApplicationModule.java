@@ -39,10 +39,10 @@ public class DatabaseApplicationModule<A extends Application> extends BaseApplic
     @Override
     public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService) {
         if (dataSource != null) {
-            httpServerContext.attributes().put("datasource", dataSource);
+            httpServerContext.getAttributes().put("datasource", dataSource);
         }
         if (databaseProvider != null) {
-            httpServerContext.attributes().put("databaseprovider", databaseProvider);
+            httpServerContext.getAttributes().put("databaseprovider", databaseProvider);
         }
     }
 

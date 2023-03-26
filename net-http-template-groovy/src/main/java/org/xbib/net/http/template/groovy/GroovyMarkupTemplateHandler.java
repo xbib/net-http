@@ -60,14 +60,14 @@ public class GroovyMarkupTemplateHandler implements HttpHandler {
 
     @Override
     public void handle(HttpServerContext context) throws IOException {
-        DefaultTemplateResolver templateResolver = context.attributes().get(DefaultTemplateResolver.class, "templateresolver");
+        DefaultTemplateResolver templateResolver = context.getAttributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver == null) {
-            context.attributes().put("templateresolver", this.templateResolver);
+            context.getAttributes().put("templateresolver", this.templateResolver);
             logger.log(Level.FINER, "setting templateresolver " + this.templateResolver);
         }
-        TemplateEngine templateEngine = context.attributes().get(TemplateEngine.class, "templateengine");
+        TemplateEngine templateEngine = context.getAttributes().get(TemplateEngine.class, "templateengine");
         if (templateEngine == null) {
-            context.attributes().put("templateengine", this.templateEngine);
+            context.getAttributes().put("templateengine", this.templateEngine);
             logger.log(Level.FINER, "setting templateengine " + this.templateEngine);
         }
     }

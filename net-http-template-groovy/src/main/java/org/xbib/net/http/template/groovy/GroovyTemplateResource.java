@@ -48,18 +48,18 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
     @Override
     public void render(HttpServerContext httpServerContext) throws IOException {
         logger.log(Level.FINER, "rendering groovy template, path = " + getPath() + " isExists = " + isExists() + " isDirectory =" + isDirectory() );
-        Application application = httpServerContext.attributes().get(Application.class, "application");
+        Application application = httpServerContext.getAttributes().get(Application.class, "application");
         if (application == null) {
             logger.log(Level.WARNING, "application is null");
             return;
         }
-        TemplateEngine templateEngine = httpServerContext.attributes().get(TemplateEngine.class, "templateengine");
+        TemplateEngine templateEngine = httpServerContext.getAttributes().get(TemplateEngine.class, "templateengine");
         if (templateEngine == null) {
             logger.log(Level.WARNING, "template engine is null");
             return;
         }
         Path templatePath = getPath();
-        HttpService service = httpServerContext.attributes().get(HttpService.class, "service");
+        HttpService service = httpServerContext.getAttributes().get(HttpService.class, "service");
         if (service instanceof GroovyTemplateService groovyTemplateService) {
             if (groovyTemplateService.getTemplateName() != null) {
                 templatePath = application.resolve(groovyTemplateService.getTemplateName());
@@ -69,7 +69,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             }
         }
         // status response handlers have priority
-        GroovyHttpResonseStatusTemplateResource resource = httpServerContext.attributes().get(GroovyHttpResonseStatusTemplateResource.class, "_resource");
+        GroovyHttpResonseStatusTemplateResource resource = httpServerContext.getAttributes().get(GroovyHttpResonseStatusTemplateResource.class, "_resource");
         if (resource != null) {
             String indexFileName = resource.getIndexFileName();
             if (indexFileName != null) {
@@ -78,7 +78,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             logger.log(Level.FINER, "rendering Groovy HTTP status response with templatePath = " + templatePath);
         } else {
             // override if 'templatePath' attribute is set
-            String overridePath = httpServerContext.attributes().get(String.class, "templatePath");
+            String overridePath = httpServerContext.getAttributes().get(String.class, "templatePath");
             if (overridePath != null) {
                 logger.log(Level.FINER, "found override templatePath = " + overridePath);
                 templatePath = application.resolve(overridePath);
@@ -113,22 +113,22 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
         Template template = templates.get(templatePath);
         Logger templateLogger = Logger.getLogger("template." + getName().replace('/', '.'));
         Binding binding = new Binding();
-        httpServerContext.attributes().forEach(binding::setVariable);
+        httpServerContext.getAttributes().forEach(binding::setVariable);
         binding.setVariable("logger", templateLogger);
         binding.setVariable("log", templateLogger);
         application.getModules().forEach(m -> binding.setVariable(m.getName(), m));
-        DefaultTemplateResolver templateResolver = httpServerContext.attributes().get(DefaultTemplateResolver.class, "templateresolver");
+        DefaultTemplateResolver templateResolver = httpServerContext.getAttributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver == null) {
             // for Groovy template engines without a resolver, no need to set a locale
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.attributes().put("writable", writable);
+            httpServerContext.getAttributes().put("writable", writable);
             return;
         }
         if (!negotiateLocale) {
             // if no locale negotiation configured, set always the applicaiton locale. This constant value never changes.
             templateResolver.setLocale(application.getLocale());
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.attributes().put("writable", writable);
+            httpServerContext.getAttributes().put("writable", writable);
             return;
         }
         // handle programmatic locale change plus template making under lock so no other request/response can interrupt us
@@ -146,12 +146,12 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
                 }
             }
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.attributes().put("writable", writable);
+            httpServerContext.getAttributes().put("writable", writable);
         } catch (Exception e) {
             // fail silently by ignoring negotation
             templateResolver.setLocale(application.getLocale());
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.attributes().put("writable", writable);
+            httpServerContext.getAttributes().put("writable", writable);
         } finally {
             lock.unlock();
         }

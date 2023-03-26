@@ -27,7 +27,7 @@ public class CommonFormatLogger implements HttpHandler {
         HttpResponseStatus httpResponseStatus = httpServerContext.response().getResponseStatus();
         int statusInteger = httpResponseStatus != null ? httpResponseStatus.code() : 0;
         Long contentLength = httpServerContext.response().getLength();
-        UserProfile userProfile = httpServerContext.attributes().get(UserProfile.class, "userprofile");
+        UserProfile userProfile = httpServerContext.getAttributes().get(UserProfile.class, "userprofile");
         String user = userProfile != null ? userProfile.getEffectiveUserId() : "";
         String message = String.format(Locale.US, LOG_FORMAT,
                 inetAddressString,

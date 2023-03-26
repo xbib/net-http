@@ -20,7 +20,7 @@ public interface HttpServerContext {
 
     void setResolverResult(HttpRouteResolver.Result<HttpService> result);
 
-    Attributes attributes();
+    Attributes getAttributes();
 
     void done();
 

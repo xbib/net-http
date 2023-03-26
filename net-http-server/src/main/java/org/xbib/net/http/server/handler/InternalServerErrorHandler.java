@@ -18,7 +18,7 @@ public class InternalServerErrorHandler implements HttpErrorHandler {
 
     @Override
     public void handle(HttpServerContext context) throws IOException {
-        Throwable throwable = context.attributes().get(Throwable.class, "_throwable");
+        Throwable throwable = context.getAttributes().get(Throwable.class, "_throwable");
         if (throwable != null) {
             logger.log(Level.SEVERE, throwable.getMessage(), throwable);
         }

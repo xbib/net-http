@@ -88,21 +88,21 @@ public class OutgoingSessionHandler implements HttpHandler {
             logger.log(Level.FINE, "suffix " + suffix + " blocking outgoing session handling");
             return;
         }
-        CookieBox cookieBox = context.attributes().get(CookieBox.class, "outgoingcookies");
+        CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "outgoingcookies");
         if (cookieBox == null) {
             cookieBox = new CookieBox();
         }
-        Application application = context.attributes().get(Application.class, "application");
-        UserProfile userProfile = context.attributes().get(UserProfile.class, "userprofile");
+        Application application = context.getAttributes().get(Application.class, "application");
+        UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         String host = context.getContextURL().getHost();
         String path = application.getContextPath();
-        Throwable throwable = context.attributes().get(Throwable.class, "_throwable");
+        Throwable throwable = context.getAttributes().get(Throwable.class, "_throwable");
         if (throwable instanceof CookieSignatureException) {
             cookieBox = new CookieBox();
             cookieBox.add(createEmptyCookie(host, path));
             return;
         }
-        Session session = context.attributes().get(Session.class, "session");
+        Session session = context.getAttributes().get(Session.class, "session");
         if (session != null) {
             try {
                 if (userProfile != null) {
@@ -125,7 +125,7 @@ public class OutgoingSessionHandler implements HttpHandler {
             }
         }
         logger.log(Level.FINER, "outgoing cookies = " + cookieBox);
-        context.attributes().put("outgoingcookies", cookieBox);
+        context.getAttributes().put("outgoingcookies", cookieBox);
     }
 
     private Cookie encodeCookie(Session session, String host, String path) throws IOException,

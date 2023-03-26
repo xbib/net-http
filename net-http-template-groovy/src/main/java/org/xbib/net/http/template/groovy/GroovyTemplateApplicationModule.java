@@ -64,9 +64,9 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
 
     @Override
     public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
-        httpServerContext.attributes().put("request", httpRequest);
-        httpServerContext.attributes().put("params", httpRequest.getParameter().asSingleValuedMap());
-        application.getModules().forEach(module -> httpServerContext.attributes().put(module.getName(), module));
+        httpServerContext.getAttributes().put("request", httpRequest);
+        httpServerContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
+        application.getModules().forEach(module -> httpServerContext.getAttributes().put(module.getName(), module));
     }
 
     @Override
