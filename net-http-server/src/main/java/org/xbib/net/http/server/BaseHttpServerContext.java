@@ -70,6 +70,7 @@ public class BaseHttpServerContext implements HttpServerContext {
         this.attributes.put("domain", domain);
         this.attributes.put("requestbuilder", httpRequestBuilder);
         this.attributes.put("responsebuilder", httpResponseBuilder);
+        this.attributes.put("ctx", this);
     }
 
     @Override

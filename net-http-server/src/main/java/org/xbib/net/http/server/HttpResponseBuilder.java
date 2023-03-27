@@ -1,5 +1,6 @@
 package org.xbib.net.http.server;
 
+import org.xbib.net.Attributes;
 import org.xbib.net.buffer.DataBuffer;
 import org.xbib.net.buffer.DataBufferFactory;
 import org.xbib.net.http.HttpHeaders;
@@ -63,6 +64,8 @@ public interface HttpResponseBuilder {
     HttpResponseBuilder write(FileChannel fileChannel, int bufferSize);
 
     Long getLength();
+
+    Attributes getAttributes();
 
     void reset();
 

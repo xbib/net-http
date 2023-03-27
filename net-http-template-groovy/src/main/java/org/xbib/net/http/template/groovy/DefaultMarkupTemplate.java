@@ -7,6 +7,8 @@ import groovy.text.markup.TemplateConfiguration;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.xbib.net.Attributes;
 import org.xbib.net.URL;
 import org.xbib.net.URLBuilder;
 import org.xbib.net.buffer.DefaultDataBufferFactory;
@@ -214,6 +216,10 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
                 .withLocale(application.getLocale())
                 .withZone(application.getZoneId());
         return ZonedDateTime.now().format(formatter);
+    }
+
+    public Attributes getAttributes() {
+        return responseBuilder.getAttributes();
     }
 
     public String bootstrapCss() {

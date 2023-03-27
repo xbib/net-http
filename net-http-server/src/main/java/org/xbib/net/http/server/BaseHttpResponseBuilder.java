@@ -1,6 +1,7 @@
 package org.xbib.net.http.server;
 
 import org.xbib.datastructures.common.Pair;
+import org.xbib.net.Attributes;
 import org.xbib.net.buffer.DataBuffer;
 import org.xbib.net.buffer.DataBufferFactory;
 import org.xbib.net.buffer.DefaultDataBufferFactory;
@@ -28,9 +29,16 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     private static final Logger logger = Logger.getLogger(BaseHttpResponseBuilder.class.getName());
 
-    private static final String SPACE = " ";
+    /**
+     * A space character for constructing the response.
+     */
+    private static final Character SPACE = ' ';
 
-    private static final String COLON = ":";
+
+    /**
+     * A colon character for header construction.
+     */
+    private static final Character COLON = ':';
 
     private static final String CRLF = "\r\n";
 
@@ -44,6 +52,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     protected HttpResponseStatus status;
 
+    /**
+     * For getting the server name.
+     */
     protected HttpServerConfig httpServerConfig;
 
     protected boolean shouldClose;
@@ -76,6 +87,11 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     protected boolean done;
 
+    /**
+     * Attributes for applications that want to save data in the response.
+     */
+    protected Attributes attributes;
+
     protected BaseHttpResponseBuilder() {
         reset();
     }
@@ -88,6 +104,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         this.contentType = HttpHeaderValues.APPLICATION_OCTET_STREAM;
         this.dataBufferFactory = DefaultDataBufferFactory.getInstance();
         this.shouldClose = false; // tell client we want to keep the connection alive
+        this.attributes = new BaseAttributes();
     }
 
     @Override
@@ -311,6 +328,11 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         return length != null ? length :
                 headers.containsHeader(HttpHeaderNames.CONTENT_LENGTH) ?
                 Long.parseLong(headers.get(HttpHeaderNames.CONTENT_LENGTH)) : null;
+    }
+
+    @Override
+    public Attributes getAttributes() {
+        return attributes;
     }
 
     @Override
