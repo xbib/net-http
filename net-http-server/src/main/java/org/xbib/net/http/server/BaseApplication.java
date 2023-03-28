@@ -59,7 +59,8 @@ public class BaseApplication implements Application {
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
-        this.executor = new BlockingThreadPoolExecutor(builder.blockingThreadCount, builder.blockingQueueCount,
+        this.executor = new BlockingThreadPoolExecutor(builder.blockingThreadCount, builder.blockingThreadQueueCount,
+                builder.blockingThreadKeepAliveTime, builder.blockingThreadKeepAliveTimeUnit,
                 new NamedThreadFactory("org-xbib-net-http-server-application"));
         this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
                         logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
@@ -125,15 +126,10 @@ public class BaseApplication implements Application {
     }
 
     @Override
-    public void dispatch(HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder) {
-        Future<?> future = executor.submit(() -> {
-            try {
-                getRouter().route(requestBuilder, responseBuilder);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, t.getMessage(), t);
-                throw t;
-            }
-        });
+    public void dispatch(HttpRequestBuilder httpRequestBuilder,
+                         HttpResponseBuilder httpResponseBuilder) {
+        Submittable submittable = new Submittable(httpRequestBuilder, httpResponseBuilder);
+        Future<?> future = executor.submit(submittable);
         logger.log(Level.FINE, "dispatching " + future);
     }
 
@@ -141,16 +137,11 @@ public class BaseApplication implements Application {
     public void dispatch(HttpRequestBuilder httpRequestBuilder,
                          HttpResponseBuilder httpResponseBuilder,
                          HttpResponseStatus httpResponseStatus) {
-        Future<?> future = executor.submit(() -> {
-            HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
-            httpServerContext.getAttributes().put("responsebuilder", httpResponseBuilder);
-            try {
-                getRouter().routeStatus(httpResponseStatus, httpServerContext);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, t.getMessage(), t);
-                throw t;
-            }
-        });
+        HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
+        httpServerContext.getAttributes().put("responsebuilder", httpResponseBuilder);
+        StatusSubmittable submittable = new StatusSubmittable(httpRequestBuilder, httpResponseBuilder,
+                httpResponseStatus, httpServerContext);
+        Future<?> future = executor.submit(submittable);
         logger.log(Level.FINE, "dispatching status " + future);
     }
 
@@ -338,5 +329,70 @@ public class BaseApplication implements Application {
             ((Closeable) incomingCookieHandler).close();
         }
         logger.log(Level.INFO, "application closed");
+    }
+
+    private class Submittable implements Runnable, Closeable {
+
+        private final HttpRequestBuilder httpRequestBuilder;
+
+        private final HttpResponseBuilder httpResponseBuilder;
+
+        private Submittable(HttpRequestBuilder httpRequestBuilder,
+                            HttpResponseBuilder httpResponseBuilder) {
+            this.httpRequestBuilder = httpRequestBuilder;
+            this.httpResponseBuilder = httpResponseBuilder;
+        }
+
+        @Override
+        public void run() {
+            try {
+                getRouter().route(httpRequestBuilder, httpResponseBuilder);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                throw t;
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            httpRequestBuilder.close();
+            httpResponseBuilder.close();
+        }
+    }
+
+    private class StatusSubmittable implements Runnable, Closeable {
+        private final HttpRequestBuilder httpRequestBuilder;
+
+        private final HttpResponseBuilder httpResponseBuilder;
+
+        private final HttpResponseStatus httpResponseStatus;
+
+        private final HttpServerContext httpServerContext;
+
+        private StatusSubmittable(HttpRequestBuilder httpRequestBuilder,
+                                  HttpResponseBuilder httpResponseBuilder,
+                                  HttpResponseStatus httpResponseStatus,
+                                  HttpServerContext httpServerContext) {
+            this.httpRequestBuilder = httpRequestBuilder;
+            this.httpResponseBuilder = httpResponseBuilder;
+            this.httpResponseStatus = httpResponseStatus;
+            this.httpServerContext = httpServerContext;
+        }
+
+        @Override
+        public void run() {
+            try {
+                getRouter().routeStatus(httpResponseStatus, httpServerContext);
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                throw t;
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            httpRequestBuilder.close();
+            httpResponseBuilder.close();
+        }
     }
 }

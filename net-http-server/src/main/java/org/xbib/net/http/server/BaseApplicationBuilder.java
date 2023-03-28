@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +38,11 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     protected int blockingThreadCount;
 
-    protected int blockingQueueCount;
+    protected int blockingThreadQueueCount;
+
+    protected int blockingThreadKeepAliveTime;
+
+    protected TimeUnit blockingThreadKeepAliveTimeUnit;
 
     protected Path home;
 
@@ -66,7 +71,9 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     protected BaseApplicationBuilder() {
         this.classLoader = getClass().getClassLoader();
         this.blockingThreadCount = Runtime.getRuntime().availableProcessors();
-        this.blockingQueueCount = Integer.MAX_VALUE;
+        this.blockingThreadQueueCount = Integer.MAX_VALUE;
+        this.blockingThreadKeepAliveTime = 60;
+        this.blockingThreadKeepAliveTimeUnit = TimeUnit.SECONDS;
         this.home = Paths.get(System.getProperties().containsKey("application.home") ? System.getProperty("application.home") : ".");
         this.contextPath = "/";
         this.secret = "secret";
@@ -88,8 +95,20 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     @Override
-    public BaseApplicationBuilder setQueueCount(int blockingQueueCount) {
-        this.blockingQueueCount = blockingQueueCount;
+    public BaseApplicationBuilder setQueueCount(int blockingThreadQueueCount) {
+        this.blockingThreadQueueCount = blockingThreadQueueCount;
+        return this;
+    }
+
+    @Override
+    public BaseApplicationBuilder setKeepAliveTime(int blockingThreadKeepAliveTime) {
+        this.blockingThreadKeepAliveTime = blockingThreadKeepAliveTime;
+        return this;
+    }
+
+    @Override
+    public BaseApplicationBuilder setKeepAliveTimeUnit(TimeUnit blockingThreadKeepAliveTimeUnit) {
+        this.blockingThreadKeepAliveTimeUnit = blockingThreadKeepAliveTimeUnit;
         return this;
     }
 

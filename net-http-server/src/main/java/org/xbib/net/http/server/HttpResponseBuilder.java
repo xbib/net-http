@@ -8,12 +8,13 @@ import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.cookie.Cookie;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 
-public interface HttpResponseBuilder {
+public interface HttpResponseBuilder extends Closeable {
 
     HttpResponseBuilder setDataBufferFactory(DataBufferFactory dataBufferFactory);
 

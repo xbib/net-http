@@ -5,12 +5,17 @@ import org.xbib.net.http.server.route.HttpRouter;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public interface ApplicationBuilder {
 
     ApplicationBuilder setThreadCount(int blockingThreadCount);
 
-    ApplicationBuilder setQueueCount(int blockingQueueCount);
+    ApplicationBuilder setQueueCount(int blockingThreadQueueCount);
+
+    ApplicationBuilder setKeepAliveTime(int keepAliveTime);
+
+    ApplicationBuilder setKeepAliveTimeUnit(TimeUnit keepAliveTimeUnit);
 
     ApplicationBuilder setHome(Path home);
 

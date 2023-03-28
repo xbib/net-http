@@ -118,4 +118,9 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             channel.write(fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength));
         }
     }
+
+    @Override
+    public void close() throws IOException {
+
+    }
 }

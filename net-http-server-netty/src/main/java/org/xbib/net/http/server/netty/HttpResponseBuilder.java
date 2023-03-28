@@ -128,9 +128,12 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         internalBufferWrite(Unpooled.buffer(0));
     }
 
-    public void close() {
-        logger.log(Level.FINER, "closing channel " + ctx.channel());
-        ctx.close();
+    @Override
+    public void close() throws IOException {
+        if (ctx.channel().isOpen()) {
+            logger.log(Level.FINER, "closing netty channel " + ctx.channel());
+            ctx.close();
+        }
     }
 
     @Override
@@ -146,10 +149,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             internalWrite(fileChannel, bufferSize, true);
         } else if (inputStream != null) {
             internalWrite(inputStream, bufferSize, true);
-        }
-        if (shouldFlush()) {
-            // really server flush?
-            //flush();
         }
         return new HttpResponse(this);
     }

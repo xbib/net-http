@@ -1,5 +1,7 @@
 package org.xbib.net.http.server.util;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
@@ -16,11 +18,6 @@ import java.util.logging.Logger;
 public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
 
     private final Logger logger = Logger.getLogger(BlockingThreadPoolExecutor.class.getName());
-
-    public BlockingThreadPoolExecutor(int nThreads, int maxQueue,
-                                      ThreadFactory threadFactory) {
-        this(nThreads, maxQueue, 60L, TimeUnit.SECONDS, threadFactory);
-    }
 
     public BlockingThreadPoolExecutor(int nThreads, int maxQueue,
                                       long keepAliveTime, TimeUnit timeUnit,
@@ -52,6 +49,9 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
                     logger.log(Level.FINE, "waiting for " + future);
                     future.get();
                 }
+                if (future instanceof Closeable closeable) {
+                    closeable.close();
+                }
             } catch (CancellationException ce) {
                 logger.log(Level.FINE, ce.getMessage(), ce);
                 throwable = ce;
@@ -61,6 +61,8 @@ public class BlockingThreadPoolExecutor extends ThreadPoolExecutor {
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 logger.log(Level.FINE, ie.getMessage(), ie);
+            } catch (IOException e) {
+                logger.log(Level.FINE, e.getMessage(), e);
             }
         }
         if (throwable != null) {

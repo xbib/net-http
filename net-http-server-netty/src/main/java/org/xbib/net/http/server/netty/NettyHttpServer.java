@@ -135,11 +135,11 @@ public class NettyHttpServer implements HttpServer {
                 channelFuture.channel().closeFuture()
                         .addListener((ChannelFutureListener) future -> {
                             future.await();
-                            logger.log(Level.INFO, "future " + future + " awaited");
+                            logger.log(Level.FINER, "future " + future + " awaited");
                         });
                 channels.add(channelFuture.sync().channel());
                 channelFuture.await();
-                logger.log(Level.INFO, () -> channelFuture.channel() + " ready, listening");
+                logger.log(Level.FINER, () -> channelFuture.channel() + " ready, listening");
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, e.getMessage(), e);
             }
@@ -152,7 +152,7 @@ public class NettyHttpServer implements HttpServer {
             try {
                 ChannelFuture channelFuture = channel.closeFuture().sync();
                 if (channelFuture.isDone()) {
-                    logger.log(Level.INFO, () -> channel + " close future synced");
+                    logger.log(Level.FINER, () -> channel + " close future synced");
                 }
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, e.getMessage(), e);
@@ -192,7 +192,7 @@ public class NettyHttpServer implements HttpServer {
         for (ChannelFuture channelFuture : channelFutures) {
             if (channelFuture != null && !channelFuture.isDone()) {
                 if (channelFuture.channel().isOpen()) {
-                    logger.log(Level.INFO, "closing channel future");
+                    logger.log(Level.FINER, "closing channel future");
                     channelFuture.channel().close();
                 }
                 channelFuture.cancel(true);
