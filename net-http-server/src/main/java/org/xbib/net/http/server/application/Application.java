@@ -1,9 +1,4 @@
-package org.xbib.net.http.server;
-
-import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.session.SessionListener;
-import org.xbib.settings.Settings;
+package org.xbib.net.http.server.application;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,6 +7,14 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpRequestBuilder;
+import org.xbib.net.http.server.HttpResponseBuilder;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.session.SessionListener;
+import org.xbib.settings.Settings;
 
 public interface Application extends SessionListener, Resolver<Path>, Closeable {
 

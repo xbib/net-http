@@ -2,11 +2,11 @@ package org.xbib.net.http.template.groovy;
 
 import org.xbib.net.ParameterDefinition;
 import org.xbib.net.http.HttpMethod;
-import org.xbib.net.http.server.BaseHttpServiceBuilder;
+import org.xbib.net.http.server.service.BaseHttpServiceBuilder;
 
 import java.nio.file.Path;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpSecurityDomain;
+import org.xbib.net.http.server.domain.HttpSecurityDomain;
 
 public class GroovyTemplateServiceBuilder extends BaseHttpServiceBuilder {
 

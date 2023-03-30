@@ -1,13 +1,5 @@
 package org.xbib.net.http.server.session.file;
 
-import org.xbib.net.PercentEncoder;
-import org.xbib.net.PercentEncoders;
-import org.xbib.net.http.server.persist.Codec;
-import org.xbib.net.http.server.session.BaseSession;
-import org.xbib.net.http.server.session.Session;
-import org.xbib.net.http.server.session.SessionListener;
-import org.xbib.net.util.JsonUtil;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
@@ -22,6 +14,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import org.xbib.net.PercentEncoder;
+import org.xbib.net.PercentEncoders;
+import org.xbib.net.http.server.persist.Codec;
+import org.xbib.net.http.server.session.BaseSession;
+import org.xbib.net.http.server.session.Session;
+import org.xbib.net.http.server.session.SessionListener;
+import org.xbib.net.util.JsonUtil;
 
 public class FileJsonSessionCodec implements Codec<Session> {
 

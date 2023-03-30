@@ -3,8 +3,8 @@ package org.xbib.net.http.server.ldap;
 import java.util.Map;
 import org.xbib.net.Authenticator;
 import org.xbib.net.GroupsProvider;
-import org.xbib.net.UsersProvider;
 import org.xbib.net.SecurityRealm;
+import org.xbib.net.UsersProvider;
 
 public class LdapRealm extends SecurityRealm {
 

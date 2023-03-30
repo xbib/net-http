@@ -1,20 +1,17 @@
 package org.xbib.net.http.server.route;
 
-import java.util.Set;
-import org.xbib.net.Parameter;
-import org.xbib.net.ParameterBuilder;
-import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpMethod;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
+import org.xbib.net.Parameter;
+import org.xbib.net.ParameterBuilder;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpMethod;
 import static org.xbib.net.Parameter.Domain.PATH;
 
 public class BaseHttpRouteResolver<T> implements HttpRouteResolver<T> {

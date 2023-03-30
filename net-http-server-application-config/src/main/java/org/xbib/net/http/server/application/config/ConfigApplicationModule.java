@@ -6,11 +6,11 @@ import org.xbib.config.ConfigLoader;
 import org.xbib.config.ConfigLogger;
 import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
-import org.xbib.net.http.server.Application;
-import org.xbib.net.http.server.BaseApplicationModule;
+import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.application.BaseApplicationModule;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.HttpService;
+import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
 
 public class ConfigApplicationModule extends BaseApplicationModule {

@@ -1,11 +1,10 @@
-package org.xbib.net.http.server;
-
-import org.xbib.net.http.server.route.HttpRouter;
+package org.xbib.net.http.server.application;
 
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import org.xbib.net.http.server.route.HttpRouter;
 
 public interface ApplicationBuilder {
 

@@ -1,4 +1,4 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.application;
 
 public interface Resolver<R> {
 

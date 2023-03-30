@@ -1,5 +1,10 @@
 package org.xbib.net.http.server;
 
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.util.Objects;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.URLBuilder;
@@ -7,12 +12,6 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
-
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.util.Objects;
 
 public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 

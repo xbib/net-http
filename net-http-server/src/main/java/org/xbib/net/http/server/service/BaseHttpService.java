@@ -1,15 +1,16 @@
-package org.xbib.net.http.server;
-
-import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.xbib.net.ParameterDefinition;
-import org.xbib.net.http.HttpMethod;
+package org.xbib.net.http.server.service;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.logging.Logger;
+import org.xbib.net.ParameterDefinition;
+import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.domain.HttpSecurityDomain;
 
 public class BaseHttpService implements HttpService {
 

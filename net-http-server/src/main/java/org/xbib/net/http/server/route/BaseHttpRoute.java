@@ -1,19 +1,18 @@
 package org.xbib.net.http.server.route;
 
-import java.util.Collection;
-import java.util.Set;
-import org.xbib.net.ParameterBuilder;
-import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpMethod;
-
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import org.xbib.net.ParameterBuilder;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpMethod;
 
 public class BaseHttpRoute implements HttpRoute {
 

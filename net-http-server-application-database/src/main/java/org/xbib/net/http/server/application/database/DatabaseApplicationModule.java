@@ -4,11 +4,11 @@ import org.xbib.jdbc.connection.pool.PoolConfig;
 import org.xbib.jdbc.connection.pool.PoolDataSource;
 import org.xbib.jdbc.query.DatabaseProvider;
 import org.xbib.jdbc.query.Flavor;
-import org.xbib.net.http.server.Application;
-import org.xbib.net.http.server.BaseApplicationModule;
+import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.application.BaseApplicationModule;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.HttpService;
+import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
 
 import javax.sql.DataSource;

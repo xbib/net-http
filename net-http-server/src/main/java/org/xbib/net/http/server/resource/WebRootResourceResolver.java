@@ -1,18 +1,17 @@
 package org.xbib.net.http.server.resource;
 
-import org.xbib.net.PathNormalizer;
-import org.xbib.net.Resource;
-import org.xbib.net.URL;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.xbib.net.PathNormalizer;
+import org.xbib.net.Resource;
+import org.xbib.net.URL;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpRequest;
+import org.xbib.net.http.server.HttpServerContext;
 
 public class WebRootResourceResolver implements ResourceResolver {
 

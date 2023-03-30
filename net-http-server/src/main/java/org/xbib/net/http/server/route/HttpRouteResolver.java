@@ -1,11 +1,10 @@
 package org.xbib.net.http.server.route;
 
+import java.util.List;
 import java.util.Set;
 import org.xbib.net.Parameter;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpMethod;
-
-import java.util.List;
 
 public interface HttpRouteResolver<T> {
 

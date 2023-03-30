@@ -7,7 +7,6 @@ import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.server.BaseHttpRequestBuilder;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
@@ -100,7 +99,6 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     }
 
     @Override
-    public void close() throws IOException {
-
+    public void release() {
     }
 }

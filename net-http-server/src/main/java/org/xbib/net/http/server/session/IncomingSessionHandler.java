@@ -1,18 +1,5 @@
 package org.xbib.net.http.server.session;
 
-import org.xbib.net.PercentDecoder;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.cookie.Cookie;
-import org.xbib.net.http.cookie.CookieBox;
-import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.auth.BaseUserProfile;
-import org.xbib.net.UserProfile;
-import org.xbib.net.http.server.cookie.CookieSignatureException;
-import org.xbib.net.http.server.cookie.CookieSignatureUtil;
-import org.xbib.net.http.server.persist.Codec;
-
 import java.io.IOException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +11,18 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.PercentDecoder;
+import org.xbib.net.UserProfile;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.cookie.Cookie;
+import org.xbib.net.http.cookie.CookieBox;
+import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.auth.BaseUserProfile;
+import org.xbib.net.http.server.cookie.CookieSignatureException;
+import org.xbib.net.http.server.cookie.CookieSignatureUtil;
+import org.xbib.net.http.server.persist.Codec;
 
 public class IncomingSessionHandler implements HttpHandler {
 

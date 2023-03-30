@@ -1,16 +1,15 @@
 package org.xbib.net.http.server.session.memory;
 
-import org.xbib.net.http.server.persist.Codec;
-import org.xbib.net.http.server.session.BaseSession;
-import org.xbib.net.http.server.session.Session;
-import org.xbib.net.http.server.session.SessionListener;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.xbib.net.http.server.persist.Codec;
+import org.xbib.net.http.server.session.BaseSession;
+import org.xbib.net.http.server.session.Session;
+import org.xbib.net.http.server.session.SessionListener;
 
 public class MemoryPropertiesSessionCodec implements Codec<Session> {
 

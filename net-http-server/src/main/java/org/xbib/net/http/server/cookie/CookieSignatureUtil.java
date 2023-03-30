@@ -1,15 +1,14 @@
 package org.xbib.net.http.server.cookie;
 
-import org.xbib.net.util.JsonUtil;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import org.xbib.net.util.JsonUtil;
 
 public class CookieSignatureUtil {
 

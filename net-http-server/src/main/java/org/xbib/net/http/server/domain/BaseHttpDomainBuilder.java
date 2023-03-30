@@ -1,4 +1,4 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.domain;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.server.service.HttpService;
 
 public class BaseHttpDomainBuilder implements HttpDomainBuilder {
 

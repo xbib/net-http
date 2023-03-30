@@ -1,8 +1,7 @@
 package org.xbib.net.http.server;
 
-import org.xbib.net.Response;
-
 import java.io.IOException;
+import org.xbib.net.Response;
 
 public interface HttpResponse extends Response {
 

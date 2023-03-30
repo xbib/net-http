@@ -1,10 +1,9 @@
 package org.xbib.net.http.server.resource;
 
-import org.xbib.net.Resource;
-import org.xbib.net.http.server.HttpServerContext;
-
 import java.io.IOException;
 import java.util.List;
+import org.xbib.net.Resource;
+import org.xbib.net.http.server.HttpServerContext;
 
 public interface ResourceResolver {
 

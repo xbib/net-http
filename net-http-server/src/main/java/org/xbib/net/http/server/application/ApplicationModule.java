@@ -1,5 +1,8 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.application;
 
+import org.xbib.net.http.server.HttpRequest;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.settings.Settings;
 

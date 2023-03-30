@@ -9,7 +9,6 @@ import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.server.BaseHttpRequestBuilder;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -116,7 +115,7 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     }
 
     @Override
-    public void close() throws IOException {
+    public void release() {
         if (fullHttpRequest != null) {
             logger.log(Level.FINER, "releasing retained netty request");
             fullHttpRequest.release();

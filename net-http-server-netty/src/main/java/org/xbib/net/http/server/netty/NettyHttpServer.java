@@ -15,7 +15,7 @@ import org.xbib.net.NetworkClass;
 import org.xbib.net.NetworkUtils;
 import org.xbib.net.SocketConfig;
 import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpServer;
 
 import java.io.IOException;

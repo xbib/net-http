@@ -6,10 +6,10 @@ import groovy.text.markup.MarkupTemplateEngine;
 import groovy.text.markup.TemplateConfiguration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.Resolver;
+import org.xbib.net.http.server.application.Resolver;
 
 import java.io.IOException;
 import java.nio.file.Path;

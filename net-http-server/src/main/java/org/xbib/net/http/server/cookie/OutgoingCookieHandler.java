@@ -1,13 +1,12 @@
 package org.xbib.net.http.server.cookie;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.cookie.CookieBox;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class OutgoingCookieHandler implements HttpHandler {
 

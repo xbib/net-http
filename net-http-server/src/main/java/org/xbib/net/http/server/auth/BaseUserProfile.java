@@ -1,11 +1,9 @@
 package org.xbib.net.http.server.auth;
 
-import org.xbib.net.Attributes;
-import org.xbib.net.UserProfile;
-import org.xbib.net.http.server.BaseAttributes;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.xbib.net.Attributes;
+import org.xbib.net.UserProfile;
 
 public class BaseUserProfile implements UserProfile {
 

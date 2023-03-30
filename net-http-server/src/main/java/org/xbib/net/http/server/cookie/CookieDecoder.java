@@ -1,13 +1,12 @@
 package org.xbib.net.http.server.cookie;
 
-import org.xbib.net.http.cookie.Cookie;
-import org.xbib.net.http.cookie.CookieHeaderNames;
-import org.xbib.net.http.cookie.DefaultCookie;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.xbib.net.http.cookie.Cookie;
+import org.xbib.net.http.cookie.CookieHeaderNames;
+import org.xbib.net.http.cookie.DefaultCookie;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie decoder to be used server side.

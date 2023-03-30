@@ -1,8 +1,7 @@
 package org.xbib.net.http.server;
 
-import org.xbib.net.NetworkClass;
-
 import java.util.Optional;
+import org.xbib.net.NetworkClass;
 
 public class HttpServerConfig {
 

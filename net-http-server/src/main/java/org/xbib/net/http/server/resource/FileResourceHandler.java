@@ -1,19 +1,18 @@
 package org.xbib.net.http.server.resource;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.xbib.net.PathNormalizer;
-import org.xbib.net.Resource;
-import org.xbib.net.URL;
-import org.xbib.net.http.server.Application;
-import org.xbib.net.http.server.HttpServerContext;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.xbib.net.PathNormalizer;
+import org.xbib.net.Resource;
+import org.xbib.net.URL;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.application.Application;
 
 public class FileResourceHandler extends AbstractResourceHandler {
 

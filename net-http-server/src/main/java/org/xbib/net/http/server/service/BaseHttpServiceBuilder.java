@@ -1,15 +1,15 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.service;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-
-import org.xbib.net.ParameterDefinition;
-import org.xbib.net.http.HttpMethod;
-import org.xbib.net.PathNormalizer;
-
 import java.util.Objects;
+import java.util.Set;
+import org.xbib.net.ParameterDefinition;
+import org.xbib.net.PathNormalizer;
+import org.xbib.net.http.HttpMethod;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpServiceBuilder;
+import org.xbib.net.http.server.domain.HttpSecurityDomain;
 
 public class BaseHttpServiceBuilder implements HttpServiceBuilder {
 
@@ -28,8 +28,7 @@ public class BaseHttpServiceBuilder implements HttpServiceBuilder {
     protected BaseHttpServiceBuilder() {
         this.prefix = "";
         this.pathSpec = "/**";
-        this.methods = new HashSet<>();
-        methods.add(HttpMethod.GET);
+        this.methods = Set.of(HttpMethod.GET);
         this.handlers = null;
         this.securityDomain = null;
     }
@@ -49,8 +48,8 @@ public class BaseHttpServiceBuilder implements HttpServiceBuilder {
     }
 
     @Override
-    public BaseHttpServiceBuilder setMethod(HttpMethod... method) {
-        this.methods = new LinkedHashSet<>(Arrays.asList(method));
+    public BaseHttpServiceBuilder setMethod(HttpMethod... methods) {
+        this.methods = Set.of(methods);
         return this;
     }
 

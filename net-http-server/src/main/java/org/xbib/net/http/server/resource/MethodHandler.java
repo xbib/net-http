@@ -1,10 +1,9 @@
 package org.xbib.net.http.server.resource;
 
+import java.lang.reflect.Method;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
-
-import java.lang.reflect.Method;
 
 public class MethodHandler implements HttpHandler {
 

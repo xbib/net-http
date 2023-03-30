@@ -1,10 +1,9 @@
 package org.xbib.net.http.server.resource;
 
-import org.xbib.net.Resource;
-import org.xbib.net.http.server.HttpServerContext;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.xbib.net.Resource;
+import org.xbib.net.http.server.HttpServerContext;
 
 public class HtmlTemplateResourceHandler extends AbstractResourceHandler {
 

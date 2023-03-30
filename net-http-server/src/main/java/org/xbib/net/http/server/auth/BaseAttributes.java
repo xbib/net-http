@@ -1,8 +1,7 @@
-package org.xbib.net.http.server;
-
-import org.xbib.net.Attributes;
+package org.xbib.net.http.server.auth;
 
 import java.util.LinkedHashMap;
+import org.xbib.net.Attributes;
 
 @SuppressWarnings("serial")
 public class BaseAttributes extends LinkedHashMap<String, Object> implements Attributes {

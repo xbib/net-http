@@ -1,5 +1,7 @@
 package org.xbib.net.http.server;
 
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
@@ -7,11 +9,7 @@ import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
 
-import java.io.Closeable;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-
-public interface HttpRequestBuilder extends Closeable {
+public interface HttpRequestBuilder {
 
     HttpRequestBuilder setAddress(HttpAddress httpAddress);
 
@@ -48,5 +46,7 @@ public interface HttpRequestBuilder extends Closeable {
     HttpRequest build();
 
     void done();
+
+    void release();
 
 }

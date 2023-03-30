@@ -1,6 +1,19 @@
 package org.xbib.net.http.server;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.datastructures.json.tiny.Json;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
@@ -12,22 +25,11 @@ import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.cookie.CookieBox;
+import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.auth.BaseAttributes;
+import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.route.HttpRouteResolver;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.CharBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
-import java.nio.file.Path;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.xbib.net.http.server.service.HttpService;
 import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 
 public class BaseHttpServerContext implements HttpServerContext {

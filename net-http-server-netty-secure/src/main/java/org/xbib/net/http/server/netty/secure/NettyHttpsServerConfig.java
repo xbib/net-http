@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
-import org.xbib.net.http.server.HttpDomain;
+import org.xbib.net.http.server.domain.HttpDomain;
 
 import java.util.Collection;
 

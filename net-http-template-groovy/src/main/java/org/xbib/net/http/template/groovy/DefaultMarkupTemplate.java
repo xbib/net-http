@@ -14,7 +14,7 @@ import org.xbib.net.URLBuilder;
 import org.xbib.net.buffer.DefaultDataBufferFactory;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.session.Session;

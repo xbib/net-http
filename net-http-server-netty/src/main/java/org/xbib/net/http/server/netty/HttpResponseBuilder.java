@@ -129,8 +129,9 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     }
 
     @Override
-    public void close() throws IOException {
-        if (ctx.channel().isOpen()) {
+    public void release() {
+        super.release();
+        if (ctx != null && ctx.channel().isOpen()) {
             logger.log(Level.FINER, "closing netty channel " + ctx.channel());
             ctx.close();
         }
@@ -185,7 +186,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         }
         HttpHeaders trailingHeaders = new DefaultHttpHeaders();
         super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
-        // retain Netty byteBuf because FullHttpResponse will be released in writeAndFlush()
         FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.valueOf(version.text()),
                 responseStatus, byteBuf.retain(), headers, trailingHeaders);
         if (!ctx.channel().isWritable()) {
@@ -204,7 +204,7 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
 
     private void internalWrite(FileChannel fileChannel, int bufferSize, boolean keepAlive) {
         if (!ctx.channel().isWritable()) {
-            logger.log(Level.WARNING, "we have a problem, the channel " + ctx.channel() + " is not writable");
+            logger.log(Level.WARNING, "channel not writeable: " + ctx.channel());
         }
         HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(status.code());
         DefaultHttpResponse rsp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);

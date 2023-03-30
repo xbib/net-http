@@ -5,7 +5,7 @@ import org.xbib.net.NetworkUtils;
 import org.xbib.net.SocketConfig;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;

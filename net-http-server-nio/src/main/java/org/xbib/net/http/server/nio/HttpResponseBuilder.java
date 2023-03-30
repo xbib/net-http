@@ -116,6 +116,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     }
 
     @Override
-    public void close() throws IOException {
+    public void release() {
     }
 }

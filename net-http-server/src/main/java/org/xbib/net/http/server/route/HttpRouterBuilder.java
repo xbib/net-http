@@ -1,7 +1,7 @@
 package org.xbib.net.http.server.route;
 
-import org.xbib.net.http.server.HttpDomain;
 import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.domain.HttpDomain;
 
 public interface HttpRouterBuilder {
 

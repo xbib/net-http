@@ -1,6 +1,6 @@
 package org.xbib.net.http.server.application.web;
 
-import org.xbib.net.http.server.BaseApplicationBuilder;
+import org.xbib.net.http.server.application.BaseApplicationBuilder;
 
 import org.xbib.settings.Settings;
 

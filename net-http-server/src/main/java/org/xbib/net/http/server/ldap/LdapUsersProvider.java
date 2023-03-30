@@ -7,9 +7,8 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
-import org.xbib.net.UsersProvider;
 import org.xbib.net.UserDetails;
-
+import org.xbib.net.UsersProvider;
 import static java.lang.String.format;
 
 public class LdapUsersProvider extends UsersProvider {

@@ -5,7 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpServerBuilder;
 import org.xbib.net.util.NamedThreadFactory;
 

@@ -1,7 +1,5 @@
 package org.xbib.net.http.server.persist.file;
 
-import org.xbib.net.http.server.persist.Codec;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -12,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.xbib.net.http.server.persist.Codec;
 
 public class FilePropertiesCodec implements Codec<Map<String, Object>> {
 

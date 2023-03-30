@@ -1,18 +1,5 @@
 package org.xbib.net.http.server;
 
-import org.xbib.datastructures.common.Pair;
-import org.xbib.net.Attributes;
-import org.xbib.net.buffer.DataBuffer;
-import org.xbib.net.buffer.DataBufferFactory;
-import org.xbib.net.buffer.DefaultDataBufferFactory;
-import org.xbib.net.http.server.cookie.CookieEncoder;
-import org.xbib.net.http.HttpHeaderNames;
-import org.xbib.net.http.HttpHeaderValues;
-import org.xbib.net.http.HttpHeaders;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.HttpVersion;
-import org.xbib.net.http.cookie.Cookie;
-
 import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
@@ -24,6 +11,19 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.datastructures.common.Pair;
+import org.xbib.net.Attributes;
+import org.xbib.net.buffer.DataBuffer;
+import org.xbib.net.buffer.DataBufferFactory;
+import org.xbib.net.buffer.DefaultDataBufferFactory;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.HttpHeaderValues;
+import org.xbib.net.http.HttpHeaders;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.cookie.Cookie;
+import org.xbib.net.http.server.auth.BaseAttributes;
+import org.xbib.net.http.server.cookie.CookieEncoder;
 
 public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
@@ -344,6 +344,14 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         logger.log(Level.FINER, "done");
     }
 
+    @Override
+    public void release() {
+        if (dataBuffer != null) {
+            logger.log(Level.FINER, "databuffer release " + dataBuffer);
+            dataBuffer.release();
+        }
+    }
+
     public void buildHeaders(long contentLength) {
         this.length = contentLength;
         if (!headers.containsHeader(HttpHeaderNames.CONTENT_TYPE)) {
@@ -373,7 +381,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (httpServerConfig != null && httpServerConfig.getServerName() != null) {
             headers.add(HttpHeaderNames.SERVER, httpServerConfig.getServerName());
         }
-        logger.log(Level.FINER, "done: status = " + status + " headers = " + headers);
+        logger.log(Level.FINER, "build headers: status = " + status + " headers = " + headers);
     }
 
     public CharBuffer wrapHeaders() {

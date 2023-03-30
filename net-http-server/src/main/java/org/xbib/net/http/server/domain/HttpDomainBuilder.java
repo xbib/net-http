@@ -1,8 +1,8 @@
-package org.xbib.net.http.server;
-
-import org.xbib.net.http.HttpAddress;
+package org.xbib.net.http.server.domain;
 
 import java.io.IOException;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.server.service.HttpService;
 
 public interface HttpDomainBuilder {
 

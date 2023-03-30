@@ -1,13 +1,12 @@
 package org.xbib.net.http.server.cookie;
 
+import java.time.Instant;
+import java.util.Locale;
+import java.util.Objects;
 import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.cookie.CookieHeaderNames;
 import org.xbib.net.http.cookie.CookieUtil;
 import org.xbib.net.util.DateTimeUtil;
-
-import java.time.Instant;
-import java.util.Locale;
-import java.util.Objects;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie encoder to be used server side,

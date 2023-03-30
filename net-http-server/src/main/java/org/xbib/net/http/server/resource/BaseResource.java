@@ -1,10 +1,9 @@
 package org.xbib.net.http.server.resource;
 
-import org.xbib.net.Resource;
-import org.xbib.net.URL;
-
 import java.nio.file.Path;
 import java.time.Instant;
+import org.xbib.net.Resource;
+import org.xbib.net.URL;
 
 public class BaseResource implements Resource {
 

@@ -1,22 +1,4 @@
-package org.xbib.net.http.server;
-
-import org.xbib.net.http.cookie.SameSite;
-import org.xbib.net.http.server.route.HttpRouter;
-import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.cookie.IncomingCookieHandler;
-import org.xbib.net.http.server.cookie.OutgoingCookieHandler;
-import org.xbib.net.http.server.persist.Codec;
-import org.xbib.net.http.server.session.memory.MemoryPropertiesSessionCodec;
-import org.xbib.net.http.server.render.HttpResponseRenderer;
-import org.xbib.net.http.server.session.IncomingSessionHandler;
-import org.xbib.net.http.server.session.OutgoingSessionHandler;
-import org.xbib.net.http.server.session.Session;
-import org.xbib.net.http.server.util.BlockingThreadPoolExecutor;
-import org.xbib.net.http.server.validate.HttpRequestValidator;
-import org.xbib.net.util.NamedThreadFactory;
-import org.xbib.net.util.RandomUtil;
-import org.xbib.settings.Settings;
+package org.xbib.net.http.server.application;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -32,6 +14,29 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.cookie.SameSite;
+import org.xbib.net.http.server.BaseHttpServerContext;
+import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpRequestBuilder;
+import org.xbib.net.http.server.HttpResponseBuilder;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.cookie.IncomingCookieHandler;
+import org.xbib.net.http.server.cookie.OutgoingCookieHandler;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.persist.Codec;
+import org.xbib.net.http.server.render.HttpResponseRenderer;
+import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.net.http.server.session.IncomingSessionHandler;
+import org.xbib.net.http.server.session.OutgoingSessionHandler;
+import org.xbib.net.http.server.session.Session;
+import org.xbib.net.http.server.session.memory.MemoryPropertiesSessionCodec;
+import org.xbib.net.http.server.validate.HttpRequestValidator;
+import org.xbib.net.util.NamedThreadFactory;
+import org.xbib.net.util.RandomUtil;
+import org.xbib.settings.Settings;
 
 public class BaseApplication implements Application {
 
@@ -39,7 +44,7 @@ public class BaseApplication implements Application {
 
     protected BaseApplicationBuilder builder;
 
-    private final BlockingThreadPoolExecutor executor;
+    private final ApplicationThreadPoolExecutor executor;
 
     private final HttpRequestValidator httpRequestValidator;
 
@@ -59,7 +64,7 @@ public class BaseApplication implements Application {
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
-        this.executor = new BlockingThreadPoolExecutor(builder.blockingThreadCount, builder.blockingThreadQueueCount,
+        this.executor = new ApplicationThreadPoolExecutor(builder.blockingThreadCount, builder.blockingThreadQueueCount,
                 builder.blockingThreadKeepAliveTime, builder.blockingThreadKeepAliveTimeUnit,
                 new NamedThreadFactory("org-xbib-net-http-server-application"));
         this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
@@ -128,9 +133,21 @@ public class BaseApplication implements Application {
     @Override
     public void dispatch(HttpRequestBuilder httpRequestBuilder,
                          HttpResponseBuilder httpResponseBuilder) {
-        Submittable submittable = new Submittable(httpRequestBuilder, httpResponseBuilder);
-        Future<?> future = executor.submit(submittable);
-        logger.log(Level.FINE, "dispatching " + future);
+        RouterCallable routerCallable = new RouterCallable() {
+            @Override
+            public Boolean call() {
+                getRouter().route(httpRequestBuilder, httpResponseBuilder);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                httpRequestBuilder.release();
+                httpResponseBuilder.release();
+            }
+        };
+        Future<?> future = executor.submit(routerCallable);
+        logger.log(Level.FINE, "dispatched " + future);
     }
 
     @Override
@@ -139,10 +156,21 @@ public class BaseApplication implements Application {
                          HttpResponseStatus httpResponseStatus) {
         HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
         httpServerContext.getAttributes().put("responsebuilder", httpResponseBuilder);
-        StatusSubmittable submittable = new StatusSubmittable(httpRequestBuilder, httpResponseBuilder,
-                httpResponseStatus, httpServerContext);
-        Future<?> future = executor.submit(submittable);
-        logger.log(Level.FINE, "dispatching status " + future);
+        RouterCallable routerCallable = new RouterCallable() {
+            @Override
+            public Boolean call() {
+                getRouter().routeStatus(httpResponseStatus, httpServerContext);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                httpRequestBuilder.release();
+                httpResponseBuilder.release();
+            }
+        };
+        Future<?> future = executor.submit(routerCallable);
+        logger.log(Level.FINE, "dispatched status " + future);
     }
 
     @Override
@@ -331,68 +359,4 @@ public class BaseApplication implements Application {
         logger.log(Level.INFO, "application closed");
     }
 
-    private class Submittable implements Runnable, Closeable {
-
-        private final HttpRequestBuilder httpRequestBuilder;
-
-        private final HttpResponseBuilder httpResponseBuilder;
-
-        private Submittable(HttpRequestBuilder httpRequestBuilder,
-                            HttpResponseBuilder httpResponseBuilder) {
-            this.httpRequestBuilder = httpRequestBuilder;
-            this.httpResponseBuilder = httpResponseBuilder;
-        }
-
-        @Override
-        public void run() {
-            try {
-                getRouter().route(httpRequestBuilder, httpResponseBuilder);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, t.getMessage(), t);
-                throw t;
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            httpRequestBuilder.close();
-            httpResponseBuilder.close();
-        }
-    }
-
-    private class StatusSubmittable implements Runnable, Closeable {
-        private final HttpRequestBuilder httpRequestBuilder;
-
-        private final HttpResponseBuilder httpResponseBuilder;
-
-        private final HttpResponseStatus httpResponseStatus;
-
-        private final HttpServerContext httpServerContext;
-
-        private StatusSubmittable(HttpRequestBuilder httpRequestBuilder,
-                                  HttpResponseBuilder httpResponseBuilder,
-                                  HttpResponseStatus httpResponseStatus,
-                                  HttpServerContext httpServerContext) {
-            this.httpRequestBuilder = httpRequestBuilder;
-            this.httpResponseBuilder = httpResponseBuilder;
-            this.httpResponseStatus = httpResponseStatus;
-            this.httpServerContext = httpServerContext;
-        }
-
-        @Override
-        public void run() {
-            try {
-                getRouter().routeStatus(httpResponseStatus, httpServerContext);
-            } catch (Throwable t) {
-                logger.log(Level.SEVERE, t.getMessage(), t);
-                throw t;
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            httpRequestBuilder.close();
-            httpResponseBuilder.close();
-        }
-    }
 }

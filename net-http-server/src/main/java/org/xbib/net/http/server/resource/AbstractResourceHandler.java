@@ -1,20 +1,5 @@
 package org.xbib.net.http.server.resource;
 
-import org.xbib.net.Resource;
-import org.xbib.net.URL;
-import org.xbib.net.buffer.DataBuffer;
-import org.xbib.net.buffer.DataBufferUtil;
-import org.xbib.net.http.HttpHeaderNames;
-import org.xbib.net.http.HttpHeaders;
-import org.xbib.net.http.HttpMethod;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.util.DateTimeUtil;
-import org.xbib.net.mime.MimeTypeService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -33,6 +18,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.Resource;
+import org.xbib.net.URL;
+import org.xbib.net.buffer.DataBuffer;
+import org.xbib.net.buffer.DataBufferUtil;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.HttpHeaders;
+import org.xbib.net.http.HttpMethod;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpResponseBuilder;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.mime.MimeTypeService;
+import org.xbib.net.util.DateTimeUtil;
 
 public abstract class AbstractResourceHandler implements HttpHandler {
 
@@ -267,6 +266,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                         .append(StandardCharsets.ISO_8859_1.decode(dataBuffer.asByteBuffer()))
                         .append('\n')
                         .append("--MULTIPART_BOUNDARY--").append('\n');
+                    dataBuffer.release();
                 } catch (URISyntaxException | IOException e) {
                     logger.log(Level.FINEST, e.getMessage(), e);
                 }
@@ -345,9 +345,10 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         } else {
             fileChannel = fileChannel.position(offset);
             try (ReadableByteChannel channel = fileChannel) {
+                DataBuffer dataBuffer = DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
                 responseBuilder.setResponseStatus(httpResponseStatus)
                         .setContentType(contentType)
-                        .write(DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size));
+                        .write(dataBuffer);
             }
         }
     }
@@ -363,10 +364,11 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         } else {
             long n = inputStream.skip(offset);
             try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
+                DataBuffer dataBuffer = DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
                 responseBuilder
                         .setResponseStatus(httpResponseStatus)
                         .setContentType(contentType)
-                        .write(DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size));
+                        .write(dataBuffer);
             }
         }
     }

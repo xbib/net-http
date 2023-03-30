@@ -2,31 +2,29 @@ package org.xbib.net.http.server.route;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.TreeSet;
-
 import org.xbib.datastructures.common.LinkedHashSetMultiMap;
 import org.xbib.datastructures.common.MultiMap;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.Application;
-import org.xbib.net.http.server.HttpDomain;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.HttpService;
+import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.handler.InternalServerErrorHandler;
-
+import org.xbib.net.http.server.service.HttpService;
 import static org.xbib.net.http.HttpResponseStatus.NOT_FOUND;
 
 public class BaseHttpRouter implements HttpRouter {
@@ -88,7 +86,8 @@ public class BaseHttpRouter implements HttpRouter {
     }
 
     @Override
-    public void route(HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder) {
+    public void route(HttpRequestBuilder requestBuilder,
+                      HttpResponseBuilder responseBuilder) {
         Objects.requireNonNull(requestBuilder);
         Objects.requireNonNull(requestBuilder.getRequestURI());
         Objects.requireNonNull(requestBuilder.getBaseURL());
@@ -108,7 +107,8 @@ public class BaseHttpRouter implements HttpRouter {
         route(httpServerContext, httpRouteResolverResults);
     }
 
-    protected void route(HttpServerContext httpServerContext, List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults) {
+    protected void route(HttpServerContext httpServerContext,
+                         List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults) {
         application.onOpen(httpServerContext);
         try {
             if (httpServerContext.isFailed()) {
@@ -168,7 +168,8 @@ public class BaseHttpRouter implements HttpRouter {
     }
 
     @Override
-    public void routeStatus(HttpResponseStatus httpResponseStatus, HttpServerContext httpServerContext) {
+    public void routeStatus(HttpResponseStatus httpResponseStatus,
+                            HttpServerContext httpServerContext) {
         logger.log(Level.FINER, "routing status " + httpResponseStatus);
         try {
             HttpHandler httpHandler = getHandler(httpResponseStatus);

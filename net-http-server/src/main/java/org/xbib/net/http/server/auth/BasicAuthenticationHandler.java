@@ -1,5 +1,9 @@
 package org.xbib.net.http.server.auth;
 
+import java.io.IOException;
+import java.util.Base64;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.net.SecurityRealm;
 import org.xbib.net.UserProfile;
 import org.xbib.net.http.HttpHeaderNames;
@@ -7,11 +11,6 @@ import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
-
-import java.io.IOException;
-import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class BasicAuthenticationHandler extends LoginAuthenticationHandler implements HttpHandler {
 

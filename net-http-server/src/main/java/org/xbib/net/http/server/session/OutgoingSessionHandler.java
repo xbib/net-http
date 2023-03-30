@@ -1,21 +1,5 @@
 package org.xbib.net.http.server.session;
 
-import org.xbib.net.PercentEncoder;
-import org.xbib.net.PercentEncoders;
-import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.cookie.Cookie;
-import org.xbib.net.http.cookie.CookieBox;
-import org.xbib.net.http.cookie.DefaultCookie;
-import org.xbib.net.http.cookie.SameSite;
-import org.xbib.net.http.server.Application;
-import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.UserProfile;
-import org.xbib.net.http.server.cookie.CookieSignatureException;
-import org.xbib.net.http.server.cookie.CookieSignatureUtil;
-import org.xbib.net.http.server.persist.Codec;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -26,6 +10,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.PercentEncoder;
+import org.xbib.net.PercentEncoders;
+import org.xbib.net.UserProfile;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.cookie.Cookie;
+import org.xbib.net.http.cookie.CookieBox;
+import org.xbib.net.http.cookie.DefaultCookie;
+import org.xbib.net.http.cookie.SameSite;
+import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.cookie.CookieSignatureException;
+import org.xbib.net.http.server.cookie.CookieSignatureUtil;
+import org.xbib.net.http.server.persist.Codec;
 
 public class OutgoingSessionHandler implements HttpHandler {
 

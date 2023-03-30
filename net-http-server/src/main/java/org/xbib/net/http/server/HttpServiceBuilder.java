@@ -2,6 +2,8 @@ package org.xbib.net.http.server;
 
 import org.xbib.net.ParameterDefinition;
 import org.xbib.net.http.HttpMethod;
+import org.xbib.net.http.server.domain.HttpSecurityDomain;
+import org.xbib.net.http.server.service.HttpService;
 
 public interface HttpServiceBuilder {
 

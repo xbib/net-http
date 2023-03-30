@@ -1,19 +1,17 @@
 package org.xbib.net.http.server.route;
 
-import org.xbib.net.http.server.HttpDomain;
-import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.handler.BadRequestHandler;
-import org.xbib.net.http.server.handler.ForbiddenHandler;
-import org.xbib.net.http.server.handler.InternalServerErrorHandler;
-import org.xbib.net.http.server.handler.NotFoundHandler;
-import org.xbib.net.http.server.handler.NotImplementedHandler;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
+import org.xbib.net.http.server.HttpHandler;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.handler.BadRequestHandler;
+import org.xbib.net.http.server.handler.ForbiddenHandler;
+import org.xbib.net.http.server.handler.InternalServerErrorHandler;
+import org.xbib.net.http.server.handler.NotFoundHandler;
+import org.xbib.net.http.server.handler.NotImplementedHandler;
 import org.xbib.net.http.server.handler.UnauthorizedHandler;
 import org.xbib.net.http.server.handler.VersionNotSupportedHandler;
 

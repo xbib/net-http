@@ -1,8 +1,8 @@
 package org.xbib.net.http.template.groovy;
 
 import groovy.text.markup.BaseTemplate;
-import org.xbib.net.http.server.BaseApplicationModule;
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.BaseApplicationModule;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
 
@@ -11,7 +11,7 @@ import java.io.UncheckedIOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.xbib.net.http.server.HttpService;
+import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
 
 public class GroovyTemplateApplicationModule extends BaseApplicationModule {

@@ -1,7 +1,8 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.domain;
 
 import java.util.List;
 import org.xbib.net.SecurityRealm;
+import org.xbib.net.http.server.HttpHandler;
 
 public class BaseHttpSecurityDomain implements HttpSecurityDomain {
 

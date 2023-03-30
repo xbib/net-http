@@ -1,6 +1,9 @@
 package org.xbib.net.http.server.auth;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.net.Authenticator;
 import org.xbib.net.GroupsProvider;
 import org.xbib.net.Parameter;
@@ -11,10 +14,6 @@ import org.xbib.net.UserProfile;
 import org.xbib.net.UsersProvider;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
-
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LoginAuthenticationHandler implements HttpHandler {
 

@@ -3,7 +3,7 @@ package org.xbib.net.http.template.groovy;
 import groovy.text.markup.MarkupTemplateEngine.TemplateResource;
 import groovy.text.markup.TemplateConfiguration;
 import groovy.text.markup.TemplateResolver;
-import org.xbib.net.http.server.Resolver;
+import org.xbib.net.http.server.application.Resolver;
 
 import java.io.IOException;
 import java.net.URL;

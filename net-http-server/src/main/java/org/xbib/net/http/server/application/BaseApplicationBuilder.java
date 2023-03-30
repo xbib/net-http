@@ -1,11 +1,4 @@
-package org.xbib.net.http.server;
-
-import org.xbib.config.ConfigLoader;
-import org.xbib.config.ConfigLogger;
-import org.xbib.config.ConfigParams;
-import org.xbib.config.SystemConfigLogger;
-import org.xbib.net.http.server.route.HttpRouter;
-import org.xbib.settings.Settings;
+package org.xbib.net.http.server.application;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +13,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.config.ConfigLoader;
+import org.xbib.config.ConfigLogger;
+import org.xbib.config.ConfigParams;
+import org.xbib.config.SystemConfigLogger;
+import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.settings.Settings;
 
 public class BaseApplicationBuilder implements ApplicationBuilder {
 

@@ -1,14 +1,13 @@
 package org.xbib.net.http.server.resource.negotiate;
 
-import org.xbib.net.http.HttpHeaderNames;
-import org.xbib.net.http.server.HttpRequest;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.server.HttpRequest;
 
 /**
  * Taken from org.apache.any23.servlet.conneg.ContentTypeNegotiator

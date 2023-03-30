@@ -1,7 +1,7 @@
 package org.xbib.net.http.server.decorate;
 
 import org.xbib.net.http.server.HttpServerConfig;
-import org.xbib.net.http.server.Service;
+import org.xbib.net.http.server.service.Service;
 
 public abstract class DecoratingService extends AbstractUnwrappable<Service> implements Service {
 

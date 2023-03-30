@@ -44,18 +44,18 @@ public class NettyDataBufferFactory implements DataBufferFactory {
 	 * Return the {@code ByteBufAllocator} used by this factory.
 	 */
 	public ByteBufAllocator getByteBufAllocator() {
-		return this.byteBufAllocator;
+		return byteBufAllocator;
 	}
 
 	@Override
 	public NettyDataBuffer allocateBuffer() {
-		ByteBuf byteBuf = this.byteBufAllocator.buffer();
+		ByteBuf byteBuf = byteBufAllocator.buffer();
 		return new NettyDataBuffer(byteBuf, this);
 	}
 
 	@Override
 	public NettyDataBuffer allocateBuffer(int initialCapacity) {
-		ByteBuf byteBuf = this.byteBufAllocator.buffer(initialCapacity);
+		ByteBuf byteBuf = byteBufAllocator.buffer(initialCapacity);
 		return new NettyDataBuffer(byteBuf, this);
 	}
 
@@ -93,7 +93,7 @@ public class NettyDataBufferFactory implements DataBufferFactory {
 		if (bufferCount == 1) {
 			return dataBuffers.get(0);
 		}
-		CompositeByteBuf composite = this.byteBufAllocator.compositeBuffer(bufferCount);
+		CompositeByteBuf composite = byteBufAllocator.compositeBuffer(bufferCount);
 		for (DataBuffer dataBuffer : dataBuffers) {
 			if (!(dataBuffer instanceof NettyDataBuffer)) {
 				throw new IllegalArgumentException("dataBuffer");
@@ -112,8 +112,7 @@ public class NettyDataBufferFactory implements DataBufferFactory {
 	 * @return the netty {@code ByteBuf}
 	 */
 	public static ByteBuf toByteBuf(DataBuffer buffer) {
-		if (buffer instanceof NettyDataBuffer) {
-			NettyDataBuffer nettyDataBuffer = (NettyDataBuffer) buffer;
+		if (buffer instanceof NettyDataBuffer nettyDataBuffer) {
 			return nettyDataBuffer.getNativeBuffer();
 		}
 		else {
@@ -123,6 +122,6 @@ public class NettyDataBufferFactory implements DataBufferFactory {
 
 	@Override
 	public String toString() {
-		return "NettyDataBufferFactory (" + this.byteBufAllocator + ")";
+		return "NettyDataBufferFactory (" + byteBufAllocator + ")";
 	}
 }

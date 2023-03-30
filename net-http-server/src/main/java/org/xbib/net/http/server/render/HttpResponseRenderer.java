@@ -1,11 +1,10 @@
 package org.xbib.net.http.server.render;
 
+import java.io.IOException;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpResponse;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
-
-import java.io.IOException;
 
 public class HttpResponseRenderer implements HttpHandler {
 

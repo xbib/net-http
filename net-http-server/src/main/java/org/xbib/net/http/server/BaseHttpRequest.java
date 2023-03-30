@@ -1,13 +1,13 @@
 package org.xbib.net.http.server;
 
+import java.net.InetSocketAddress;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
-
-import java.net.InetSocketAddress;
+import org.xbib.net.http.server.auth.BaseAttributes;
 
 public abstract class BaseHttpRequest implements HttpRequest {
 

@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 
 import org.xbib.net.http.cookie.SameSite;
-import org.xbib.net.http.server.BaseApplication;
+import org.xbib.net.http.server.application.BaseApplication;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.persist.Codec;

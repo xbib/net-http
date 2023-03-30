@@ -1,16 +1,14 @@
 package org.xbib.net.http.server.decorate;
 
+import java.io.IOException;
 import java.util.Collection;
-
+import java.util.Objects;
 import org.xbib.net.ParameterDefinition;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpSecurityDomain;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.HttpService;
-
-import java.io.IOException;
-import java.util.Objects;
+import org.xbib.net.http.server.domain.HttpSecurityDomain;
+import org.xbib.net.http.server.service.HttpService;
 
 public class DecoratingHttpService implements HttpService {
 

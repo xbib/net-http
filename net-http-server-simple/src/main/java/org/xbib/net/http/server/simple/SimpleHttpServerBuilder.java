@@ -1,6 +1,6 @@
 package org.xbib.net.http.server.simple;
 
-import org.xbib.net.http.server.Application;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpServerConfig;
 
 public class SimpleHttpServerBuilder {

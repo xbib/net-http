@@ -1,5 +1,9 @@
 package org.xbib.net.http.server;
 
+import java.io.InputStream;
+import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import org.xbib.net.Attributes;
 import org.xbib.net.buffer.DataBuffer;
 import org.xbib.net.buffer.DataBufferFactory;
@@ -8,13 +12,7 @@ import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.cookie.Cookie;
 
-import java.io.Closeable;
-import java.io.InputStream;
-import java.nio.CharBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-
-public interface HttpResponseBuilder extends Closeable {
+public interface HttpResponseBuilder {
 
     HttpResponseBuilder setDataBufferFactory(DataBufferFactory dataBufferFactory);
 
@@ -73,5 +71,7 @@ public interface HttpResponseBuilder extends Closeable {
     HttpResponse build();
 
     void done();
+
+    void release();
 
 }

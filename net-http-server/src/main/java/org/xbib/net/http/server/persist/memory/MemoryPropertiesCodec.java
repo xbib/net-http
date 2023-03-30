@@ -1,14 +1,12 @@
 package org.xbib.net.http.server.persist.memory;
 
-import org.xbib.net.http.server.persist.Codec;
-
 import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.xbib.net.http.server.persist.Codec;
 
 public class MemoryPropertiesCodec implements Codec<Map<String, Object>> {
 

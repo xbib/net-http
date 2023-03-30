@@ -1,11 +1,11 @@
 package org.xbib.net.http.server.validate;
 
 import org.xbib.datastructures.common.Pair;
-import org.xbib.net.http.server.UnknownExpectException;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpServerContext;
-import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.server.UnknownExpectException;
 
 public class HttpRequestValidator implements HttpHandler {
 

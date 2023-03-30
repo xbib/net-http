@@ -1,6 +1,6 @@
 package org.xbib.net.http.template.groovy;
 
-import org.xbib.net.http.server.BaseHttpService;
+import org.xbib.net.http.server.service.BaseHttpService;
 
 public class GroovyTemplateService extends BaseHttpService {
 

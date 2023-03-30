@@ -1,7 +1,8 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.server.service;
 
+import org.xbib.net.http.server.HttpServerConfig;
+import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.decorate.Unwrappable;
-
 import static java.util.Objects.requireNonNull;
 
 @FunctionalInterface
