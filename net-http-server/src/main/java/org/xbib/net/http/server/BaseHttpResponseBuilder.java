@@ -57,9 +57,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
      */
     protected HttpServerConfig httpServerConfig;
 
-    protected boolean shouldClose;
+    protected boolean withConnectionCloseHeader;
 
-    protected boolean shouldFlush;
+    protected boolean shouldClose;
 
     protected Integer sequenceId;
 
@@ -103,7 +103,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         this.trailingHeaders = new HttpHeaders();
         this.contentType = HttpHeaderValues.APPLICATION_OCTET_STREAM;
         this.dataBufferFactory = DefaultDataBufferFactory.getInstance();
-        this.shouldClose = false; // tell client we want to keep the connection alive
+        this.withConnectionCloseHeader = false; // tell client we want to keep the connection alive
         this.attributes = new BaseAttributes();
     }
 
@@ -204,23 +204,22 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         return this;
     }
 
-
     @Override
-    public BaseHttpResponseBuilder shouldFlush(boolean shouldFlush) {
+    public BaseHttpResponseBuilder withConnectionCloseHeader(boolean withConnectionCloseHeader) {
         if (done) {
             return this;
         }
-        this.shouldFlush = shouldFlush;
+        this.withConnectionCloseHeader = withConnectionCloseHeader;
         return this;
     }
 
     @Override
-    public boolean shouldFlush() {
-        return shouldFlush;
+    public boolean withConnectionCloseHeader() {
+        return withConnectionCloseHeader;
     }
 
     @Override
-    public BaseHttpResponseBuilder shouldClose(boolean shouldClose) {
+    public HttpResponseBuilder shouldClose(boolean shouldClose) {
         if (done) {
             return this;
         }
@@ -265,7 +264,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (body != null && this.body == null) {
             this.body = body;
         } else {
-            logger.log(Level.WARNING, "cannot write null string");
+            logger.log(Level.WARNING, "cannot write more than one body");
         }
         return this;
     }
@@ -276,7 +275,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
             this.charBuffer = charBuffer;
             this.charset = charset;
         } else {
-            logger.log(Level.WARNING, "cannot write CharBuffer");
+            logger.log(Level.WARNING, "cannot write more than one CharBuffer");
         }
         return this;
     }
@@ -286,7 +285,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (dataBuffer != null && this.dataBuffer == null) {
             this.dataBuffer = dataBuffer;
         } else {
-            logger.log(Level.WARNING, "cannot write DataBuffer");
+            logger.log(Level.WARNING, "cannot write more than one DataBuffer");
         }
         return this;
     }
@@ -297,7 +296,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
             this.inputStream = inputStream;
             this.bufferSize = bufferSize;
         } else {
-            logger.log(Level.WARNING, "cannot write InputStream");
+            logger.log(Level.WARNING, "cannot write more than one InputStream");
         }
         return this;
     }
@@ -308,7 +307,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
             this.fileChannel = fileChannel;
             this.bufferSize = bufferSize;
         } else {
-            logger.log(Level.WARNING, "cannot write FileChannel");
+            logger.log(Level.WARNING, "cannot write more than one FileChannel");
         }
         return this;
     }
@@ -347,7 +346,6 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
     @Override
     public void release() {
         if (dataBuffer != null) {
-            logger.log(Level.FINER, "databuffer release " + dataBuffer);
             dataBuffer.release();
         }
     }
@@ -372,7 +370,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
                 headers.add(HttpHeaderNames.CONTENT_LENGTH, Long.toString(contentLength));
             }
         }
-        if (shouldClose) {
+        if (withConnectionCloseHeader) {
             headers.add(HttpHeaderNames.CONNECTION, "close");
         }
         if (!headers.containsHeader(HttpHeaderNames.DATE)) {

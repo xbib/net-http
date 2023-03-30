@@ -38,9 +38,9 @@ public interface HttpResponseBuilder {
 
     HttpResponseBuilder addCookie(Cookie cookie);
 
-    HttpResponseBuilder shouldFlush(boolean sholdFlush);
+    HttpResponseBuilder withConnectionCloseHeader(boolean withConnectionCloseHeader);
 
-    boolean shouldFlush();
+    boolean withConnectionCloseHeader();
 
     HttpResponseBuilder shouldClose(boolean shouldClose);
 

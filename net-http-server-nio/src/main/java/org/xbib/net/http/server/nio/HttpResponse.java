@@ -23,11 +23,6 @@ public class HttpResponse extends BaseHttpResponse {
     }
 
     @Override
-    public void close() throws IOException {
-        builder.internalClose();
-    }
-
-    @Override
     public void flush() throws IOException {
         builder.internalFlush();
     }

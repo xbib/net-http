@@ -13,12 +13,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class HttpRequestBuilder extends BaseHttpRequestBuilder {
-
-    private static final Logger logger = Logger.getLogger(HttpRequestBuilder.class.getName());
 
     protected FullHttpRequest fullHttpRequest;
 
@@ -117,7 +113,6 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     @Override
     public void release() {
         if (fullHttpRequest != null) {
-            logger.log(Level.FINER, "releasing retained netty request");
             fullHttpRequest.release();
         }
     }

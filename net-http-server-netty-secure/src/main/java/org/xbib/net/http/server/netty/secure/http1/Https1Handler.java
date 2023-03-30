@@ -34,18 +34,15 @@ public class Https1Handler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof HttpPipelinedRequest) {
-            HttpPipelinedRequest httpPipelinedRequest = (HttpPipelinedRequest) msg;
+        if (msg instanceof HttpPipelinedRequest httpPipelinedRequest) {
             try {
-                if (httpPipelinedRequest.getRequest() instanceof FullHttpRequest) {
-                    FullHttpRequest fullHttpRequest = (FullHttpRequest) httpPipelinedRequest.getRequest();
+                if (httpPipelinedRequest.getRequest() instanceof FullHttpRequest fullHttpRequest) {
                     requestReceived(ctx, fullHttpRequest, httpPipelinedRequest.getSequenceId());
                 }
             } finally {
                 httpPipelinedRequest.release();
             }
-        } else if (msg instanceof FullHttpRequest) {
-            FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
+        } else if (msg instanceof FullHttpRequest fullHttpRequest) {
             try {
                 requestReceived(ctx, fullHttpRequest, 0);
             } finally {

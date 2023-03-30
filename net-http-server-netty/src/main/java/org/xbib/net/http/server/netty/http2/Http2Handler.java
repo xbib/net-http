@@ -36,8 +36,7 @@ public class Http2Handler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) throws IOException {
-        if (object instanceof FullHttpRequest) {
-            FullHttpRequest fullHttpRequest = (FullHttpRequest) object;
+        if (object instanceof FullHttpRequest fullHttpRequest) {
             HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
             try {
                 Integer streamId = fullHttpRequest.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());

@@ -90,8 +90,8 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     }
 
     @Override
-    public HttpResponseBuilder shouldFlush(boolean shouldFlush) {
-        super.shouldFlush(shouldFlush);
+    public HttpResponseBuilder withConnectionCloseHeader(boolean close) {
+        super.withConnectionCloseHeader(close);
         return this;
     }
 
@@ -124,6 +124,24 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         return this;
     }
 
+    @Override
+    public HttpResponse build() {
+        Objects.requireNonNull(ctx);
+        if (body != null) {
+            internalStringWrite(body);
+        } else if (charBuffer != null && charset != null) {
+            internalBufferWrite(charBuffer, charset);
+        } else if (dataBuffer != null) {
+            internalBufferWrite(dataBuffer);
+        } else if (fileChannel != null) {
+            internalFileWrite(fileChannel, bufferSize, true);
+        } else if (inputStream != null) {
+            internalStreamWrite(inputStream, bufferSize, true);
+        }
+        return new HttpResponse(this);
+    }
+
+
     public void flush() {
         internalBufferWrite(Unpooled.buffer(0));
     }
@@ -131,47 +149,30 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     @Override
     public void release() {
         super.release();
-        if (ctx != null && ctx.channel().isOpen()) {
-            logger.log(Level.FINER, "closing netty channel " + ctx.channel());
-            ctx.close();
-        }
     }
 
-    @Override
-    public HttpResponse build() {
-        Objects.requireNonNull(ctx);
-        if (body != null) {
-            internalWrite(body);
-        } else if (charBuffer != null && charset != null) {
-            internalWrite(charBuffer, charset);
-        } else if (dataBuffer != null) {
-            internalWrite(dataBuffer);
-        } else if (fileChannel != null) {
-            internalWrite(fileChannel, bufferSize, true);
-        } else if (inputStream != null) {
-            internalWrite(inputStream, bufferSize, true);
-        }
-        return new HttpResponse(this);
+    private void internalStringWrite(String body) {
+        internalBufferWrite(dataBufferFactory.wrap(StandardCharsets.UTF_8.encode(body)));
     }
 
-    private void internalWrite(String body) {
-        internalWrite(dataBufferFactory.wrap(StandardCharsets.UTF_8.encode(body)));
-    }
-
-    private void internalWrite(DataBuffer dataBuffer) {
+    private void internalBufferWrite(DataBuffer dataBuffer) {
         NettyDataBuffer nettyDataBuffer = (NettyDataBuffer) dataBuffer;
         internalBufferWrite(nettyDataBuffer.getNativeBuffer());
     }
 
-    private void internalWrite(CharBuffer charBuffer, Charset charset) {
+    private void internalBufferWrite(CharBuffer charBuffer, Charset charset) {
         internalBufferWrite(ByteBufUtil.encodeString(ctx.alloc(), charBuffer, charset));
     }
 
     private void internalBufferWrite(ByteBuf byteBuf) {
-        internalBufferWrite(byteBuf, byteBuf.readableBytes());
+        internalBufferWrite(byteBuf, byteBuf.readableBytes(), true);
     }
 
-    private void internalBufferWrite(ByteBuf byteBuf, int length) {
+    private void internalBufferWrite(ByteBuf byteBuf, int length, boolean keepAlive) {
+        if (!ctx.channel().isWritable()) {
+            logger.log(Level.WARNING, "the channel " + ctx.channel() + " is not writable");
+            return;
+        }
         super.buildHeaders(length);
         HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(status.code());
         HttpHeaders headers = new DefaultHttpHeaders();
@@ -186,25 +187,29 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         }
         HttpHeaders trailingHeaders = new DefaultHttpHeaders();
         super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
-        FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.valueOf(version.text()),
-                responseStatus, byteBuf.retain(), headers, trailingHeaders);
-        if (!ctx.channel().isWritable()) {
-            logger.log(Level.WARNING, "we have a problem, the channel " + ctx.channel() + " is not writable");
-            return;
-        }
-        if (sequenceId != null) {
-            HttpPipelinedResponse httpPipelinedResponse = new HttpPipelinedResponse(fullHttpResponse,
-                    ctx.channel().newPromise(), sequenceId);
-            ctx.write(httpPipelinedResponse);
-        } else {
-            ctx.write(fullHttpResponse);
-        }
-        ctx.flush();
+        ctx.channel().eventLoop().execute(() -> {
+            FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.valueOf(version.text()),
+                    responseStatus, byteBuf.retain(), headers, trailingHeaders);
+            ChannelFuture channelFuture;
+            if (sequenceId != null) {
+                HttpPipelinedResponse httpPipelinedResponse = new HttpPipelinedResponse(fullHttpResponse,
+                        ctx.channel().newPromise(), sequenceId);
+                channelFuture = ctx.write(httpPipelinedResponse);
+            } else {
+                channelFuture = ctx.write(fullHttpResponse);
+            }
+            if (!keepAlive || shouldClose()) {
+                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
+                channelFuture.addListener(CLOSE);
+            }
+            ctx.flush();
+        });
     }
 
-    private void internalWrite(FileChannel fileChannel, int bufferSize, boolean keepAlive) {
+    private void internalFileWrite(FileChannel fileChannel, int bufferSize, boolean keepAlive) {
         if (!ctx.channel().isWritable()) {
-            logger.log(Level.WARNING, "channel not writeable: " + ctx.channel());
+            logger.log(Level.WARNING, "the channel is not writeable: " + ctx.channel());
+            return;
         }
         HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(status.code());
         DefaultHttpResponse rsp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
@@ -216,21 +221,17 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
                 throw new UncheckedIOException(e);
             }
             ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-            if (headers.containsHeader(HttpHeaderNames.CONTENT_LENGTH)) {
-                if (!keepAlive) {
-                    logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
-                    channelFuture.addListener(CLOSE);
-                }
-            } else {
+            if (!keepAlive || shouldClose()) {
                 logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                 channelFuture.addListener(CLOSE);
             }
+            ctx.flush();
         });
     }
 
-    private void internalWrite(InputStream inputStream, int bufferSize, boolean keepAlive) {
+    private void internalStreamWrite(InputStream inputStream, int bufferSize, boolean keepAlive) {
         if (!ctx.channel().isWritable()) {
-            logger.log(Level.WARNING, "channel not writeable: " + ctx.channel());
+            logger.log(Level.WARNING, "the channel is not writeable: " + ctx.channel());
             return;
         }
         ByteBuf buffer;
@@ -247,7 +248,7 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             return;
         }
         if (count < bufferSize) {
-            internalBufferWrite(buffer, count);
+            internalBufferWrite(buffer, count, keepAlive);
         } else {
             // chunked
             super.buildHeaders(0);
@@ -259,27 +260,25 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             }
             HttpHeaders trailingHeaders = new DefaultHttpHeaders();
             super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
-            DefaultHttpResponse defaultHttpResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
-            if (!headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
-                headers.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-            } else {
-                if (keepAlive) {
-                    headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+            ctx.channel().eventLoop().execute(() -> {
+                DefaultHttpResponse defaultHttpResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
+                if (!headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
+                    headers.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
+                } else {
+                    if (keepAlive) {
+                        headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+                    }
                 }
-            }
-            defaultHttpResponse.headers().set(headers);
-            ctx.write(defaultHttpResponse);
-            ctx.write(new ChunkedStream(inputStream, bufferSize));
-            ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-            if (headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
-                if (!keepAlive) {
+                defaultHttpResponse.headers().set(headers);
+                ctx.write(defaultHttpResponse);
+                ctx.write(new ChunkedStream(inputStream, bufferSize));
+                ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+                if (!keepAlive || shouldClose) {
                     logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
                     channelFuture.addListener(CLOSE);
                 }
-            } else {
-                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
-                channelFuture.addListener(CLOSE);
-            }
+                ctx.flush();
+            });
         }
     }
 }

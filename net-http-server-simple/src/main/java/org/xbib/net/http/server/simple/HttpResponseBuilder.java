@@ -38,9 +38,6 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     public HttpResponse build() {
         Objects.requireNonNull(outputStream);
         try {
-            if (shouldFlush()) {
-                internalFlush();
-            }
             if (body != null) {
                 internalWrite(body);
             } else if (charBuffer != null && charset != null) {
@@ -52,16 +49,22 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             } else if (inputStream != null) {
                 internalWrite(inputStream, bufferSize);
             }
-            if (shouldClose()) {
-                internalClose();
-            }
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return new HttpResponse(this);
     }
 
-    void internalFlush() throws IOException {
+    @Override
+    public void release() {
+        try {
+            internalClose();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, e.getMessage(), e);
+        }
+    }
+
+    void internalFlush() {
         write(dataBufferFactory.allocateBuffer());
     }
 
@@ -117,9 +120,5 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             channel.write(US_ASCII.encode(super.wrapHeaders()));
             channel.write(fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength));
         }
-    }
-
-    @Override
-    public void release() {
     }
 }

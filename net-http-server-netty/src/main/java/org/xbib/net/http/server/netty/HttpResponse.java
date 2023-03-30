@@ -6,11 +6,8 @@ import java.io.IOException;
 
 public class HttpResponse extends BaseHttpResponse {
 
-    private final HttpResponseBuilder builder;
-
     protected HttpResponse(HttpResponseBuilder builder) {
         super(builder);
-        this.builder = builder;
     }
 
     public static HttpResponseBuilder builder() {
@@ -18,12 +15,7 @@ public class HttpResponse extends BaseHttpResponse {
     }
 
     @Override
-    public void close() throws IOException {
-        builder.release();
-    }
-
-    @Override
     public void flush() throws IOException {
-        builder.flush();
+        // ignore
     }
 }
