@@ -9,10 +9,13 @@ import java.nio.file.Path;
 import org.xbib.net.Attributes;
 import org.xbib.net.URL;
 import org.xbib.net.buffer.DataBuffer;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.route.HttpRouteResolver;
 import org.xbib.net.http.server.service.HttpService;
 
 public interface HttpServerContext {
+
+    Application getApplication();
 
     HttpRequestBuilder request();
 

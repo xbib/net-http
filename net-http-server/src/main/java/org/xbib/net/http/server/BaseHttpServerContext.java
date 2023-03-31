@@ -76,6 +76,11 @@ public class BaseHttpServerContext implements HttpServerContext {
     }
 
     @Override
+    public Application getApplication() {
+        return application;
+    }
+
+    @Override
     public HttpRequestBuilder request() {
         return httpRequestBuilder;
     }

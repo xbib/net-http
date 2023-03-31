@@ -29,9 +29,9 @@ public class GroovyTemplateRenderer implements HttpHandler {
             HttpResponseStatus httpResponseStatus = context.getAttributes().get(HttpResponseStatus.class, "_status", HttpResponseStatus.OK);
             context.response()
                     .setResponseStatus(httpResponseStatus)
+                    .setHeader("cache-control", "no-cache") // override default must-revalidate behavior
                     .setHeader("content-length", Integer.toString(dataBuffer.writePosition()))
                     .setContentType("text/html; charset=" + StandardCharsets.UTF_8.displayName())
-                    .setHeader("cache-control", "no-cache")
                     .write(dataBuffer);
         }
     }

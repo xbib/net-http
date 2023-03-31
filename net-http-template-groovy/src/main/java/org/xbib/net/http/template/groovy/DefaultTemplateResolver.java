@@ -41,7 +41,7 @@ public class DefaultTemplateResolver implements TemplateResolver {
         String templateResourceString = languageTag != null ?
                 templateResource.withLocale(languageTag).toString() :
                 templateResource.toString();
-        logger.log(Level.FINER, "template resource string = " + templateResourceString + " locale = " + locale
+        logger.log(Level.FINEST, "template resource string = " + templateResourceString + " locale = " + locale
            + " templateConfiguration.getLocale() = " + templateConfiguration.getLocale() + " languageTag = " + languageTag);
         Path path = resolver.resolve(templateResourceString);
         return path.toUri().toURL();

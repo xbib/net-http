@@ -19,7 +19,7 @@ public class ApplicationThreadPoolExecutor extends ThreadPoolExecutor {
                                          long keepAliveTime, TimeUnit timeUnit,
                                          ThreadFactory threadFactory) {
         super(nThreads, nThreads, keepAliveTime, timeUnit, createBlockingQueue(maxQueue), threadFactory);
-        logger.log(Level.FINE, "threadpool executor up with nThreads = " + nThreads +
+        logger.log(Level.FINE, () -> "threadpool executor up with nThreads = " + nThreads +
                 " keepAliveTime = " + keepAliveTime +
                 " time unit = " + timeUnit +
                 " maxQueue = " + maxQueue +
@@ -38,14 +38,14 @@ public class ApplicationThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     protected void afterExecute(Runnable runnable, Throwable terminationCause) {
         super.afterExecute(runnable, terminationCause);
-        logger.log(Level.FINEST, "after execute of " + runnable);
+        logger.log(Level.FINEST, () -> "after execute of " + runnable);
         if (terminationCause != null) {
             logger.log(Level.SEVERE, terminationCause.getMessage(), terminationCause);
             return;
         }
         if (runnable instanceof RouterTask<?> routerTask) {
             RouterCallable routerCallable = (RouterCallable) routerTask.getCallable();
-            logger.log(Level.FINEST, "release " + routerCallable);
+            logger.log(Level.FINEST, () -> "releasing " + routerCallable);
             routerCallable.release();
         }
     }

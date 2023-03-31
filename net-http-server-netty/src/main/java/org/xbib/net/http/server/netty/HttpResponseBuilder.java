@@ -137,13 +137,17 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             internalFileWrite(fileChannel, bufferSize, true);
         } else if (inputStream != null) {
             internalStreamWrite(inputStream, bufferSize, true);
+        } else {
+            logger.log(Level.FINEST, "no content, we assume header only");
+            flush();
         }
         return new HttpResponse(this);
     }
 
-
     public void flush() {
-        internalBufferWrite(Unpooled.buffer(0));
+        logger.log(Level.FINEST, "flush netty response");
+        this.dataBuffer = NettyDataBufferFactory.getInstance().wrap(Unpooled.buffer(0));
+        internalBufferWrite(dataBuffer);
     }
 
     @Override
@@ -187,23 +191,23 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         }
         HttpHeaders trailingHeaders = new DefaultHttpHeaders();
         super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
-        ctx.channel().eventLoop().execute(() -> {
-            FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.valueOf(version.text()),
-                    responseStatus, byteBuf.retain(), headers, trailingHeaders);
-            ChannelFuture channelFuture;
-            if (sequenceId != null) {
-                HttpPipelinedResponse httpPipelinedResponse = new HttpPipelinedResponse(fullHttpResponse,
-                        ctx.channel().newPromise(), sequenceId);
-                channelFuture = ctx.write(httpPipelinedResponse);
-            } else {
-                channelFuture = ctx.write(fullHttpResponse);
-            }
-            if (!keepAlive || shouldClose()) {
-                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
-                channelFuture.addListener(CLOSE);
-            }
-            ctx.flush();
-        });
+        HttpVersion httpVersion = HttpVersion.valueOf(version.text());
+        FullHttpResponse fullHttpResponse =
+                new DefaultFullHttpResponse(httpVersion, responseStatus, byteBuf.retain(), headers, trailingHeaders);
+        ChannelFuture channelFuture;
+        if (sequenceId != null) {
+            HttpPipelinedResponse httpPipelinedResponse = new HttpPipelinedResponse(fullHttpResponse,
+                    ctx.channel().newPromise(), sequenceId);
+            channelFuture = ctx.write(httpPipelinedResponse);
+        } else {
+            channelFuture = ctx.write(fullHttpResponse);
+        }
+        if (!keepAlive || shouldClose()) {
+            logger.log(Level.FINEST, "adding close listener to channel future " + channelFuture);
+            channelFuture.addListener(CLOSE);
+        }
+        logger.log(Level.FINEST, "flush netty ctx");
+        ctx.flush();
     }
 
     private void internalFileWrite(FileChannel fileChannel, int bufferSize, boolean keepAlive) {
@@ -213,20 +217,19 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         }
         HttpResponseStatus responseStatus = HttpResponseStatus.valueOf(status.code());
         DefaultHttpResponse rsp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
-        ctx.channel().eventLoop().execute(() -> {
-            ctx.write(rsp);
-            try {
-                ctx.write(new ChunkedNioFile(fileChannel, bufferSize));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-            if (!keepAlive || shouldClose()) {
-                logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
-                channelFuture.addListener(CLOSE);
-            }
-            ctx.flush();
-        });
+        ctx.write(rsp);
+        try {
+            ctx.write(new ChunkedNioFile(fileChannel, bufferSize));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+        if (!keepAlive || shouldClose()) {
+            logger.log(Level.FINEST, "adding close listener to channel future " + channelFuture);
+            channelFuture.addListener(CLOSE);
+        }
+        logger.log(Level.FINEST, "flush netty ctx");
+        ctx.flush();
     }
 
     private void internalStreamWrite(InputStream inputStream, int bufferSize, boolean keepAlive) {
@@ -260,25 +263,24 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             }
             HttpHeaders trailingHeaders = new DefaultHttpHeaders();
             super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
-            ctx.channel().eventLoop().execute(() -> {
-                DefaultHttpResponse defaultHttpResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
-                if (!headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
-                    headers.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-                } else {
-                    if (keepAlive) {
-                        headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-                    }
+            DefaultHttpResponse defaultHttpResponse = new DefaultHttpResponse(HttpVersion.HTTP_1_1, responseStatus);
+            if (!headers.contains(HttpHeaderNames.CONTENT_LENGTH)) {
+                headers.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
+            } else {
+                if (keepAlive) {
+                    headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
                 }
-                defaultHttpResponse.headers().set(headers);
-                ctx.write(defaultHttpResponse);
-                ctx.write(new ChunkedStream(inputStream, bufferSize));
-                ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-                if (!keepAlive || shouldClose) {
-                    logger.log(Level.FINER, "adding close listener to channel future " + channelFuture);
-                    channelFuture.addListener(CLOSE);
-                }
-                ctx.flush();
-            });
+            }
+            defaultHttpResponse.headers().set(headers);
+            ctx.write(defaultHttpResponse);
+            ctx.write(new ChunkedStream(inputStream, bufferSize));
+            ChannelFuture channelFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+            if (!keepAlive || shouldClose) {
+                logger.log(Level.FINEST, "adding close listener to channel future " + channelFuture);
+                channelFuture.addListener(CLOSE);
+            }
+            logger.log(Level.FINEST, "flush netty ctx");
+            ctx.flush();
         }
     }
 }

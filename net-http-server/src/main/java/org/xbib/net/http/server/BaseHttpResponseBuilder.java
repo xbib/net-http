@@ -340,7 +340,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
     @Override
     public void done() {
         this.done = true;
-        logger.log(Level.FINER, "done");
+        logger.log(Level.FINEST, "done");
     }
 
     @Override
@@ -379,7 +379,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
         if (httpServerConfig != null && httpServerConfig.getServerName() != null) {
             headers.add(HttpHeaderNames.SERVER, httpServerConfig.getServerName());
         }
-        logger.log(Level.FINER, "build headers: status = " + status + " headers = " + headers);
+        logger.log(Level.FINEST, () -> "headers: status = " + status + " headers = " + headers);
     }
 
     public CharBuffer wrapHeaders() {

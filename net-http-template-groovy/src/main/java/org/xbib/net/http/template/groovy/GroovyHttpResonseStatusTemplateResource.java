@@ -31,17 +31,16 @@ class GroovyHttpResonseStatusTemplateResource extends GroovyTemplateResource {
 
     @Override
     public void render(HttpServerContext httpServerContext) throws IOException {
-        logger.log(Level.FINE, "rendering HTTP status by Groovy");
+        logger.log(Level.FINEST, "rendering HTTP status by Groovy");
         httpServerContext.getAttributes().put("_status", httpResponseStatus);
         httpServerContext.getAttributes().put("_message", message);
         httpServerContext.getAttributes().put("_resource", this);
         Application application = httpServerContext.getAttributes().get(Application.class, "application");
         GroovyMarkupTemplateHandler groovyMarkupTemplateHandler = new GroovyMarkupTemplateHandler(application);
-        logger.log(Level.FINE, "handle groovyMarkupTemplateHandler");
+        logger.log(Level.FINEST, "handle groovyMarkupTemplateHandler");
         groovyMarkupTemplateHandler.handle(httpServerContext);
         super.render(httpServerContext);
         GroovyTemplateRenderer groovyTemplateRenderer = new GroovyTemplateRenderer();
-        logger.log(Level.FINE, "handle groovyTemplateRenderer");
         groovyTemplateRenderer.handle(httpServerContext);
     }
 

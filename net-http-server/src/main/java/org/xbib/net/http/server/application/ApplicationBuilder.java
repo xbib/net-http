@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.net.mime.MimeTypeService;
 
 public interface ApplicationBuilder {
 
@@ -29,6 +30,12 @@ public interface ApplicationBuilder {
     ApplicationBuilder setLocale(Locale locale);
 
     ApplicationBuilder setZoneId(ZoneId zoneId);
+
+    ApplicationBuilder setMimeTypeService(MimeTypeService mimeTypeService);
+
+    ApplicationBuilder setStaticSuffixes(String... suffixes);
+
+    ApplicationBuilder registerModule(ApplicationModule applicationModule);
 
     Application build();
 }

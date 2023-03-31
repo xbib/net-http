@@ -18,6 +18,7 @@ import org.xbib.config.ConfigLogger;
 import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
 import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.net.mime.MimeTypeService;
 import org.xbib.settings.Settings;
 
 public class BaseApplicationBuilder implements ApplicationBuilder {
@@ -57,6 +58,8 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     protected ZoneId zoneId;
 
+    protected MimeTypeService mimeTypeService;
+
     protected Set<String> staticFileSuffixes;
 
     protected ConfigParams configParams;
@@ -79,6 +82,7 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         this.sessionsEnabled = true;
         this.locale = Locale.getDefault();
         this.zoneId = ZoneId.systemDefault();
+        this.mimeTypeService = new MimeTypeService();
         this.applicationModuleList = new ArrayList<>();
     }
 
@@ -153,11 +157,19 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         return this;
     }
 
+    @Override
+    public ApplicationBuilder setMimeTypeService(MimeTypeService mimeTypeService) {
+        this.mimeTypeService = mimeTypeService;
+        return this;
+    }
+
+    @Override
     public ApplicationBuilder setStaticSuffixes(String... suffixes) {
         this.staticFileSuffixes = Set.of(suffixes);
         return this;
     }
 
+    @Override
     public ApplicationBuilder registerModule(ApplicationModule applicationModule) {
         applicationModuleList.add(applicationModule);
         return this;

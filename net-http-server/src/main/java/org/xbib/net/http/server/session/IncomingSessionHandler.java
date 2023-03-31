@@ -107,7 +107,7 @@ public class IncomingSessionHandler implements HttpHandler {
             }
         }
         context.getAttributes().put("session", session);
-        logger.log(Level.FINER, "incoming session " + session.id());
+        logger.log(Level.FINEST, "incoming session " + session.id());
     }
 
     private Map<String, Object> decodeCookie(Cookie cookie) throws IOException,

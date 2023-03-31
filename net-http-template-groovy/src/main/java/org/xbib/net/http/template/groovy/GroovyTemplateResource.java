@@ -47,7 +47,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
 
     @Override
     public void render(HttpServerContext httpServerContext) throws IOException {
-        logger.log(Level.FINER, "rendering groovy template, path = " + getPath() + " isExists = " + isExists() + " isDirectory =" + isDirectory() );
+        logger.log(Level.FINEST, () -> "rendering groovy template, path = " + getPath() + " isExists = " + isExists() + " isDirectory =" + isDirectory() );
         Application application = httpServerContext.getAttributes().get(Application.class, "application");
         if (application == null) {
             logger.log(Level.WARNING, "application is null");
@@ -63,9 +63,9 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
         if (service instanceof GroovyTemplateService groovyTemplateService) {
             if (groovyTemplateService.getTemplateName() != null) {
                 templatePath = application.resolve(groovyTemplateService.getTemplateName());
-                logger.log(Level.FINER, "templatePath after application.resolve() = " + templatePath);
+                logger.log(Level.FINEST, "templatePath after application.resolve() = " + templatePath);
             } else {
-                logger.log(Level.FINER, "the GroovyTemplateService does not have a templateName");
+                logger.log(Level.FINEST, "the GroovyTemplateService does not have a templateName");
             }
         }
         // status response handlers have priority
@@ -75,17 +75,17 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             if (indexFileName != null) {
                 templatePath = application.resolve(indexFileName);
             }
-            logger.log(Level.FINER, "rendering Groovy HTTP status response with templatePath = " + templatePath);
+            logger.log(Level.FINEST, "rendering Groovy HTTP status response with templatePath = " + templatePath);
         } else {
             // override if 'templatePath' attribute is set
             String overridePath = httpServerContext.getAttributes().get(String.class, "templatePath");
             if (overridePath != null) {
-                logger.log(Level.FINER, "found override templatePath = " + overridePath);
+                logger.log(Level.FINEST, "found override templatePath = " + overridePath);
                 templatePath = application.resolve(overridePath);
-                logger.log(Level.FINER, "found override templatePath, resolved to " + templatePath);
+                logger.log(Level.FINEST, "found override templatePath, resolved to " + templatePath);
             }
             if (templatePath == null) {
-                logger.log(Level.FINER, "templatePath is null, OOTB effort on " + getIndexFileName());
+                logger.log(Level.FINEST, "templatePath is null, OOTB effort on " + getIndexFileName());
                 // OOTB rendering via getIndexFileName(), no getPath(), no getTemplateName()
                 templatePath = application.resolve(getIndexFileName());
             }
@@ -104,7 +104,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
         }
         templates.computeIfAbsent(templatePath, path -> {
             try {
-                logger.log(Level.FINEST, "groovy templatePath = " + path + " creating by template engine");
+                logger.log(Level.FINEST, () -> "groovy templatePath = " + path + " creating by template engine");
                 return templateEngine.createTemplate(Files.readString(path));
             } catch (Exception e) {
                 throw new IllegalArgumentException(e);
@@ -132,7 +132,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             return;
         }
         // handle programmatic locale change plus template making under lock so no other request/response can interrupt us
-        logger.log(Level.FINER, "application locale for template = " + application.getLocale());
+        logger.log(Level.FINEST, () -> "application locale for template = " + application.getLocale());
         try {
             lock.lock();
             templateResolver.setLocale(application.getLocale());
@@ -141,7 +141,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             if (acceptLanguage != null) {
                 Locale negotiatedLocale = LocaleNegotiator.findLocale(acceptLanguage);
                 if (negotiatedLocale != null) {
-                    logger.log(Level.FINER, "negotiated locale for template = " + negotiatedLocale);
+                    logger.log(Level.FINEST, () -> "negotiated locale for template = " + negotiatedLocale);
                     templateResolver.setLocale(negotiatedLocale);
                 }
             }

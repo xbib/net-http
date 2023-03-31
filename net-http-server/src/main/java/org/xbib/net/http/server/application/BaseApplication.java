@@ -34,6 +34,7 @@ import org.xbib.net.http.server.session.OutgoingSessionHandler;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.memory.MemoryPropertiesSessionCodec;
 import org.xbib.net.http.server.validate.HttpRequestValidator;
+import org.xbib.net.mime.MimeTypeService;
 import org.xbib.net.util.NamedThreadFactory;
 import org.xbib.net.util.RandomUtil;
 import org.xbib.settings.Settings;
@@ -88,6 +89,11 @@ public class BaseApplication implements Application {
     @Override
     public ZoneId getZoneId() {
         return builder.zoneId;
+    }
+
+    @Override
+    public MimeTypeService getMimeService() {
+        return builder.mimeTypeService;
     }
 
     public Path getHome() {
@@ -147,7 +153,7 @@ public class BaseApplication implements Application {
             }
         };
         Future<?> future = executor.submit(routerCallable);
-        logger.log(Level.FINE, "dispatched " + future);
+        logger.log(Level.FINEST, "dispatched " + future);
     }
 
     @Override
@@ -169,7 +175,7 @@ public class BaseApplication implements Application {
             }
         };
         Future<?> future = executor.submit(routerCallable);
-        logger.log(Level.FINE, "dispatched status " + future);
+        logger.log(Level.FINEST, "dispatched status " + future);
     }
 
     @Override
@@ -242,13 +248,13 @@ public class BaseApplication implements Application {
 
     @Override
     public void onCreated(Session session) {
-        logger.log(Level.FINE, "session name = " + sessionName + " created = " + session);
+        logger.log(Level.FINER, "session name = " + sessionName + " created = " + session);
         builder.applicationModuleList.forEach(module -> module.onOpen(this, session));
     }
 
     @Override
     public void onDestroy(Session session) {
-        logger.log(Level.FINE, "session name = " + sessionName + " destroyed = " + session);
+        logger.log(Level.FINER, "session name = " + sessionName + " destroyed = " + session);
         builder.applicationModuleList.forEach(module -> module.onClose(this, session));
     }
 
@@ -342,7 +348,7 @@ public class BaseApplication implements Application {
             ((Closeable) outgoingSessionHandler).close();
         }
         if (incomingSessionHandler != null && (incomingSessionHandler instanceof Closeable)) {
-            logger.log(Level.FINE, "application closing incming session handler");
+            logger.log(Level.FINE, "application closing incoming session handler");
             ((Closeable) incomingSessionHandler).close();
         }
         if (sessionCodec != null && sessionCodec instanceof Closeable) {

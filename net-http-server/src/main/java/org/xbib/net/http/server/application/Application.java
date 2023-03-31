@@ -14,6 +14,7 @@ import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.session.SessionListener;
+import org.xbib.net.mime.MimeTypeService;
 import org.xbib.settings.Settings;
 
 public interface Application extends SessionListener, Resolver<Path>, Closeable {
@@ -25,6 +26,8 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
     Locale getLocale();
 
     ZoneId getZoneId();
+
+    MimeTypeService getMimeService();
 
     Path getHome();
 

@@ -84,7 +84,7 @@ public class OutgoingSessionHandler implements HttpHandler {
         }
         String suffix = SessionUtil.extractExtension(context.request().getRequestPath());
         if (suffix != null && suffixes.contains(suffix)) {
-            logger.log(Level.FINE, "suffix " + suffix + " blocking outgoing session handling");
+            logger.log(Level.FINEST, () -> "suffix " + suffix + " blocking outgoing session handling");
             return;
         }
         CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "outgoingcookies");
@@ -105,7 +105,7 @@ public class OutgoingSessionHandler implements HttpHandler {
         if (session != null) {
             try {
                 if (userProfile != null) {
-                    logger.log(Level.FINE, "user profile present: " + userProfile);
+                    logger.log(Level.FINEST, () -> "user profile present: " + userProfile);
                     if (sessionUserName != null) {
                         session.put(sessionUserName, userProfile.getUserId());
                     }
@@ -123,7 +123,7 @@ public class OutgoingSessionHandler implements HttpHandler {
                 throw new HttpException("unable to create session cookie", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        logger.log(Level.FINER, "outgoing cookies = " + cookieBox);
+        logger.log(Level.FINEST, "outgoing cookies = " + cookieBox);
         context.getAttributes().put("outgoingcookies", cookieBox);
     }
 

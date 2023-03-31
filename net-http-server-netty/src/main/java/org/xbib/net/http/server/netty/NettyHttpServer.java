@@ -64,7 +64,7 @@ public class NettyHttpServer implements HttpServer {
         this.serviceLoader = ServiceLoader.load(HttpChannelInitializer.class);
         this.channelFutures = new ArrayList<>();
         this.channels = new ArrayList<>();
-        logger.log(Level.INFO, "parent event loop group = " + parentEventLoopGroup +
+        logger.log(Level.FINE, "parent event loop group = " + parentEventLoopGroup +
                 " child event loop group = " + childEventLoopGroup  +
                 " socket channel class = " + socketChannelClass +
                 " router addresses = " + getApplication().getAddresses());
@@ -85,7 +85,7 @@ public class NettyHttpServer implements HttpServer {
     @Override
     public void bind() throws BindException {
         Set<HttpAddress> httpAddressSet = getApplication().getAddresses();
-        logger.log(Level.INFO, "http adresses = " + httpAddressSet);
+        logger.log(Level.FINE, "http adresses = " + httpAddressSet);
         for (HttpAddress httpAddress : httpAddressSet) {
             SocketConfig socketConfig = httpAddress.getSocketConfig();
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -124,7 +124,7 @@ public class NettyHttpServer implements HttpServer {
                     throw new IOException("unable to bind to " + httpAddress + " because network class " +
                             detectedNetworkClass + " is not allowed by configured network class " + configuredNetworkClass);
                 }
-                logger.log(Level.INFO, () -> "trying to bind to " + inetSocketAddress);
+                logger.log(Level.FINE, () -> "trying to bind to " + inetSocketAddress);
                 channelFutures.add(bootstrap.bind(inetSocketAddress));
             } catch (IOException e) {
                 throw new BindException(e.getMessage());
@@ -139,7 +139,7 @@ public class NettyHttpServer implements HttpServer {
                         });
                 channels.add(channelFuture.sync().channel());
                 channelFuture.await();
-                logger.log(Level.FINER, () -> channelFuture.channel() + " ready, listening");
+                logger.log(Level.FINE, () -> channelFuture.channel() + " ready, listening");
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, e.getMessage(), e);
             }

@@ -121,7 +121,7 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         }
         if (request != null) {
             URL url = request.getServerURL().resolve(prefix).resolve(rel);
-            logger.log(Level.FINE, "server base URL = " + request.getServerURL() +
+            logger.log(Level.FINEST, "server base URL = " + request.getServerURL() +
                     " prefix = " + prefix + " rel = " + rel + " --> " + url);
             return absolute ? url.toExternalForm() : toOrigin(url);
         } else {

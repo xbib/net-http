@@ -42,8 +42,8 @@ public class LoginAuthenticationHandler implements HttpHandler {
         userProfile = new BaseUserProfile();
         try {
             authenticate(userProfile,
-                    (String) context.httpRequest().getParameter().get(userParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
-                    (String) context.httpRequest().getParameter().get(passwordParameterName, Parameter.Domain.DEFAULT, Parameter.Domain.FORM),
+                    (String) context.httpRequest().getParameter().get(userParameterName, Parameter.Domain.FORM),
+                    (String) context.httpRequest().getParameter().get(passwordParameterName, Parameter.Domain.FORM),
                     context.httpRequest());
             context.getAttributes().put("userprofile", userProfile);
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public class LoginAuthenticationHandler implements HttpHandler {
         }
     }
 
-    protected void authenticate(UserProfile userProfile, String username, String password, Request request) throws Exception {
+    protected void authenticate(UserProfile userProfile, String username, String password, Request request) {
         if (username == null) {
             logger.log(Level.FINE, "no username given for check, doing nothing");
             return;

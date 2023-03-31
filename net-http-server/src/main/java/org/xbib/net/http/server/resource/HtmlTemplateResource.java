@@ -53,7 +53,7 @@ public class HtmlTemplateResource implements HttpServerResource {
         }
         this.resourcePath = httpServerContext.request().getRequestPath().substring(1);
         this.path = resourcePath.length() > 0 ? root.resolve(resourcePath) : root;
-        logger.log(Level.FINER, "class = " + getClass().getName() +
+        logger.log(Level.FINEST, "class = " + getClass().getName() +
                 " root = " + root +
                 " resource path = " + resourcePath +
                 " path = " + path +
@@ -64,9 +64,9 @@ public class HtmlTemplateResource implements HttpServerResource {
         if (Files.isDirectory(path)) {
             if (getIndexFileName() != null) {
                 Path indexPath = path.resolve(indexFileName);
-                logger.log(Level.FINE, "resolved to index path = " + indexPath);
+                logger.log(Level.FINEST, "resolved to index path = " + indexPath);
                 if (Files.exists(indexPath)) {
-                    logger.log(Level.FINE, "index path exists");
+                    logger.log(Level.FINEST, "index path exists");
                     this.isExistsIndexFile = true;
                     this.path = indexPath;
                     this.isDirectory = false;
@@ -84,7 +84,7 @@ public class HtmlTemplateResource implements HttpServerResource {
         }
         this.isExists = Files.exists(path);
         this.url = URL.create(path.toUri().toString());
-        logger.log(Level.FINE, "isExists = " + isExists + " isDirectory = " + isDirectory + " url = " + url);
+        logger.log(Level.FINEST, () -> "isExists = " + isExists + " isDirectory = " + isDirectory + " url = " + url);
         this.lastModified = isExists ? Files.getLastModifiedTime(path).toInstant() : Instant.now();
         // length will be computed at rendering time
         this.length = -1;
