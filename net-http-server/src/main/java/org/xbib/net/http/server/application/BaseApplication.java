@@ -70,10 +70,10 @@ public class BaseApplication implements Application {
         this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
                         logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
         this.sessionName = getSettings().get("session.name", "SESS");
-        this.httpRequestValidator = buildRequestValidator();
-        this.incomingCookieHandler = buildIncomingCookieHandler();
-        this.outgoingCookieHandler = buildOutgoingCookieHandler();
-        this.httpResponseRenderer = buildResponseRenderer();
+        this.httpRequestValidator = newRequestValidator();
+        this.incomingCookieHandler = newIncomingCookieHandler();
+        this.outgoingCookieHandler = newOutgoingCookieHandler();
+        this.httpResponseRenderer = newResponseRenderer();
     }
 
     public static BaseApplicationBuilder builder() {
@@ -155,7 +155,6 @@ public class BaseApplication implements Application {
                          HttpResponseBuilder httpResponseBuilder,
                          HttpResponseStatus httpResponseStatus) {
         HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
-        httpServerContext.getAttributes().put("responsebuilder", httpResponseBuilder);
         RouterCallable routerCallable = new RouterCallable() {
             @Override
             public Boolean call() {
@@ -180,32 +179,36 @@ public class BaseApplication implements Application {
         HttpServerContext httpServerContext = new BaseHttpServerContext(this, domain, requestBuilder, responseBuilder);
         httpServerContext.getAttributes().put("requestbuilder", requestBuilder);
         httpServerContext.getAttributes().put("responsebuilder", responseBuilder);
-        this.sessionCodec = buildSessionCodec(httpServerContext);
+        this.sessionCodec = newSessionCodec(httpServerContext);
         if (sessionCodec != null) {
             httpServerContext.getAttributes().put("sessioncodec", sessionCodec);
         }
-        this.incomingSessionHandler = buildIncomingSessionHandler(httpServerContext);
-        this.outgoingSessionHandler = buildOutgoingSessionHandler(httpServerContext);
+        this.incomingSessionHandler = newIncomingSessionHandler(httpServerContext);
+        this.outgoingSessionHandler = newOutgoingSessionHandler(httpServerContext);
         return httpServerContext;
     }
 
-    protected HttpRequestValidator buildRequestValidator() {
+    protected HttpRequestValidator newRequestValidator() {
         return new HttpRequestValidator();
     }
 
-    protected HttpHandler buildIncomingCookieHandler() {
+    protected HttpHandler newIncomingCookieHandler() {
         return new IncomingCookieHandler();
     }
 
-    protected HttpHandler buildOutgoingCookieHandler() {
+    protected HttpHandler newOutgoingCookieHandler() {
         return new OutgoingCookieHandler();
     }
 
-    protected Codec<Session> buildSessionCodec(HttpServerContext httpServerContext) {
+    protected HttpResponseRenderer newResponseRenderer() {
+        return new HttpResponseRenderer();
+    }
+
+    protected Codec<Session> newSessionCodec(HttpServerContext httpServerContext) {
         return new MemoryPropertiesSessionCodec(sessionName,this, 1024, Duration.ofDays(1));
     }
 
-    protected HttpHandler buildIncomingSessionHandler(HttpServerContext httpServerContext) {
+    protected HttpHandler newIncomingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
         Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new IncomingSessionHandler(
@@ -219,7 +222,7 @@ public class BaseApplication implements Application {
                 () -> RandomUtil.randomString(16));
     }
 
-    protected HttpHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
+    protected HttpHandler newOutgoingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
         Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new OutgoingSessionHandler(
@@ -237,10 +240,6 @@ public class BaseApplication implements Application {
         );
     }
 
-    protected HttpResponseRenderer buildResponseRenderer() {
-        return new HttpResponseRenderer();
-    }
-
     @Override
     public void onCreated(Session session) {
         logger.log(Level.FINE, "session name = " + sessionName + " created = " + session);
@@ -253,6 +252,7 @@ public class BaseApplication implements Application {
         builder.applicationModuleList.forEach(module -> module.onClose(this, session));
     }
 
+    @Override
     public void onOpen(HttpServerContext httpServerContext) {
         try {
             if (httpRequestValidator != null) {
@@ -275,9 +275,10 @@ public class BaseApplication implements Application {
         }
     }
 
+    @Override
     public void onClose(HttpServerContext httpServerContext) {
         try {
-            // call modules before session/cookie setdown
+            // call modules before session/cookie
             builder.applicationModuleList.forEach(module -> module.onClose(this, httpServerContext));
             if (builder.sessionsEnabled && outgoingSessionHandler != null) {
                 outgoingSessionHandler.handle(httpServerContext);
@@ -320,7 +321,7 @@ public class BaseApplication implements Application {
 
     @Override
     public void close() throws IOException {
-        logger.log(Level.INFO, "application closing down");
+        logger.log(Level.INFO, "application closing");
         // stop dispatching and stop dispatched requests
         executor.shutdown();
         try {
@@ -358,5 +359,4 @@ public class BaseApplication implements Application {
         }
         logger.log(Level.INFO, "application closed");
     }
-
 }

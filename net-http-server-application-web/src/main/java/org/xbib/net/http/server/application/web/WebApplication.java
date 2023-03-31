@@ -28,12 +28,12 @@ public class WebApplication extends BaseApplication {
         }
     }
 
-    protected Codec<Session> buildSessionCodec(HttpServerContext httpServerContext) {
+    protected Codec<Session> newSessionCodec(HttpServerContext httpServerContext) {
         return new FileJsonSessionCodec(sessionName, this, 1024, Duration.ofDays(1),
                 Paths.get("/var/tmp/session"));
     }
 
-    protected HttpHandler buildIncomingSessionHandler(HttpServerContext httpServerContext) {
+    protected HttpHandler newIncomingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
         Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new IncomingSessionHandler(
@@ -47,7 +47,7 @@ public class WebApplication extends BaseApplication {
                 () -> RandomUtil.randomString(16));
     }
 
-    protected OutgoingSessionHandler buildOutgoingSessionHandler(HttpServerContext httpServerContext) {
+    protected OutgoingSessionHandler newOutgoingSessionHandler(HttpServerContext httpServerContext) {
         @SuppressWarnings("unchecked")
         Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
         return new OutgoingSessionHandler(
