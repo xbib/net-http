@@ -4,25 +4,20 @@ import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.session.Session;
-import org.xbib.settings.Settings;
 
 public interface ApplicationModule {
 
     String getName();
 
-    void onOpen(Application application, Settings settings) throws Exception;
+    void onOpen(HttpServerContext httpServerContext);
 
-    void onOpen(Application application, HttpServerContext httpServerContext);
+    void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest);
 
-    void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService);
+    void onClose(HttpServerContext httpServerContext);
 
-    void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest);
+    void onOpen(Session session);
 
-    void onClose(Application application, HttpServerContext httpServerContext);
+    void onClose(Session session);
 
-    void onOpen(Application application, Session session);
-
-    void onClose(Application application, Session session);
-
-    void onClose(Application application);
+    void onClose();
 }

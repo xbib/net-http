@@ -18,16 +18,12 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
 
     private static final Logger logger = Logger.getLogger(GroovyTemplateApplicationModule.class.getName());
 
-    private GroovyMarkupTemplateHandler groovyMarkupTemplateHandler;
+    private final GroovyMarkupTemplateHandler groovyMarkupTemplateHandler;
 
-    private GroovyTemplateRenderer groovyTemplateRenderer;
+    private final GroovyTemplateRenderer groovyTemplateRenderer;
 
     public GroovyTemplateApplicationModule(Application application, String name, Settings settings) {
         super(application, name, settings);
-    }
-
-    @Override
-    public void onOpen(Application application, Settings settings) {
         ClassLoader classLoader = GroovyMarkupTemplateHandler.class.getClassLoader();
         String defaultMarkupTemplate = settings.get("markup.templateClass",
                 "org.xbib.net.http.template.DefaultMarkupTemplate");
@@ -54,7 +50,7 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext) {
+    public void onOpen(HttpServerContext httpServerContext) {
         try {
             groovyMarkupTemplateHandler.handle(httpServerContext);
         } catch (IOException e) {
@@ -63,14 +59,14 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
+    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
         httpServerContext.getAttributes().put("request", httpRequest);
         httpServerContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
         application.getModules().forEach(module -> httpServerContext.getAttributes().put(module.getName(), module));
     }
 
     @Override
-    public void onClose(Application application, HttpServerContext httpServerContext) {
+    public void onClose(HttpServerContext httpServerContext) {
         try {
             groovyTemplateRenderer.handle(httpServerContext);
         } catch (IOException e) {

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +20,7 @@ import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.mime.MimeTypeService;
+import org.xbib.net.util.NamedThreadFactory;
 import org.xbib.settings.Settings;
 
 public class BaseApplicationBuilder implements ApplicationBuilder {
@@ -43,6 +45,8 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     protected int blockingThreadKeepAliveTime;
 
     protected TimeUnit blockingThreadKeepAliveTimeUnit;
+
+    protected ThreadPoolExecutor executor;
 
     protected Path home;
 
@@ -73,7 +77,7 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     protected BaseApplicationBuilder() {
         this.classLoader = getClass().getClassLoader();
         this.blockingThreadCount = Runtime.getRuntime().availableProcessors();
-        this.blockingThreadQueueCount = Integer.MAX_VALUE;
+        this.blockingThreadQueueCount = 0; // use fair synchronous queue
         this.blockingThreadKeepAliveTime = 60;
         this.blockingThreadKeepAliveTimeUnit = TimeUnit.SECONDS;
         this.home = Paths.get(System.getProperties().containsKey("application.home") ? System.getProperty("application.home") : ".");
@@ -112,6 +116,12 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     @Override
     public BaseApplicationBuilder setKeepAliveTimeUnit(TimeUnit blockingThreadKeepAliveTimeUnit) {
         this.blockingThreadKeepAliveTimeUnit = blockingThreadKeepAliveTimeUnit;
+        return this;
+    }
+
+    @Override
+    public BaseApplicationBuilder setExecutor(ThreadPoolExecutor executor) {
+        this.executor = executor;
         return this;
     }
 
@@ -205,12 +215,16 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         if (staticFileSuffixes == null) {
             staticFileSuffixes = DEFAULT_SUFFIXES;
         }
+        if (this.executor == null) {
+            this.executor = new ApplicationThreadPoolExecutor(blockingThreadCount, blockingThreadQueueCount,
+                    blockingThreadKeepAliveTime, blockingThreadKeepAliveTimeUnit,
+                    new NamedThreadFactory("org-xbib-net-http-server-application"));
+            this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
+                    logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
+        }
     }
 
     protected void setupApplication(Application application) {
-        if (router != null) {
-            router.setApplication(application);
-        }
         for (Map.Entry<String, Settings> entry : settings.getGroups("module").entrySet()) {
             String moduleName = entry.getKey();
             Settings moduleSettings = entry.getValue();
@@ -223,7 +237,6 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
                     ApplicationModule applicationModule = clazz.getConstructor(Application.class, String.class, Settings.class)
                             .newInstance(application, moduleName, moduleSettings);
                     applicationModuleList.add(applicationModule);
-                    applicationModule.onOpen(application, moduleSettings);
                 } catch (Exception e) {
                     logger.log(Level.WARNING, e.getMessage(), e);
                     throw new IllegalArgumentException("class not found or not loadable: " + e.getMessage());

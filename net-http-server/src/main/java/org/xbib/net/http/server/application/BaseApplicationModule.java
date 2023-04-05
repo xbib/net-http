@@ -26,34 +26,26 @@ public abstract class BaseApplicationModule implements ApplicationModule {
     }
 
     @Override
-    public void onOpen(Application application, Settings settings) throws Exception {
+    public void onOpen(HttpServerContext httpServerContext) {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext) {
+    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService) {
+    public void onClose(HttpServerContext httpServerContext) {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
+    public void onOpen(Session session) {
     }
 
     @Override
-    public void onClose(Application application, HttpServerContext httpServerContext) {
+    public void onClose(Session session) {
     }
 
     @Override
-    public void onOpen(Application application, Session session) {
-    }
-
-    @Override
-    public void onClose(Application application, Session session) {
-    }
-
-    @Override
-    public void onClose(Application application) {
+    public void onClose() {
     }
 }

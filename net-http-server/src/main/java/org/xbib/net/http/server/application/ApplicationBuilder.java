@@ -3,6 +3,7 @@ package org.xbib.net.http.server.application;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Locale;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.mime.MimeTypeService;
@@ -16,6 +17,8 @@ public interface ApplicationBuilder {
     ApplicationBuilder setKeepAliveTime(int keepAliveTime);
 
     ApplicationBuilder setKeepAliveTimeUnit(TimeUnit keepAliveTimeUnit);
+
+    ApplicationBuilder setExecutor(ThreadPoolExecutor executor);
 
     ApplicationBuilder setHome(Path home);
 

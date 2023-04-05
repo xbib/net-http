@@ -16,20 +16,16 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DatabaseApplicationModule<A extends Application> extends BaseApplicationModule {
+public class DatabaseApplicationModule extends BaseApplicationModule {
 
     private static final Logger logger = Logger.getLogger(DatabaseApplicationModule.class.getName());
 
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
-    private DatabaseProvider databaseProvider;
+    private final DatabaseProvider databaseProvider;
 
     public DatabaseApplicationModule(Application application, String name, Settings settings) {
         super(application, name, settings);
-    }
-
-    @Override
-    public void onOpen(Application application, Settings settings) throws Exception {
         this.dataSource = createDataSource();
         String flavor = System.getProperty("database.flavor");
         this.databaseProvider = flavor != null ?
@@ -37,7 +33,7 @@ public class DatabaseApplicationModule<A extends Application> extends BaseApplic
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService) {
+    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
         if (dataSource != null) {
             httpServerContext.getAttributes().put("datasource", dataSource);
         }
@@ -46,12 +42,7 @@ public class DatabaseApplicationModule<A extends Application> extends BaseApplic
         }
     }
 
-    @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
-        // nothing
-    }
-
-    private DataSource createDataSource() throws Exception {
+    private DataSource createDataSource() {
         Properties properties = new Properties();
         System.getProperties().forEach((key, value) -> {
             if (key.toString().startsWith("database.") && !key.toString().equals("database.flavor")) {
@@ -72,7 +63,11 @@ public class DatabaseApplicationModule<A extends Application> extends BaseApplic
         config.setConnectionTimeout(getAsLong(properties, "timeout", 15L * 1000L)); // 15 seconds
         config.setHousekeepingPeriodMs(getAsLong(properties, "housekeeping", 600L * 1000L)); // 10 minutes
         config.setAutoCommit(getAsBoolean(properties, "autocommit", true));
-        return new PoolDataSource(config);
+        try {
+            return new PoolDataSource(config);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private int getAsInt(Properties properties, String key, int defaultValue) {

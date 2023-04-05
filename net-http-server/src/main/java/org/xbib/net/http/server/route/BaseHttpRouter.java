@@ -39,8 +39,6 @@ public class BaseHttpRouter implements HttpRouter {
 
     private final HttpRouteResolver<HttpService> httpRouteResolver;
 
-    private Application application;
-
     protected BaseHttpRouter(BaseHttpRouterBuilder builder) {
         this.builder = builder;
         HttpRouteResolver.Builder<HttpService> httpRouteResolverBuilder = newHttpRouteResolverBuilder();
@@ -70,12 +68,6 @@ public class BaseHttpRouter implements HttpRouter {
     }
 
     @Override
-    public void setApplication(Application application) {
-        Objects.requireNonNull(application);
-        this.application = application;
-    }
-
-    @Override
     public Collection<HttpDomain> getDomains() {
         return builder.domains;
     }
@@ -86,7 +78,8 @@ public class BaseHttpRouter implements HttpRouter {
     }
 
     @Override
-    public void route(HttpRequestBuilder requestBuilder,
+    public void route(Application application,
+                      HttpRequestBuilder requestBuilder,
                       HttpResponseBuilder responseBuilder) {
         Objects.requireNonNull(requestBuilder);
         Objects.requireNonNull(requestBuilder.getRequestURI());
@@ -104,61 +97,61 @@ public class BaseHttpRouter implements HttpRouter {
                 true);
         httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);
         HttpServerContext httpServerContext = application.createContext(httpDomain, requestBuilder, responseBuilder);
-        route(httpServerContext, httpRouteResolverResults);
-    }
-
-    protected void route(HttpServerContext httpServerContext,
-                         List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults) {
         application.onOpen(httpServerContext);
         try {
-            if (httpServerContext.isFailed()) {
-                return;
-            }
-            if (httpRouteResolverResults.isEmpty()) {
-                logger.log(Level.FINE, "route resolver results is empty, generating a not found message");
-                httpServerContext.setResolverResult(null);
-                routeStatus(NOT_FOUND, httpServerContext);
-                return;
-            }
-            for (HttpRouteResolver.Result<HttpService> httpRouteResolverResult : httpRouteResolverResults) {
-                try {
-                    // first: create the final request
-                    httpServerContext.setResolverResult(httpRouteResolverResult);
-                    HttpService httpService = httpRouteResolverResult.getValue();
-                    HttpRequest httpRequest = httpServerContext.httpRequest();
-                    application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService, httpRequest));
-                    // second: security check, authentication etc.
-                    if (httpService.getSecurityDomain() != null) {
-                        logger.log(Level.FINEST, () -> "handling security domain service " + httpService);
-                        for (HttpHandler httpHandler : httpService.getSecurityDomain().getHandlers()) {
-                            logger.log(Level.FINEST, () -> "handling security domain handler " + httpHandler);
-                            httpHandler.handle(httpServerContext);
-                        }
-                    }
-                    if (httpServerContext.isDone() || httpServerContext.isFailed()) {
-                        break;
-                    }
-                    // after security checks, accept service, open and execute service
-                    httpServerContext.getAttributes().put("service", httpService);
-                    application.getModules().forEach(module -> module.onOpen(application, httpServerContext, httpService));
-                    logger.log(Level.FINEST, () -> "handling service " + httpService);
-                    httpService.handle(httpServerContext);
-                    // if service signals that work is done, break
-                    if (httpServerContext.isDone() || httpServerContext.isFailed()) {
-                        break;
-                    }
-                } catch (HttpException e) {
-                    logger.log(Level.SEVERE, e.getMessage(), e);
-                    routeException(e);
-                    break;
-                } catch (Throwable t) {
-                    logger.log(Level.SEVERE, t.getMessage(), t);
-                    routeToErrorHandler(httpServerContext, t);
-                    break;
-                }
-            }
+            route(application, httpServerContext, httpRouteResolverResults);
         } finally {
             application.onClose(httpServerContext);
+        }
+    }
+
+    protected void route(Application application,
+                         HttpServerContext httpServerContext,
+                         List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults) {
+        if (httpServerContext.isFailed()) {
+            return;
+        }
+        if (httpRouteResolverResults.isEmpty()) {
+            logger.log(Level.FINE, "route resolver results is empty, generating a not found message");
+            httpServerContext.setResolverResult(null);
+            routeStatus(NOT_FOUND, httpServerContext);
+            return;
+        }
+        for (HttpRouteResolver.Result<HttpService> httpRouteResolverResult : httpRouteResolverResults) {
+            try {
+                // first: create the final request
+                httpServerContext.setResolverResult(httpRouteResolverResult);
+                HttpService httpService = httpRouteResolverResult.getValue();
+                HttpRequest httpRequest = httpServerContext.httpRequest();
+                application.getModules().forEach(module -> module.onOpen(httpServerContext, httpService, httpRequest));
+                // second: security check, authentication etc.
+                if (httpService.getSecurityDomain() != null) {
+                    logger.log(Level.FINEST, () -> "handling security domain service " + httpService);
+                    for (HttpHandler httpHandler : httpService.getSecurityDomain().getHandlers()) {
+                        logger.log(Level.FINEST, () -> "handling security domain handler " + httpHandler);
+                        httpHandler.handle(httpServerContext);
+                    }
+                }
+                if (httpServerContext.isDone() || httpServerContext.isFailed()) {
+                    break;
+                }
+                // after security checks, accept service, open and execute service
+                httpServerContext.getAttributes().put("service", httpService);
+                logger.log(Level.FINEST, () -> "handling service " + httpService);
+                httpService.handle(httpServerContext);
+                // if service signals that work is done, break
+                if (httpServerContext.isDone() || httpServerContext.isFailed()) {
+                    break;
+                }
+            } catch (HttpException e) {
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                routeException(e);
+                break;
+            } catch (Throwable t) {
+                logger.log(Level.SEVERE, t.getMessage(), t);
+                routeToErrorHandler(httpServerContext, t);
+                break;
+            }
         }
     }
 

@@ -15,8 +15,10 @@ public class ApplicationThreadPoolExecutor extends ThreadPoolExecutor {
 
     private final Logger logger = Logger.getLogger(ApplicationThreadPoolExecutor.class.getName());
 
-    public ApplicationThreadPoolExecutor(int nThreads, int maxQueue,
-                                         long keepAliveTime, TimeUnit timeUnit,
+    public ApplicationThreadPoolExecutor(int nThreads,
+                                         int maxQueue,
+                                         long keepAliveTime,
+                                         TimeUnit timeUnit,
                                          ThreadFactory threadFactory) {
         super(nThreads, nThreads, keepAliveTime, timeUnit, createBlockingQueue(maxQueue), threadFactory);
         logger.log(Level.FINE, () -> "threadpool executor up with nThreads = " + nThreads +
@@ -26,13 +28,13 @@ public class ApplicationThreadPoolExecutor extends ThreadPoolExecutor {
                 " threadFactory = " + threadFactory);
     }
 
-    private static BlockingQueue<Runnable> createBlockingQueue(int max) {
-        return max == Integer.MAX_VALUE ? new SynchronousQueue<>(true) : new ArrayBlockingQueue<>(max);
+    private static BlockingQueue<Runnable> createBlockingQueue(int maxQueue) {
+        return maxQueue == 0 ? new SynchronousQueue<>(true) : new ArrayBlockingQueue<>(maxQueue);
     }
 
     @Override
     protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-        return new RouterTask<>(callable);
+        return new ApplicationTask<>(callable);
     }
 
     @Override
@@ -43,10 +45,10 @@ public class ApplicationThreadPoolExecutor extends ThreadPoolExecutor {
             logger.log(Level.SEVERE, terminationCause.getMessage(), terminationCause);
             return;
         }
-        if (runnable instanceof RouterTask<?> routerTask) {
-            RouterCallable routerCallable = (RouterCallable) routerTask.getCallable();
-            logger.log(Level.FINEST, () -> "releasing " + routerCallable);
-            routerCallable.release();
+        if (runnable instanceof ApplicationTask<?> applicationTask) {
+            ApplicationCallable<?> applicationCallable = (ApplicationCallable<?>) applicationTask.getCallable();
+            logger.log(Level.FINEST, () -> "releasing " + applicationCallable);
+            applicationCallable.release();
         }
     }
 }

@@ -67,7 +67,7 @@ public class NettyHttpServer implements HttpServer {
         logger.log(Level.FINE, "parent event loop group = " + parentEventLoopGroup +
                 " child event loop group = " + childEventLoopGroup  +
                 " socket channel class = " + socketChannelClass +
-                " router addresses = " + getApplication().getAddresses());
+                " router addresses = " + builder.application.getAddresses());
     }
 
     public static NettyHttpServerBuilder builder() {
@@ -84,8 +84,8 @@ public class NettyHttpServer implements HttpServer {
 
     @Override
     public void bind() throws BindException {
-        Set<HttpAddress> httpAddressSet = getApplication().getAddresses();
-        logger.log(Level.FINE, "http adresses = " + httpAddressSet);
+        Set<HttpAddress> httpAddressSet = builder.application.getAddresses();
+        logger.log(Level.FINE, "http addresses = " + httpAddressSet);
         for (HttpAddress httpAddress : httpAddressSet) {
             SocketConfig socketConfig = httpAddress.getSocketConfig();
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -198,8 +198,7 @@ public class NettyHttpServer implements HttpServer {
                 channelFuture.cancel(true);
             }
         }
-        // close application
-        getApplication().close();
+        builder.application.close();
         logger.log(Level.INFO, "server shutdown complete");
     }
 

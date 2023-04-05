@@ -6,9 +6,9 @@ import org.xbib.config.ConfigLoader;
 import org.xbib.config.ConfigLogger;
 import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
+import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.application.BaseApplicationModule;
-import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
@@ -24,27 +24,21 @@ public class ConfigApplicationModule extends BaseApplicationModule {
         bootLogger = optionalBootLogger.orElse(new SystemConfigLogger());
     }
 
-    private ConfigParams configParams;
+    private final ConfigParams configParams;
 
-    private ConfigLoader configLoader;
+    private final ConfigLoader configLoader;
 
-    private Settings settings;
+    private final Settings settings;
 
     public ConfigApplicationModule(Application application, String name, Settings settings) {
         super(application, name, settings);
-    }
-
-    @Override
-    public void onOpen(Application application, Settings settings) {
         String profile = System.getProperty("application.profile");
         if (profile == null) {
             profile = "developer";
         }
-        String[] args = profile.split(";");
         this.configParams = new ConfigParams()
-                .withArgs(args)
-                .withDirectoryName("application")
-                .withFileNamesWithoutSuffix(args[0])
+                .withDirectoryName(name)
+                .withFileNamesWithoutSuffix(profile)
                 .withSystemEnvironment()
                 .withSystemProperties();
         this.configLoader = ConfigLoader.getInstance()
@@ -53,14 +47,9 @@ public class ConfigApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService) {
+    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
         httpServerContext.getAttributes().put("configparams", configParams);
         httpServerContext.getAttributes().put("configloader", configLoader);
         httpServerContext.getAttributes().put("settings", settings);
-    }
-
-    @Override
-    public void onOpen(Application application, HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
-        // do nothing
     }
 }

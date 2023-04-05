@@ -55,7 +55,7 @@ public class SimpleHttpServer implements HttpServer {
     @Override
     public void bind() throws BindException {
         // bind only once per HttpAddress in all domains
-        for (HttpAddress httpAddress : getApplication().getAddresses()) {
+        for (HttpAddress httpAddress : builder.application.getAddresses()) {
             logger.log(Level.INFO, () -> "trying to bind to " + httpAddress);
             try {
                 InetSocketAddress inetSocketAddress = httpAddress.getInetSocketAddress();
@@ -76,7 +76,7 @@ public class SimpleHttpServer implements HttpServer {
                 if (serverSocket.isBound()) {
                     serverSockets.put(httpAddress, serverSocket);
                     logger.log(Level.INFO, () -> "server socket = " + serverSocket +
-                            " domains = " + getApplication().getAddresses() + " bound, listening on " + inetSocketAddress);
+                            " domains = " + builder.application.getAddresses() + " bound, listening on " + inetSocketAddress);
                 } else {
                     logger.log(Level.WARNING, "server socket " + serverSocket + " not bound, something is wrong");
                 }
@@ -108,7 +108,7 @@ public class SimpleHttpServer implements HttpServer {
                                         httpAddress,
                                         (InetSocketAddress) socket.getLocalSocketAddress(),
                                         (InetSocketAddress) socket.getRemoteSocketAddress());
-                                getApplication().dispatch(httpRequestBuilder, httpResponseBuilder);
+                                builder.application.dispatch(httpRequestBuilder, httpResponseBuilder);
                             } catch (Throwable t) {
                                 logger.log(Level.SEVERE, t.getMessage(), t);
                             } finally {

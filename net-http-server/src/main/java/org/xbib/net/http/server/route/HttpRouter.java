@@ -15,13 +15,12 @@ public interface HttpRouter {
 
     DomainsByAddress getDomainsByAddress();
 
-    void setApplication(Application application);
-
-    void route(HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder);
-
-    void routeException(HttpException e);
+    void route(Application application, HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder);
 
     void routeStatus(HttpResponseStatus httpResponseStatus, HttpServerContext httpServerContext);
 
     void routeToErrorHandler(HttpServerContext httpServerContext, Throwable t);
+
+    void routeException(HttpException e);
+
 }

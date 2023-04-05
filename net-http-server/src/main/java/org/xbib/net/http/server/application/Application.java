@@ -38,13 +38,19 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
     Collection<ApplicationModule> getModules();
 
     /**
-     * Dispatch a regular request.
+     * Dispatch a request.
      * @param requestBuilder the request
      * @param responseBuilder the response
      */
     void dispatch(HttpRequestBuilder requestBuilder,
                   HttpResponseBuilder responseBuilder);
 
+    /**
+     * Dispatch a status.
+     * @param requestBuilder the request
+     * @param responseBuilder the response
+     * @param httpResponseStatus the status
+     */
     void dispatch(HttpRequestBuilder requestBuilder,
                   HttpResponseBuilder responseBuilder,
                   HttpResponseStatus httpResponseStatus);

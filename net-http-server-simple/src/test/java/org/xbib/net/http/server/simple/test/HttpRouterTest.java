@@ -56,8 +56,7 @@ public class HttpRouterTest {
                 .setMethod(HttpMethod.DELETE)
                 .setRequestURI("/demo")
                 .addHeader(HttpHeaderNames.HOST, httpAddress.hostAndPort());
-        router.setApplication(BaseApplication.builder().build());
-        router.route(httpRequest, httpResponse);
+        router.route(BaseApplication.builder().build(), httpRequest, httpResponse);
         String string = outputStream.toString(StandardCharsets.UTF_8);
         Logger.getAnonymousLogger().log(Level.INFO, "the response string is = " + string);
         assertTrue(string.contains("/demo"));

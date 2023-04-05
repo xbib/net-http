@@ -26,8 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -39,13 +37,10 @@ public class NioHttpServer implements HttpServer {
 
     private final NioHttpServerBuilder builder;
 
-    private final ExecutorService workerPool;
-
     private final Map<HttpAddress, ServerSocketChannel> serverSockets;
 
     NioHttpServer(NioHttpServerBuilder builder) {
         this.builder = builder;
-        this.workerPool = Executors.newCachedThreadPool();
         this.serverSockets = new HashMap<>();
     }
 
@@ -55,7 +50,7 @@ public class NioHttpServer implements HttpServer {
 
     @Override
     public void bind() throws BindException {
-        for (HttpAddress httpAddress : getApplication().getAddresses()) {
+        for (HttpAddress httpAddress : builder.application.getAddresses()) {
             try {
                 logger.log(Level.INFO, () -> "trying to bind to " + httpAddress);
                 ServerSocketChannel channel = ServerSocketChannel.open();
@@ -106,7 +101,7 @@ public class NioHttpServer implements HttpServer {
                                     httpAddress,
                                     (InetSocketAddress) socketChannel.getLocalAddress(),
                                     (InetSocketAddress) socketChannel.getRemoteAddress());
-                            handle(requestBuilder, responseBuilder);
+                            builder.application.dispatch(requestBuilder, responseBuilder);
                             socketChannel.close();
                         } catch (IOException e) {
                             logger.log(Level.SEVERE, e.getMessage(), e);
@@ -135,10 +130,6 @@ public class NioHttpServer implements HttpServer {
     @Override
     public Application getApplication() {
         return builder.application;
-    }
-
-    public void handle(HttpRequestBuilder httpRequestBuilder, HttpResponseBuilder httpResponseBuilder) throws IOException {
-        getApplication().dispatch(httpRequestBuilder, httpResponseBuilder);
     }
 
     @Override

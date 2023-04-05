@@ -35,7 +35,6 @@ import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.memory.MemoryPropertiesSessionCodec;
 import org.xbib.net.http.server.validate.HttpRequestValidator;
 import org.xbib.net.mime.MimeTypeService;
-import org.xbib.net.util.NamedThreadFactory;
 import org.xbib.net.util.RandomUtil;
 import org.xbib.settings.Settings;
 
@@ -44,8 +43,6 @@ public class BaseApplication implements Application {
     private static final Logger logger = Logger.getLogger(BaseApplication.class.getName());
 
     protected BaseApplicationBuilder builder;
-
-    private final ApplicationThreadPoolExecutor executor;
 
     private final HttpRequestValidator httpRequestValidator;
 
@@ -65,11 +62,6 @@ public class BaseApplication implements Application {
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
-        this.executor = new ApplicationThreadPoolExecutor(builder.blockingThreadCount, builder.blockingThreadQueueCount,
-                builder.blockingThreadKeepAliveTime, builder.blockingThreadKeepAliveTimeUnit,
-                new NamedThreadFactory("org-xbib-net-http-server-application"));
-        this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
-                        logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
         this.sessionName = getSettings().get("session.name", "SESS");
         this.httpRequestValidator = newRequestValidator();
         this.incomingCookieHandler = newIncomingCookieHandler();
@@ -139,10 +131,11 @@ public class BaseApplication implements Application {
     @Override
     public void dispatch(HttpRequestBuilder httpRequestBuilder,
                          HttpResponseBuilder httpResponseBuilder) {
-        RouterCallable routerCallable = new RouterCallable() {
+        final Application application = this;
+        ApplicationCallable<?> applicationCallable = new ApplicationCallable<>() {
             @Override
-            public Boolean call() {
-                getRouter().route(httpRequestBuilder, httpResponseBuilder);
+            public Object call() {
+                getRouter().route(application, httpRequestBuilder, httpResponseBuilder);
                 return true;
             }
 
@@ -152,7 +145,7 @@ public class BaseApplication implements Application {
                 httpResponseBuilder.release();
             }
         };
-        Future<?> future = executor.submit(routerCallable);
+        Future<?> future = builder.executor.submit(applicationCallable);
         logger.log(Level.FINEST, "dispatched " + future);
     }
 
@@ -161,9 +154,9 @@ public class BaseApplication implements Application {
                          HttpResponseBuilder httpResponseBuilder,
                          HttpResponseStatus httpResponseStatus) {
         HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
-        RouterCallable routerCallable = new RouterCallable() {
+        ApplicationCallable<?> applicationCallable = new ApplicationCallable<>() {
             @Override
-            public Boolean call() {
+            public Object call() {
                 getRouter().routeStatus(httpResponseStatus, httpServerContext);
                 return true;
             }
@@ -174,7 +167,7 @@ public class BaseApplication implements Application {
                 httpResponseBuilder.release();
             }
         };
-        Future<?> future = executor.submit(routerCallable);
+        Future<?> future = builder.executor.submit(applicationCallable);
         logger.log(Level.FINEST, "dispatched status " + future);
     }
 
@@ -249,13 +242,13 @@ public class BaseApplication implements Application {
     @Override
     public void onCreated(Session session) {
         logger.log(Level.FINER, "session name = " + sessionName + " created = " + session);
-        builder.applicationModuleList.forEach(module -> module.onOpen(this, session));
+        builder.applicationModuleList.forEach(module -> module.onOpen(session));
     }
 
     @Override
     public void onDestroy(Session session) {
         logger.log(Level.FINER, "session name = " + sessionName + " destroyed = " + session);
-        builder.applicationModuleList.forEach(module -> module.onClose(this, session));
+        builder.applicationModuleList.forEach(module -> module.onClose(session));
     }
 
     @Override
@@ -271,7 +264,7 @@ public class BaseApplication implements Application {
                 incomingSessionHandler.handle(httpServerContext);
             }
             // call modules after request/cookie/session setup
-            builder.applicationModuleList.forEach(module -> module.onOpen(this, httpServerContext));
+            builder.applicationModuleList.forEach(module -> module.onOpen(httpServerContext));
         } catch (HttpException e) {
             getRouter().routeException(e);
             httpServerContext.fail();
@@ -285,7 +278,7 @@ public class BaseApplication implements Application {
     public void onClose(HttpServerContext httpServerContext) {
         try {
             // call modules before session/cookie
-            builder.applicationModuleList.forEach(module -> module.onClose(this, httpServerContext));
+            builder.applicationModuleList.forEach(module -> module.onClose(httpServerContext));
             if (builder.sessionsEnabled && outgoingSessionHandler != null) {
                 outgoingSessionHandler.handle(httpServerContext);
             }
@@ -329,19 +322,19 @@ public class BaseApplication implements Application {
     public void close() throws IOException {
         logger.log(Level.INFO, "application closing");
         // stop dispatching and stop dispatched requests
-        executor.shutdown();
+        builder.executor.shutdown();
         try {
-            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                List<Runnable> list = executor.shutdownNow();
+            if (!builder.executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                List<Runnable> list = builder.executor.shutdownNow();
                 logger.log(Level.WARNING, "unable to stop runnables " + list);
             }
         } catch (InterruptedException e) {
-            List<Runnable> list = executor.shutdownNow();
+            List<Runnable> list = builder.executor.shutdownNow();
             logger.log(Level.WARNING, "unable to stop runnables " + list);
         }
         builder.applicationModuleList.forEach(module -> {
             logger.log(Level.FINE, "application closing module " + module);
-            module.onClose(this);
+            module.onClose();
         });
         if (outgoingSessionHandler != null && (outgoingSessionHandler instanceof Closeable)) {
             logger.log(Level.FINE, "application closing outgoing session handler");
