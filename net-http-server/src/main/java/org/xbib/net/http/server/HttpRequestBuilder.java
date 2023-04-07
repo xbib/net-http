@@ -31,6 +31,8 @@ public interface HttpRequestBuilder {
 
     HttpRequestBuilder addHeader(String name, String value);
 
+    HttpRequestBuilder addPart(Part part);
+
     URL getBaseURL();
 
     HttpMethod getMethod();

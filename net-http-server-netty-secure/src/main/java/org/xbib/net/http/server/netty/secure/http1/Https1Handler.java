@@ -89,7 +89,7 @@ public class Https1Handler extends ChannelDuplexHandler {
                 serverRequestBuilder.setSNIHost(serverNameIndicationHandler.hostname());
                 serverRequestBuilder.setSSLSession(serverNameIndicationHandler.getSslHandler().engine().getSession());
             }
-            nettyHttpServer.getApplication().dispatch(serverRequestBuilder, serverResponseBuilder);
+            nettyHttpServer.dispatch(serverRequestBuilder, serverResponseBuilder);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "bad request: " + e.getMessage(), e);
             DefaultFullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(io.netty.handler.codec.http.HttpVersion.valueOf(httpAddress.getVersion().text()),

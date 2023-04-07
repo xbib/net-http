@@ -28,6 +28,7 @@ import org.xbib.net.http.server.netty.TrafficLoggingHandler;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.http.server.netty.http1.HttpFileUploadHandler;
 
 /**
  * Insecure HTTP/2 server channel initializer.
@@ -63,9 +64,17 @@ public class Http2ChannelInitializer implements HttpChannelInitializer {
         if (nettyHttpServerConfig.isDecompressionEnabled()) {
             pipeline.addLast("server-decompressor", new HttpContentDecompressor());
         }
-        pipeline.addLast("server-object-aggregator",
-                new HttpObjectAggregator(nettyHttpServerConfig.getMaxContentLength()));
-        pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        if (nettyHttpServerConfig.isObjectAggregationEnabled()) {
+            pipeline.addLast("server-object-aggregator",
+                    new HttpObjectAggregator(nettyHttpServerConfig.getMaxContentLength()));
+        }
+        if (nettyHttpServerConfig.isFileUploadEnabled()) {
+            HttpFileUploadHandler httpFileUploadHandler = new HttpFileUploadHandler(nettyHttpServer);
+            pipeline.addLast("server-file-upload", httpFileUploadHandler);
+        }
+        if (nettyHttpServerConfig.isChunkedWriteEnabled()) {
+            pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        }
         pipeline.addLast("server-request", new Http2Handler(nettyHttpServer));
         pipeline.addLast("server-messages", new Http2Messages());
         pipeline.addLast("server-idle-timeout", new IdleTimeoutHandler(nettyHttpServerConfig.getTimeoutMillis()));

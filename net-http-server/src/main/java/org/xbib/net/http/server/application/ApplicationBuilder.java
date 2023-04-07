@@ -3,22 +3,11 @@ package org.xbib.net.http.server.application;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Locale;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import org.xbib.net.http.server.executor.Executor;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.mime.MimeTypeService;
 
 public interface ApplicationBuilder {
-
-    ApplicationBuilder setThreadCount(int blockingThreadCount);
-
-    ApplicationBuilder setQueueCount(int blockingThreadQueueCount);
-
-    ApplicationBuilder setKeepAliveTime(int keepAliveTime);
-
-    ApplicationBuilder setKeepAliveTimeUnit(TimeUnit keepAliveTimeUnit);
-
-    ApplicationBuilder setExecutor(ThreadPoolExecutor executor);
 
     ApplicationBuilder setHome(Path home);
 
@@ -28,8 +17,6 @@ public interface ApplicationBuilder {
 
     ApplicationBuilder setSessionsEnabled(boolean sessionsEnabled);
 
-    ApplicationBuilder setRouter(HttpRouter router);
-
     ApplicationBuilder setLocale(Locale locale);
 
     ApplicationBuilder setZoneId(ZoneId zoneId);
@@ -38,7 +25,9 @@ public interface ApplicationBuilder {
 
     ApplicationBuilder setStaticSuffixes(String... suffixes);
 
-    ApplicationBuilder registerModule(ApplicationModule applicationModule);
+    ApplicationBuilder setExecutor(Executor executor);
+
+    ApplicationBuilder setRouter(HttpRouter httpRouter);
 
     Application build();
 }

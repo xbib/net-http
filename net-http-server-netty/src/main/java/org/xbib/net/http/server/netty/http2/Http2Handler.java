@@ -55,7 +55,7 @@ public class Http2Handler extends ChannelDuplexHandler {
                         .setLocalAddress((InetSocketAddress) ctx.channel().localAddress())
                         .setRemoteAddress((InetSocketAddress) ctx.channel().remoteAddress())
                         .setStreamId(streamId);
-                nettyHttpServer.getApplication().dispatch(serverRequestBuilder, httpResponseBuilder);
+                nettyHttpServer.dispatch(serverRequestBuilder, httpResponseBuilder);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "bad request:" + e.getMessage(), e);
                 DefaultFullHttpResponse fullHttpResponse =

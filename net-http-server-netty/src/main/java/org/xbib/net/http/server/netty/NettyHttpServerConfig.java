@@ -57,19 +57,36 @@ public class NettyHttpServerConfig extends HttpServerConfig {
     private int pipeliningCapacity = 1024;
 
     /**
+     * HTTP object aggregation is enabled by default.
+     */
+    private boolean isObjectAggregationEnabled = true;
+
+    /**
      * This is Netty's default.
      */
     private int maxCompositeBufferComponents = 1024;
 
     /**
-     * Default for compression.
+     * Do not write chunks by default.
      */
-    private boolean enableCompression = true;
+    private boolean isChunkedWriteEnabled = false;
 
     /**
-     * Default for decompression.
+     * Compression is enabled by default.
      */
-    private boolean enableDecompression = true;
+    private boolean isCompressionEnabled = true;
+
+    /**
+     * Decompression is enabled by default.
+     */
+    private boolean isDecompressionEnabled = true;
+
+    /**
+     * Disable file upload (POST) by default.
+     */
+    private boolean isFileUploadEnabled = false;
+
+    private int fileUploadDiskThreshold = 1 *1024 * 1024;
 
     public NettyHttpServerConfig() {
     }
@@ -154,6 +171,15 @@ public class NettyHttpServerConfig extends HttpServerConfig {
         return pipeliningCapacity;
     }
 
+    public NettyHttpServerConfig setObjectAggregationEnabled(boolean isObjectAgregationEnabled) {
+        this.isObjectAggregationEnabled = isObjectAgregationEnabled;
+        return this;
+    }
+
+    public boolean isObjectAggregationEnabled() {
+        return isObjectAggregationEnabled;
+    }
+
     public NettyHttpServerConfig setMaxCompositeBufferComponents(int maxCompositeBufferComponents) {
         this.maxCompositeBufferComponents = maxCompositeBufferComponents;
         return this;
@@ -163,22 +189,48 @@ public class NettyHttpServerConfig extends HttpServerConfig {
         return maxCompositeBufferComponents;
     }
 
-    public NettyHttpServerConfig setCompression(boolean enabled) {
-        this.enableCompression = enabled;
+    public NettyHttpServerConfig setCompression(boolean isCompressionEnabled) {
+        this.isCompressionEnabled = isCompressionEnabled;
         return this;
     }
 
     public boolean isCompressionEnabled() {
-        return enableCompression;
+        return isCompressionEnabled;
     }
 
-    public NettyHttpServerConfig setDecompression(boolean enabled) {
-        this.enableDecompression = enabled;
+    public NettyHttpServerConfig setDecompression(boolean isDecompressionEnabled) {
+        this.isDecompressionEnabled = isDecompressionEnabled;
         return this;
     }
 
     public boolean isDecompressionEnabled() {
-        return enableDecompression;
+        return isDecompressionEnabled;
     }
 
+    public NettyHttpServerConfig setChunkWriteEnabled(boolean isChunkedWriteEnabled) {
+        this.isChunkedWriteEnabled = isChunkedWriteEnabled;
+        return this;
+    }
+
+    public boolean isChunkedWriteEnabled() {
+        return isChunkedWriteEnabled;
+    }
+
+    public NettyHttpServerConfig setFileUploadEnabled(boolean isFileUploadEnabled) {
+        this.isFileUploadEnabled = isFileUploadEnabled;
+        return this;
+    }
+
+    public boolean isFileUploadEnabled() {
+        return isFileUploadEnabled;
+    }
+
+    public NettyHttpServerConfig setFileUploadDiskThreshold(int fileUploadDiskThreshold) {
+        this.fileUploadDiskThreshold = fileUploadDiskThreshold;
+        return this;
+    }
+
+    public int getFileUploadDiskThreshold() {
+        return fileUploadDiskThreshold;
+    }
 }

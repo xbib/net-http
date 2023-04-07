@@ -2,7 +2,6 @@ package org.xbib.net.http.client.netty;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http2.HttpConversionUtil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -33,6 +32,7 @@ import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.client.BackOff;
 import org.xbib.net.http.client.ExceptionListener;
 import org.xbib.net.http.client.HttpResponse;
+import org.xbib.net.http.client.Part;
 import org.xbib.net.http.client.ResponseListener;
 import org.xbib.net.http.client.TimeoutListener;
 import org.xbib.net.http.cookie.Cookie;
@@ -43,53 +43,53 @@ public class HttpRequestBuilder implements org.xbib.net.http.client.HttpRequestB
 
     private static final String DEFAULT_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8";
 
-    final ByteBufAllocator allocator;
+    protected final ByteBufAllocator allocator;
 
-    HttpAddress httpAddress;
+    protected HttpAddress httpAddress;
 
-    URL url;
+    protected URL url;
 
-    String requestPath;
+    protected String requestPath;
 
-    final Collection<Cookie> cookies;
+    protected final Collection<Cookie> cookies;
 
-    HttpMethod httpMethod;
+    protected HttpMethod httpMethod;
 
-    HttpHeaders headers;
+    protected HttpHeaders headers;
 
-    HttpVersion httpVersion;
+    protected HttpVersion httpVersion;
 
-    final List<String> removeHeaders;
+    protected final List<String> removeHeaders;
 
-    String userAgent;
+    protected String userAgent;
 
-    boolean keepalive;
+    protected boolean keepalive;
 
-    boolean gzip;
+    protected boolean gzip;
 
-    String contentType;
+    protected String contentType;
 
-    ParameterBuilder parameterBuilder;
+    protected ParameterBuilder parameterBuilder;
 
-    ByteBuffer body;
+    protected ByteBuffer body;
 
-    final List<InterfaceHttpData> bodyData;
+    protected boolean followRedirect;
 
-    boolean followRedirect;
+    protected int maxRedirects;
 
-    int maxRedirects;
+    protected boolean enableBackOff;
 
-    boolean enableBackOff;
+    protected BackOff backOff;
 
-    BackOff backOff;
+    protected ResponseListener<HttpResponse> responseListener;
 
-    ResponseListener<HttpResponse> responseListener;
+    protected ExceptionListener exceptionListener;
 
-    ExceptionListener exceptionListener;
+    protected TimeoutListener timeoutListener;
 
-    TimeoutListener timeoutListener;
+    protected long timeoutMillis;
 
-    long timeoutMillis;
+    protected final List<Part> parts;
 
     protected HttpRequestBuilder() {
         this(ByteBufAllocator.DEFAULT);
@@ -108,10 +108,10 @@ public class HttpRequestBuilder implements org.xbib.net.http.client.HttpRequestB
         this.headers = new HttpHeaders();
         this.removeHeaders = new ArrayList<>();
         this.cookies = new HashSet<>();
-        this.bodyData = new ArrayList<>();
         this.contentType = DEFAULT_FORM_CONTENT_TYPE;
         this.parameterBuilder = Parameter.builder();
         this.timeoutMillis = 0L;
+        this.parts = new ArrayList<>();
     }
 
     @Override
@@ -245,14 +245,9 @@ public class HttpRequestBuilder implements org.xbib.net.http.client.HttpRequestB
         return this;
     }
 
-    /**
-     * For multipart MIME body data.
-     *
-     * @param data a mime body
-     * @return this
-     */
-    public HttpRequestBuilder addBodyData(InterfaceHttpData data) {
-        bodyData.add(data);
+    @Override
+    public HttpRequestBuilder addPart(Part part) {
+        parts.add(part);
         return this;
     }
 
@@ -382,10 +377,11 @@ public class HttpRequestBuilder implements org.xbib.net.http.client.HttpRequestB
     }
 
     public HttpRequest build() {
-        return new HttpRequest(this, validateHeaders());
+        this.headers = validateHeaders(headers);
+        return new HttpRequest(this);
     }
 
-    protected HttpHeaders validateHeaders() {
+    protected HttpHeaders validateHeaders(HttpHeaders httpHeaders) {
         Parameter parameter = parameterBuilder.build();
         HttpHeaders validatedHeaders = HttpHeaders.of(headers);
         if (url != null) {

@@ -16,6 +16,7 @@ import io.netty.handler.codec.http2.Http2MultiplexHandler;
 import io.netty.handler.codec.http2.Http2ServerUpgradeCodec;
 import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.handler.logging.LogLevel;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AsciiString;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +27,7 @@ import org.xbib.net.http.server.netty.NettyCustomizer;
 import org.xbib.net.http.server.netty.NettyHttpServer;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
 import org.xbib.net.http.server.netty.TrafficLoggingHandler;
+import org.xbib.net.http.server.netty.http1.HttpFileUploadHandler;
 import org.xbib.net.http.server.netty.secure.NettyHttpsServerConfig;
 import org.xbib.net.http.server.netty.secure.ServerNameIndicationHandler;
 
@@ -47,7 +49,7 @@ public class Https2ChannelInitializer implements HttpChannelInitializer {
         final NettyHttpsServerConfig nettyHttpsServerConfig = (NettyHttpsServerConfig) nettyHttpServer.getNettyHttpServerConfig();
         final ServerNameIndicationHandler serverNameIndicationHandler =
                 new ServerNameIndicationHandler(nettyHttpsServerConfig, httpAddress,
-                        nettyHttpsServerConfig.getDomainNameMapping(nettyHttpServer.getApplication().getDomains()));
+                        nettyHttpsServerConfig.getDomainNameMapping(nettyHttpServer.getDomains()));
         channel.attr(NettyHttpsServerConfig.ATTRIBUTE_KEY_SNI_HANDLER).set(serverNameIndicationHandler);
         ChannelPipeline pipeline = channel.pipeline();
         pipeline.addLast("server-sni", serverNameIndicationHandler);
@@ -55,8 +57,16 @@ public class Https2ChannelInitializer implements HttpChannelInitializer {
             pipeline.addLast("server-logger", new TrafficLoggingHandler(LogLevel.DEBUG));
         }
         pipeline.addLast("server-upgrade", createUpgradeHandler(nettyHttpServer, httpAddress, serverNameIndicationHandler));
-        // handler for HTTP1
-        pipeline.addLast("server-object-aggregator", new HttpObjectAggregator(nettyHttpsServerConfig.getMaxContentLength()));
+        if (nettyHttpsServerConfig.isObjectAggregationEnabled()) {
+            pipeline.addLast("server-object-aggregator", new HttpObjectAggregator(nettyHttpsServerConfig.getMaxContentLength()));
+        }
+        if (nettyHttpsServerConfig.isFileUploadEnabled()) {
+            HttpFileUploadHandler httpFileUploadHandler = new HttpFileUploadHandler(nettyHttpServer);
+            pipeline.addLast("server-file-upload", httpFileUploadHandler);
+        }
+        if (nettyHttpsServerConfig.isChunkedWriteEnabled()) {
+            pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        }
         pipeline.addLast("server-requests", new Https2Handler(nettyHttpServer));
         pipeline.addLast("server-messages", new Https2Messages());
         pipeline.addLast("server-idle-timeout", new IdleTimeoutHandler(nettyHttpsServerConfig.getTimeoutMillis()));
@@ -77,6 +87,7 @@ public class Https2ChannelInitializer implements HttpChannelInitializer {
         NettyHttpServerConfig nettyHttpServerConfig = nettyHttpServer.getNettyHttpServerConfig();
         Https2ChildChannelInitializer childHandler =
                 new Https2ChildChannelInitializer(nettyHttpServer, httpAddress, serverNameIndicationHandler);
+        // TODO replace Http2MultiplexCodecBuilder
         Http2MultiplexCodecBuilder multiplexCodecBuilder = Http2MultiplexCodecBuilder.forServer(childHandler)
                 .initialSettings(Http2Settings.defaultSettings());
         if (nettyHttpServerConfig.isDebug()) {
@@ -94,6 +105,10 @@ public class Https2ChannelInitializer implements HttpChannelInitializer {
         return new CleartextHttp2ServerUpgradeHandler(serverCodec, upgradeHandler, multiplexCodec);
     }
 
+    /**
+     * A new upgrade handler.
+     * Sadly, this does not work.
+     */
     protected CleartextHttp2ServerUpgradeHandler createNewUpgradeHandler(NettyHttpServer nettyHttpServer,
                                                                          HttpAddress httpAddress,
                                                                          ServerNameIndicationHandler serverNameIndicationHandler) {

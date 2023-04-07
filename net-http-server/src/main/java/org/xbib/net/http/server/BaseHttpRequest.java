@@ -1,6 +1,7 @@
 package org.xbib.net.http.server;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
@@ -83,6 +84,11 @@ public abstract class BaseHttpRequest implements HttpRequest {
     @Override
     public Long getRequestId() {
         return builder.requestId;
+    }
+
+    @Override
+    public List<Part> getParts() {
+        return builder.parts;
     }
 
     @Override

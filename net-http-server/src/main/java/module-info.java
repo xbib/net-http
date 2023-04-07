@@ -23,6 +23,7 @@ module org.xbib.net.http.server {
     exports org.xbib.net.http.server.session.file;
     exports org.xbib.net.http.server.session.memory;
     exports org.xbib.net.http.server.validate;
+    exports org.xbib.net.http.server.executor;
     requires org.xbib.net;
     requires org.xbib.net.mime;
     requires org.xbib.net.http;

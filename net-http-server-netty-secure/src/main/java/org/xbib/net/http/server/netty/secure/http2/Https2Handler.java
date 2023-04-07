@@ -55,7 +55,7 @@ public class Https2Handler extends ChannelDuplexHandler {
                         .setRemoteAddress((InetSocketAddress) ctx.channel().remoteAddress())
                         .setStreamId(streamId);
                 if ("PRI".equals(fullHttpRequest.method().name())) {
-                    nettyHttpServer.getApplication().dispatch(httpsRequestBuilder, httpsResponseBuilder, HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED);
+                    nettyHttpServer.dispatch(httpsRequestBuilder, httpsResponseBuilder, HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED);
                     return;
                 }
                 httpsResponseBuilder.shouldClose("close".equalsIgnoreCase(fullHttpRequest.headers().get(HttpHeaderNames.CONNECTION)));
@@ -65,7 +65,7 @@ public class Https2Handler extends ChannelDuplexHandler {
                     httpsRequestBuilder.setSNIHost(serverNameIndicationHandler.hostname());
                     httpsRequestBuilder.setSSLSession(serverNameIndicationHandler.getSslHandler().engine().getSession());
                 }
-                nettyHttpServer.getApplication().dispatch(httpsRequestBuilder, httpsResponseBuilder);
+                nettyHttpServer.dispatch(httpsRequestBuilder, httpsResponseBuilder);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "bad request: " + e.getMessage(), e);
                 DefaultFullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(io.netty.handler.codec.http.HttpVersion.valueOf(httpAddress.getVersion().text()),

@@ -37,34 +37,14 @@ public class BaseHttpRouter implements HttpRouter {
 
     private final DomainsByAddress domainsByAddress;
 
-    private final HttpRouteResolver<HttpService> httpRouteResolver;
-
     protected BaseHttpRouter(BaseHttpRouterBuilder builder) {
         this.builder = builder;
-        HttpRouteResolver.Builder<HttpService> httpRouteResolverBuilder = newHttpRouteResolverBuilder();
-        for (HttpDomain domain : builder.domains) {
-            for (HttpService httpService : domain.getServices()) {
-                logger.log(Level.FINER, "adding " + domain.getAddress() + " " + httpService.getMethods() +
-                        " prefix = " + httpService.getPrefix() +
-                        " path = " + httpService.getPathSpecification() + " " + httpService);
-                HttpRoute httpRoute = new BaseHttpRoute(domain.getAddress(),
-                        httpService.getMethods(),
-                        httpService.getPrefix(),
-                        httpService.getPathSpecification(), false);
-                httpRouteResolverBuilder.add(httpRoute, httpService);
-            }
-        }
-        this.httpRouteResolver = httpRouteResolverBuilder.build();
         this.domains = createDomains(builder.domains);
         this.domainsByAddress = createAddresses(builder.domains);
     }
 
     public static BaseHttpRouterBuilder builder() {
         return new BaseHttpRouterBuilder();
-    }
-
-    public HttpRouteResolver.Builder<HttpService> newHttpRouteResolverBuilder() {
-        return BaseHttpRouteResolver.builder();
     }
 
     @Override
@@ -95,7 +75,7 @@ public class BaseHttpRouter implements HttpRouter {
                 builder.prefix,
                 requestBuilder.getRequestPath(),
                 true);
-        httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);
+        builder.httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);
         HttpServerContext httpServerContext = application.createContext(httpDomain, requestBuilder, responseBuilder);
         application.onOpen(httpServerContext);
         try {

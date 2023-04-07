@@ -11,13 +11,6 @@ import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
-import org.xbib.net.NetworkClass;
-import org.xbib.net.NetworkUtils;
-import org.xbib.net.SocketConfig;
-import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.server.application.Application;
-import org.xbib.net.http.server.HttpServer;
-
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -28,6 +21,18 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xbib.net.NetworkClass;
+import org.xbib.net.NetworkUtils;
+import org.xbib.net.SocketConfig;
+import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpRequestBuilder;
+import org.xbib.net.http.server.HttpResponseBuilder;
+import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.HttpServer;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.executor.CallableReleasable;
+import org.xbib.net.http.server.route.HttpRouter;
 
 /**
  * Netty HTTP server.
@@ -161,8 +166,50 @@ public class NettyHttpServer implements HttpServer {
     }
 
     @Override
-    public Application getApplication() {
-        return builder.application;
+    public void dispatch(HttpRequestBuilder requestBuilder,
+                         HttpResponseBuilder responseBuilder) {
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                router.route(builder.application, requestBuilder, responseBuilder);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public void dispatch(HttpRequestBuilder requestBuilder,
+                         HttpResponseBuilder responseBuilder,
+                         HttpResponseStatus responseStatus) {
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+                router.routeStatus(responseStatus, httpServerContext);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public Collection<HttpDomain> getDomains() {
+        return builder.application.getDomains();
     }
 
     @Override

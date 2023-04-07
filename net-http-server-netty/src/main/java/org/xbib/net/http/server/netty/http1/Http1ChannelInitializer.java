@@ -41,7 +41,7 @@ public class Http1ChannelInitializer implements HttpChannelInitializer {
         if (nettyHttpServerConfig.isDebug()) {
             pipeline.addLast("server-logging", new TrafficLoggingHandler(LogLevel.DEBUG));
         }
-        //pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        // always use the server codec or we won't be able to handle HTTP
         pipeline.addLast("server-codec", new HttpServerCodec(nettyHttpServerConfig.getMaxInitialLineLength(),
                         nettyHttpServerConfig.getMaxHeadersSize(), nettyHttpServerConfig.getMaxChunkSize()));
         if (nettyHttpServerConfig.isCompressionEnabled()) {
@@ -50,9 +50,18 @@ public class Http1ChannelInitializer implements HttpChannelInitializer {
         if (nettyHttpServerConfig.isDecompressionEnabled()) {
             pipeline.addLast("server-decompressor", new HttpContentDecompressor());
         }
-        HttpObjectAggregator httpObjectAggregator = new HttpObjectAggregator(nettyHttpServerConfig.getMaxContentLength());
-        httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpServerConfig.getMaxCompositeBufferComponents());
-        pipeline.addLast("server-aggregator", httpObjectAggregator);
+        if (nettyHttpServerConfig.isObjectAggregationEnabled()) {
+            HttpObjectAggregator httpObjectAggregator = new HttpObjectAggregator(nettyHttpServerConfig.getMaxContentLength());
+            httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpServerConfig.getMaxCompositeBufferComponents());
+            pipeline.addLast("server-aggregator", httpObjectAggregator);
+        }
+        if (nettyHttpServerConfig.isChunkedWriteEnabled()) {
+            pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        }
+        if (nettyHttpServerConfig.isFileUploadEnabled()) {
+            HttpFileUploadHandler httpFileUploadHandler = new HttpFileUploadHandler(server);
+            pipeline.addLast("server-file-upload", httpFileUploadHandler);
+        }
         if (nettyHttpServerConfig.isPipeliningEnabled()) {
             pipeline.addLast("server-pipelining", new HttpPipeliningHandler(nettyHttpServerConfig.getPipeliningCapacity()));
         }

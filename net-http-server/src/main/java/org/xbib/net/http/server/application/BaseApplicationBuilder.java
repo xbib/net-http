@@ -3,29 +3,22 @@ package org.xbib.net.http.server.application;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.xbib.config.ConfigLoader;
 import org.xbib.config.ConfigLogger;
 import org.xbib.config.ConfigParams;
 import org.xbib.config.SystemConfigLogger;
+import org.xbib.net.http.server.executor.BaseExecutor;
+import org.xbib.net.http.server.executor.Executor;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.mime.MimeTypeService;
-import org.xbib.net.util.NamedThreadFactory;
 import org.xbib.settings.Settings;
 
 public class BaseApplicationBuilder implements ApplicationBuilder {
-
-    private static final Logger logger = Logger.getLogger(BaseApplicationBuilder.class.getName());
 
     private static final ConfigLogger bootLogger;
 
@@ -36,17 +29,10 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         bootLogger = optionalBootLogger.orElse(new SystemConfigLogger());
     }
 
+    private static final Set<String> DEFAULT_SUFFIXES =
+            Set.of("css", "js", "ico", "png", "jpg", "jpeg", "gif", "woff2");
+
     protected ClassLoader classLoader;
-
-    protected int blockingThreadCount;
-
-    protected int blockingThreadQueueCount;
-
-    protected int blockingThreadKeepAliveTime;
-
-    protected TimeUnit blockingThreadKeepAliveTimeUnit;
-
-    protected ThreadPoolExecutor executor;
 
     protected Path home;
 
@@ -55,8 +41,6 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     protected String secret;
 
     protected boolean sessionsEnabled;
-
-    protected HttpRouter router;
 
     protected Locale locale;
 
@@ -72,14 +56,12 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     protected Settings settings;
 
-    protected List<ApplicationModule> applicationModuleList;
+    protected Executor executor;
+
+    protected HttpRouter httpRouter;
 
     protected BaseApplicationBuilder() {
         this.classLoader = getClass().getClassLoader();
-        this.blockingThreadCount = Runtime.getRuntime().availableProcessors();
-        this.blockingThreadQueueCount = 0; // use fair synchronous queue
-        this.blockingThreadKeepAliveTime = 60;
-        this.blockingThreadKeepAliveTimeUnit = TimeUnit.SECONDS;
         this.home = Paths.get(System.getProperties().containsKey("application.home") ? System.getProperty("application.home") : ".");
         this.contextPath = "/";
         this.secret = "secret";
@@ -87,41 +69,30 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
         this.locale = Locale.getDefault();
         this.zoneId = ZoneId.systemDefault();
         this.mimeTypeService = new MimeTypeService();
-        this.applicationModuleList = new ArrayList<>();
+        String name = System.getProperty("application.name");
+        if (name == null) {
+            name = "application";
+        }
+        String profile = System.getProperty("application.profile");
+        if (profile == null) {
+            profile = "developer";
+        }
+        this.configParams = new ConfigParams()
+                .withDirectoryName(name)
+                .withFileNamesWithoutSuffix(profile)
+                .withSystemEnvironment()
+                .withSystemProperties();
+        this.configLoader = ConfigLoader.getInstance()
+                .withLogger(bootLogger);
+        this.settings = configLoader.load(configParams);
+        if (staticFileSuffixes == null) {
+            staticFileSuffixes = DEFAULT_SUFFIXES;
+        }
+        this.executor = BaseExecutor.builder().build();
     }
 
     public BaseApplicationBuilder setSettings(Settings settings) {
         this.settings = settings;
-        return this;
-    }
-
-    @Override
-    public BaseApplicationBuilder setThreadCount(int blockingThreadCount) {
-        this.blockingThreadCount = blockingThreadCount;
-        return this;
-    }
-
-    @Override
-    public BaseApplicationBuilder setQueueCount(int blockingThreadQueueCount) {
-        this.blockingThreadQueueCount = blockingThreadQueueCount;
-        return this;
-    }
-
-    @Override
-    public BaseApplicationBuilder setKeepAliveTime(int blockingThreadKeepAliveTime) {
-        this.blockingThreadKeepAliveTime = blockingThreadKeepAliveTime;
-        return this;
-    }
-
-    @Override
-    public BaseApplicationBuilder setKeepAliveTimeUnit(TimeUnit blockingThreadKeepAliveTimeUnit) {
-        this.blockingThreadKeepAliveTimeUnit = blockingThreadKeepAliveTimeUnit;
-        return this;
-    }
-
-    @Override
-    public BaseApplicationBuilder setExecutor(ThreadPoolExecutor executor) {
-        this.executor = executor;
         return this;
     }
 
@@ -150,12 +121,6 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     @Override
-    public ApplicationBuilder setRouter(HttpRouter router) {
-        this.router = router;
-        return this;
-    }
-
-    @Override
     public ApplicationBuilder setLocale(Locale locale) {
         this.locale = locale;
         return this;
@@ -180,73 +145,20 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     }
 
     @Override
-    public ApplicationBuilder registerModule(ApplicationModule applicationModule) {
-        applicationModuleList.add(applicationModule);
+    public ApplicationBuilder setExecutor(Executor executor) {
+        this.executor = executor;
+        return this;
+    }
+
+    @Override
+    public ApplicationBuilder setRouter(HttpRouter httpRouter) {
+        this.httpRouter = httpRouter;
         return this;
     }
 
     @Override
     public Application build() {
-        prepareApplication();
-        Application application = new BaseApplication(this);
-        setupApplication(application);
-        return application;
+        Objects.requireNonNull(httpRouter);
+        return new BaseApplication(this);
     }
-
-    protected void prepareApplication() {
-        String name = System.getProperty("application.name");
-        if (name == null) {
-            name = "application";
-        }
-        String profile = System.getProperty("application.profile");
-        if (profile == null) {
-            profile = "developer";
-        }
-        String[] args = profile.split(";");
-        this.configParams = new ConfigParams()
-                .withArgs(args)
-                .withDirectoryName(name)
-                .withFileNamesWithoutSuffix(args[0])
-                .withSystemEnvironment()
-                .withSystemProperties();
-        this.configLoader = ConfigLoader.getInstance()
-                .withLogger(bootLogger);
-        this.settings = configLoader.load(configParams);
-        if (staticFileSuffixes == null) {
-            staticFileSuffixes = DEFAULT_SUFFIXES;
-        }
-        if (this.executor == null) {
-            this.executor = new ApplicationThreadPoolExecutor(blockingThreadCount, blockingThreadQueueCount,
-                    blockingThreadKeepAliveTime, blockingThreadKeepAliveTimeUnit,
-                    new NamedThreadFactory("org-xbib-net-http-server-application"));
-            this.executor.setRejectedExecutionHandler((runnable, threadPoolExecutor) ->
-                    logger.log(Level.SEVERE, "rejected " + runnable + " for thread pool executor = " + threadPoolExecutor));
-        }
-    }
-
-    protected void setupApplication(Application application) {
-        for (Map.Entry<String, Settings> entry : settings.getGroups("module").entrySet()) {
-            String moduleName = entry.getKey();
-            Settings moduleSettings = entry.getValue();
-            if (moduleSettings.getAsBoolean("enabled", true)) {
-                try {
-                    String className = moduleSettings.get("class");
-                    @SuppressWarnings("unchecked")
-                    Class<ApplicationModule> clazz =
-                        (Class<ApplicationModule>) Class.forName(className, true, classLoader);
-                    ApplicationModule applicationModule = clazz.getConstructor(Application.class, String.class, Settings.class)
-                            .newInstance(application, moduleName, moduleSettings);
-                    applicationModuleList.add(applicationModule);
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, e.getMessage(), e);
-                    throw new IllegalArgumentException("class not found or not loadable: " + e.getMessage());
-                }
-            } else {
-                logger.log(Level.WARNING, "disabled module: " + moduleName);
-            }
-        }
-    }
-
-    private static final Set<String> DEFAULT_SUFFIXES =
-            Set.of("css", "js", "ico", "png", "jpg", "jpeg", "gif", "woff2");
 }

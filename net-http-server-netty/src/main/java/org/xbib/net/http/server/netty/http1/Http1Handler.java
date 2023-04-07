@@ -34,11 +34,9 @@ class Http1Handler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof HttpPipelinedRequest) {
-            HttpPipelinedRequest httpPipelinedRequest = (HttpPipelinedRequest) msg;
+        if (msg instanceof HttpPipelinedRequest httpPipelinedRequest) {
             try {
-                if (httpPipelinedRequest.getRequest() instanceof FullHttpRequest) {
-                    FullHttpRequest fullHttpRequest = (FullHttpRequest) httpPipelinedRequest.getRequest();
+                if (httpPipelinedRequest.getRequest() instanceof FullHttpRequest fullHttpRequest) {
                     requestReceived(ctx, fullHttpRequest, httpPipelinedRequest.getSequenceId());
                 }
             } finally {
@@ -73,7 +71,9 @@ class Http1Handler extends ChannelDuplexHandler {
         ctx.close();
     }
 
-    protected void requestReceived(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, Integer sequenceId) {
+    protected void requestReceived(ChannelHandlerContext ctx,
+                                   FullHttpRequest fullHttpRequest,
+                                   Integer sequenceId) {
         HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
         try {
             HttpResponseBuilder serverResponseBuilder = HttpResponse.builder()
@@ -82,7 +82,7 @@ class Http1Handler extends ChannelDuplexHandler {
                 serverResponseBuilder.setSequenceId(sequenceId);
             }
             serverResponseBuilder.shouldClose("close".equalsIgnoreCase(fullHttpRequest.headers().get(HttpHeaderNames.CONNECTION)));
-            // the base URL construction may fail with exception. In hat case, we return a built-in 400 Bad Request.
+            // the base URL construction may fail with exception. In that case, we return a built-in 400 Bad Request.
             HttpRequestBuilder serverRequestBuilder = HttpRequest.builder()
                     .setFullHttpRequest(fullHttpRequest)
                     .setBaseURL(httpAddress,
@@ -91,7 +91,7 @@ class Http1Handler extends ChannelDuplexHandler {
                     .setLocalAddress((InetSocketAddress) ctx.channel().localAddress())
                     .setRemoteAddress((InetSocketAddress) ctx.channel().remoteAddress())
                     .setSequenceId(sequenceId);
-            nettyHttpServer.getApplication().dispatch(serverRequestBuilder, serverResponseBuilder);
+            nettyHttpServer.dispatch(serverRequestBuilder, serverResponseBuilder);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "bad request: " + e.getMessage(), e);
             DefaultFullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,

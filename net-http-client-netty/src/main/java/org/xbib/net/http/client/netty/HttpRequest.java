@@ -2,7 +2,6 @@ package org.xbib.net.http.client.netty;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -23,6 +22,7 @@ import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.client.BackOff;
 import org.xbib.net.http.client.ExceptionListener;
 import org.xbib.net.http.client.HttpResponse;
+import org.xbib.net.http.client.Part;
 import org.xbib.net.http.client.ResponseListener;
 import org.xbib.net.http.client.TimeoutListener;
 import org.xbib.net.http.cookie.Cookie;
@@ -34,15 +34,12 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
 
     private final HttpRequestBuilder builder;
 
-    private final HttpHeaders headers;
-
     private CompletableFuture<HttpRequest> completableFuture;
 
     private int redirectCount;
 
-    protected HttpRequest(HttpRequestBuilder builder, HttpHeaders headers) {
+    protected HttpRequest(HttpRequestBuilder builder) {
         this.builder = builder;
-        this.headers = headers;
     }
 
     @Override
@@ -62,7 +59,7 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
 
     @Override
     public HttpHeaders getHeaders() {
-        return headers;
+        return builder.headers;
     }
 
     @Override
@@ -95,11 +92,11 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
 
     @Override
     public CharBuffer getBodyAsChars(Charset charset) {
-        return charset.decode(getBody());
+        return charset.decode(builder.body);
     }
 
     public CharBuffer getBodyAsChars(Charset charset, int offset, int size) {
-        ByteBuffer slicedBuffer = (getBody().duplicate().position(offset)).slice();
+        ByteBuffer slicedBuffer = (builder.body.duplicate().position(offset)).slice();
         slicedBuffer.limit(size);
         return charset.decode(slicedBuffer);
     }
@@ -110,8 +107,8 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
         return (R) this;
     }
 
-    public List<InterfaceHttpData> getBodyData() {
-        return builder.bodyData;
+    public List<Part> getParts() {
+        return builder.parts;
     }
 
     public boolean isFollowRedirect() {
@@ -151,7 +148,7 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
         return "HttpNettyRequest[url=" + builder.url +
                 ",version=" + builder.httpVersion +
                 ",method=" + builder.httpMethod +
-                ",headers=" + headers.entries() +
+                ",headers=" + builder.headers.entries() +
                 ",content=" + (builder.body != null && builder.body.remaining() >= 16 ?
                 getBodyAsChars(StandardCharsets.UTF_8, 0, 16) + "..." :
                 builder.body != null ? getBodyAsChars(StandardCharsets.UTF_8) : "") +
@@ -254,7 +251,7 @@ public class HttpRequest implements org.xbib.net.http.client.HttpRequest, Closea
         return builder(PooledByteBufAllocator.DEFAULT, httpMethod)
                 .setVersion(httpRequest.builder.httpVersion)
                 .setURL(httpRequest.builder.url)
-                .setHeaders(httpRequest.headers)
+                .setHeaders(httpRequest.builder.headers)
                 .content(httpRequest.builder.body)
                 .setResponseListener(httpRequest.builder.responseListener)
                 .setTimeoutListener(httpRequest.builder.timeoutListener, httpRequest.builder.timeoutMillis)

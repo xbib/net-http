@@ -1,7 +1,5 @@
 package org.xbib.net.http.server.netty;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import org.xbib.net.Request;
 import org.xbib.net.http.server.BaseHttpRequest;
 
@@ -9,8 +7,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import org.xbib.net.util.ByteBufferInputStream;
 
 public class HttpRequest extends BaseHttpRequest {
 
@@ -27,7 +25,8 @@ public class HttpRequest extends BaseHttpRequest {
 
     @Override
     public InputStream getInputStream() {
-        return new ByteBufInputStream(builder.fullHttpRequest.content());
+        //return new ByteBufInputStream(builder.fullHttpRequest.content());
+        return builder.byteBuffer != null ? new ByteBufferInputStream(builder.byteBuffer) : null;
     }
 
     @Override
@@ -48,13 +47,10 @@ public class HttpRequest extends BaseHttpRequest {
 
     @Override
     public String toString() {
-        return "HttpRequest[request=" + builder.fullHttpRequest +
+        return "HttpRequest[method=" + builder.getMethod() +
+                ",version=" + builder.getVersion() +
                 ",parameter=" + builder.getParameter() +
-                ",body=" + builder.fullHttpRequest.content().toString(StandardCharsets.UTF_8) +
+                ",body=" + (builder.byteBuffer != null) +
                 "]";
-    }
-
-    public ByteBuf getByteBuf() {
-        return builder.fullHttpRequest.content();
     }
 }

@@ -26,7 +26,7 @@ public class NettyHttpClientConfig {
      */
     private LogLevel debugLogLevel = LogLevel.DEBUG;
 
-    SocketConfig socketConfig = new SocketConfig();
+    protected SocketConfig socketConfig = new SocketConfig();
 
     private String transportProviderName = null;
 
@@ -67,7 +67,7 @@ public class NettyHttpClientConfig {
     /**
      * Default for gzip codec is false
      */
-    private boolean gzipEnabled = false;
+    private boolean isGzipEnabled = false;
 
     private ByteBufAllocator byteBufAllocator;
 
@@ -94,6 +94,10 @@ public class NettyHttpClientConfig {
     private WriteBufferWaterMark writeBufferWaterMark = WriteBufferWaterMark.DEFAULT;
 
     private BackOff backOff = BackOff.ZERO_BACKOFF;
+
+    private Boolean isChunkWriteEnabled = true;
+
+    private Boolean isObjectAggregationEnabled = true;
 
     public NettyHttpClientConfig() {
         this.byteBufAllocator = ByteBufAllocator.DEFAULT;
@@ -208,12 +212,12 @@ public class NettyHttpClientConfig {
     }
 
     public NettyHttpClientConfig setGzipEnabled(boolean gzipEnabled) {
-        this.gzipEnabled = gzipEnabled;
+        this.isGzipEnabled = gzipEnabled;
         return this;
     }
 
     public boolean isGzipEnabled() {
-        return gzipEnabled;
+        return isGzipEnabled;
     }
 
     public NettyHttpClientConfig setHttp2Settings(Http2Settings http2Settings) {
@@ -330,4 +334,21 @@ public class NettyHttpClientConfig {
         return backOff;
     }
 
+    public NettyHttpClientConfig setChunkWriteEnabled(boolean isChunkWriteEnabled) {
+        this.isChunkWriteEnabled = isChunkWriteEnabled;
+        return this;
+    }
+
+    public Boolean isChunkWriteEnabled() {
+        return isChunkWriteEnabled;
+    }
+
+    public NettyHttpClientConfig setObjectAggregationEnabled(boolean isObjectAggregationEnabled) {
+        this.isObjectAggregationEnabled = isObjectAggregationEnabled;
+        return this;
+    }
+
+    public Boolean isObjectAggregationEnabled() {
+        return isObjectAggregationEnabled;
+    }
 }

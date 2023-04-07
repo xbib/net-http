@@ -8,11 +8,12 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.executor.Executor;
+import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.session.SessionListener;
 import org.xbib.net.mime.MimeTypeService;
 import org.xbib.settings.Settings;
@@ -35,25 +36,9 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
 
     Settings getSettings();
 
+    void addModule(ApplicationModule applicationModule);
+
     Collection<ApplicationModule> getModules();
-
-    /**
-     * Dispatch a request.
-     * @param requestBuilder the request
-     * @param responseBuilder the response
-     */
-    void dispatch(HttpRequestBuilder requestBuilder,
-                  HttpResponseBuilder responseBuilder);
-
-    /**
-     * Dispatch a status.
-     * @param requestBuilder the request
-     * @param responseBuilder the response
-     * @param httpResponseStatus the status
-     */
-    void dispatch(HttpRequestBuilder requestBuilder,
-                  HttpResponseBuilder responseBuilder,
-                  HttpResponseStatus httpResponseStatus);
 
     HttpServerContext createContext(HttpDomain domain,
                                     HttpRequestBuilder httpRequestBuilder,
@@ -62,6 +47,10 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
     void onOpen(HttpServerContext httpServerContext);
 
     void onClose(HttpServerContext httpServerContext);
+
+    Executor getExecutor();
+
+    HttpRouter getRouter();
 
     void close() throws IOException;
 }

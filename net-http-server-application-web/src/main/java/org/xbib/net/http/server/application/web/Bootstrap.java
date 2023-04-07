@@ -17,6 +17,9 @@ import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
 import org.xbib.net.http.server.domain.BaseHttpSecurityDomain;
 import org.xbib.net.http.server.domain.HttpSecurityDomain;
+import org.xbib.net.http.server.executor.BaseExecutor;
+import org.xbib.net.http.server.executor.Executor;
+import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.auth.BasicAuthenticationHandler;
 import org.xbib.net.http.server.auth.FormAuthenticationHandler;
@@ -120,6 +123,7 @@ public final class Bootstrap {
 
         BasicAuthenticationHandler basicAuthenticationHandler =
                 new BasicAuthenticationHandler(ldapRealm);
+
         FormAuthenticationHandler formAuthenticationHandler =
                 new FormAuthenticationHandler("j_username", "j_password", "j_remember",
                         "demo/auth/form/index.gtpl", ldapRealm);
@@ -148,48 +152,57 @@ public final class Bootstrap {
                 })
                 .build();
 
-        try (NettyHttpServer server = NettyHttpServer.builder()
-                .setHttpServerConfig(serverConfig)
-                .setApplication(WebApplication.builder()
-                        .setSettings(settings)
-                        .setSecret("1088e6b7ad58d64d09961e1357bf95544447051c6ad1332cd626e3a33bb5786b")
-                        .setRouter(BaseHttpRouter.builder()
-                                .setHandler(400, new GroovyHttpStatusHandler(HttpResponseStatus.BAD_REQUEST, "Bad request", "400.gtpl"))
-                                .setHandler(401, new GroovyHttpStatusHandler(HttpResponseStatus.UNAUTHORIZED, "Unauthorized", "401.gtpl"))
-                                .setHandler(403, new GroovyHttpStatusHandler(HttpResponseStatus.FORBIDDEN, "Forbidden", "403.gtpl"))
-                                .setHandler(404, new GroovyHttpStatusHandler(HttpResponseStatus.NOT_FOUND, "Not found", "404.gtpl"))
-                                .setHandler(500, new GroovyInternalServerErrorHandler("500.gtpl"))
-                                .addDomain(BaseHttpDomain.builder()
-                                        .setHttpAddress(httpsAddress)
-                                        .addService(BaseHttpService.builder()
-                                                .setPath("/favicon.ico")
-                                                .setHandler(ctx -> {
-                                                    ctx.response()
-                                                            .setResponseStatus(HttpResponseStatus.OK)
-                                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, "image/x-icon")
-                                                            .write(NettyDataBufferFactory.getInstance().wrap(Hex.fromHex(hexFavIcon)))
-                                                            .build();
-                                                    ctx.done();
-                                                })
-                                                .build())
-                                        .addService(BaseHttpService.builder()
-                                                .setPath("/webjars/**")
-                                                .setHandler(new ClassLoaderResourceHandler(Bootstrap.class.getClassLoader(), "META-INF/resources/"))
-                                                .build())
-                                        .addService(httpService)
-                                        .addService(GroovyTemplateService.builder()
-                                                .setTemplateName("index.gtpl")
-                                                .setSecurityDomain(securityDomain)
-                                                .setPath("glob:**")
-                                                .setHandler(new GroovyTemplateResourceHandler())
-                                                .build())
-                                        .build())
+        HttpRouter httpRouter = BaseHttpRouter.builder()
+                .setHandler(400, new GroovyHttpStatusHandler(HttpResponseStatus.BAD_REQUEST, "Bad request", "400.gtpl"))
+                .setHandler(401, new GroovyHttpStatusHandler(HttpResponseStatus.UNAUTHORIZED, "Unauthorized", "401.gtpl"))
+                .setHandler(403, new GroovyHttpStatusHandler(HttpResponseStatus.FORBIDDEN, "Forbidden", "403.gtpl"))
+                .setHandler(404, new GroovyHttpStatusHandler(HttpResponseStatus.NOT_FOUND, "Not found", "404.gtpl"))
+                .setHandler(500, new GroovyInternalServerErrorHandler("500.gtpl"))
+                .addDomain(BaseHttpDomain.builder()
+                        .setHttpAddress(httpsAddress)
+                        .addService(BaseHttpService.builder()
+                                .setPath("/favicon.ico")
+                                .setHandler(ctx -> {
+                                    ctx.response()
+                                            .setResponseStatus(HttpResponseStatus.OK)
+                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, "image/x-icon")
+                                            .write(NettyDataBufferFactory.getInstance().wrap(Hex.fromHex(hexFavIcon)))
+                                            .build();
+                                    ctx.done();
+                                })
+                                .build())
+                        .addService(BaseHttpService.builder()
+                                .setPath("/webjars/**")
+                                .setHandler(new ClassLoaderResourceHandler(Bootstrap.class.getClassLoader(), "META-INF/resources/"))
+                                .build())
+                        .addService(httpService)
+                        .addService(GroovyTemplateService.builder()
+                                .setTemplateName("index.gtpl")
+                                .setSecurityDomain(securityDomain)
+                                .setPath("glob:**")
+                                .setHandler(new GroovyTemplateResourceHandler())
                                 .build())
                         .build())
+                .build();
+
+        Executor executor = BaseExecutor.builder()
+                .build();
+
+        WebApplication application = WebApplication.builder()
+                .setSettings(settings)
+                .setSecret("1088e6b7ad58d64d09961e1357bf95544447051c6ad1332cd626e3a33bb5786b")
+                .setExecutor(executor)
+                .setRouter(httpRouter)
+                .build();
+
+        try (NettyHttpServer server = NettyHttpServer.builder()
+                .setHttpServerConfig(serverConfig)
+                .setApplication(application)
                 .build()) {
             server.bind();
             server.loop();
         }
+
         return 0;
     }
 

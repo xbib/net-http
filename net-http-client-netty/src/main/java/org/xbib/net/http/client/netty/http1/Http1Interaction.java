@@ -1,19 +1,26 @@
 package org.xbib.net.http.client.netty.http1;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
+import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2Settings;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +33,7 @@ import org.xbib.net.URLSyntaxException;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.client.Part;
 import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.client.cookie.CookieDecoder;
 import org.xbib.net.http.client.cookie.CookieEncoder;
@@ -42,11 +50,8 @@ public class Http1Interaction extends BaseInteraction {
 
     private static final Logger logger = Logger.getLogger(Http1Interaction.class.getName());
 
-    private final HttpDataFactory httpDataFactory;
-
     public Http1Interaction(NettyHttpClient nettyHttpClient, HttpAddress httpAddress) {
         super(nettyHttpClient, httpAddress);
-        this.httpDataFactory = new DefaultHttpDataFactory();
     }
 
     @Override
@@ -72,6 +77,10 @@ public class Http1Interaction extends BaseInteraction {
     }
 
     public Interaction executeRequest(HttpRequest request, Channel channel) throws IOException {
+        if (!channel.isWritable()) {
+            logger.log(Level.WARNING, "sorry, channel not writable");
+            return this;
+        }
         final String channelId = channel.id().toString();
         streamIds.putIfAbsent(channelId, new StreamIds());
         // Some HTTP 1 servers do not understand URIs in HTTP command line in spite of RFC 7230.
@@ -84,7 +93,6 @@ public class Http1Interaction extends BaseInteraction {
         DefaultFullHttpRequest fullHttpRequest = request.getBody() == null ?
                 new DefaultFullHttpRequest(httpVersion, httpMethod, uri) :
                 new DefaultFullHttpRequest(httpVersion, httpMethod, uri, Unpooled.wrappedBuffer(request.getBody()));
-        HttpPostRequestEncoder httpPostRequestEncoder = null;
         final Integer streamId = streamIds.get(channelId).nextStreamId();
         if (streamId == null) {
             throw new IllegalStateException("stream id is null");
@@ -96,27 +104,52 @@ public class Http1Interaction extends BaseInteraction {
         if (!cookies.isEmpty()) {
             request.getHeaders().set(HttpHeaderNames.COOKIE, CookieEncoder.STRICT.encode(cookies));
         }
+        // headers
         request.getHeaders().entries().forEach(p -> fullHttpRequest.headers().add(p.getKey(), p.getValue()));
-        if (request.getBody() == null && !request.getBodyData().isEmpty()) {
-            try {
-                httpPostRequestEncoder = new HttpPostRequestEncoder(httpDataFactory, fullHttpRequest, true);
-                httpPostRequestEncoder.setBodyHttpDatas(request.getBodyData());
-                httpPostRequestEncoder.finalizeRequest();
-            } catch (HttpPostRequestEncoder.ErrorDataEncoderException e) {
-                throw new IOException(e);
+        // file upload
+        HttpDataFactory httpDataFactory = new DefaultHttpDataFactory();
+        HttpPostRequestEncoder httpPostRequestEncoder = null;
+        try {
+            if (!request.getParts().isEmpty()) {
+                httpPostRequestEncoder = new HttpPostRequestEncoder(httpDataFactory,
+                                fullHttpRequest,
+                                true,
+                                StandardCharsets.UTF_8,
+                                HttpPostRequestEncoder.EncoderMode.RFC1738);
+                for (Part part : request.getParts()) {
+                    Path path = part.getPath();
+                    if (Files.exists(path)) {
+                        FileUpload fileUpload = httpDataFactory.createFileUpload(fullHttpRequest, part.getName(),
+                                path.toFile().getName(), part.getContentType(), part.getContentTransferEncoding(),
+                                part.getCharset(), Files.size(path));
+                        fileUpload.setContent(path.toFile());
+                        logger.log(Level.FINEST, "HTTP FORM file upload = " + fileUpload);
+                        httpPostRequestEncoder.addBodyHttpData(fileUpload);
+                    } else {
+                        logger.log(Level.WARNING, " does not exist : " + path);
+                    }
+                }
+                io.netty.handler.codec.http.HttpRequest httpRequest = httpPostRequestEncoder.finalizeRequest();
+                channel.write(httpRequest);
+            } else {
+                channel.write(fullHttpRequest);
             }
-        }
-        if (!channel.isWritable()) {
-            logger.log(Level.WARNING, "channel not writable");
-            return this;
-        }
-        channel.write(fullHttpRequest);
-        if (httpPostRequestEncoder != null && httpPostRequestEncoder.isChunked()) {
-            channel.write(httpPostRequestEncoder);
-        }
-        channel.flush();
-        if (httpPostRequestEncoder != null) {
-            httpPostRequestEncoder.cleanFiles();
+            if (httpPostRequestEncoder != null && httpPostRequestEncoder.isChunked()) {
+                logger.log(Level.FINEST, "finish chunked HTTP POST encoder");
+                channel.write(httpPostRequestEncoder);
+            } else {
+                logger.log(Level.FINEST, "HTTP POST encoder not chunked");
+            }
+            channel.flush();
+        } catch (HttpPostRequestEncoder.ErrorDataEncoderException e) {
+            throw new IOException(e);
+        } finally {
+            if (httpPostRequestEncoder != null) {
+                logger.log(Level.FINEST, "cleaning files of HTTP POST encoder");
+                //httpPostRequestEncoder.cleanFiles();
+            }
+            logger.log(Level.FINEST, "clean all http data");
+            //httpDataFactory.cleanAllHttpData();
         }
         return this;
     }
@@ -241,7 +274,7 @@ public class Http1Interaction extends BaseInteraction {
 
     @Override
     public void close() throws IOException {
-        httpDataFactory.cleanAllHttpData();
+        //httpDataFactory.cleanAllHttpData();
         super.close();
     }
 

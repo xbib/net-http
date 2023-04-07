@@ -6,16 +6,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.http.HttpAddress;
-import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.cookie.SameSite;
 import org.xbib.net.http.server.BaseHttpServerContext;
 import org.xbib.net.http.server.HttpException;
@@ -26,6 +25,7 @@ import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.cookie.IncomingCookieHandler;
 import org.xbib.net.http.server.cookie.OutgoingCookieHandler;
 import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.executor.Executor;
 import org.xbib.net.http.server.persist.Codec;
 import org.xbib.net.http.server.render.HttpResponseRenderer;
 import org.xbib.net.http.server.route.HttpRouter;
@@ -60,6 +60,8 @@ public class BaseApplication implements Application {
 
     private HttpHandler outgoingSessionHandler;
 
+    protected List<ApplicationModule> applicationModuleList;
+
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
         this.sessionName = getSettings().get("session.name", "SESS");
@@ -67,10 +69,36 @@ public class BaseApplication implements Application {
         this.incomingCookieHandler = newIncomingCookieHandler();
         this.outgoingCookieHandler = newOutgoingCookieHandler();
         this.httpResponseRenderer = newResponseRenderer();
+        this.applicationModuleList = new ArrayList<>();
+        for (Map.Entry<String, Settings> entry : builder.settings.getGroups("module").entrySet()) {
+            String moduleName = entry.getKey();
+            Settings moduleSettings = entry.getValue();
+            if (moduleSettings.getAsBoolean("enabled", true)) {
+                try {
+                    String className = moduleSettings.get("class");
+                    @SuppressWarnings("unchecked")
+                    Class<ApplicationModule> clazz =
+                            (Class<ApplicationModule>) Class.forName(className, true, builder.classLoader);
+                    ApplicationModule applicationModule = clazz.getConstructor(Application.class, String.class, Settings.class)
+                            .newInstance(this, moduleName, moduleSettings);
+                    applicationModuleList.add(applicationModule);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                    throw new IllegalArgumentException("class not found or not loadable: " + e.getMessage());
+                }
+            } else {
+                logger.log(Level.WARNING, "disabled module: " + moduleName);
+            }
+        }
     }
 
     public static BaseApplicationBuilder builder() {
         return new BaseApplicationBuilder();
+    }
+
+    @Override
+    public void addModule(ApplicationModule applicationModule) {
+        applicationModuleList.add(applicationModule);
     }
 
     @Override
@@ -88,10 +116,12 @@ public class BaseApplication implements Application {
         return builder.mimeTypeService;
     }
 
+    @Override
     public Path getHome() {
         return builder.home;
     }
 
+    @Override
     public String getContextPath() {
         return builder.contextPath;
     }
@@ -99,10 +129,6 @@ public class BaseApplication implements Application {
     @Override
     public Settings getSettings() {
         return builder.settings;
-    }
-
-    public HttpRouter getRouter() {
-        return builder.router;
     }
 
     public String getSecret() {
@@ -115,60 +141,17 @@ public class BaseApplication implements Application {
 
     @Override
     public Collection<ApplicationModule> getModules() {
-        return builder.applicationModuleList;
+        return applicationModuleList;
     }
 
     @Override
     public Collection<HttpDomain> getDomains() {
-        return getRouter().getDomains();
+        return builder.httpRouter.getDomains();
     }
 
     @Override
     public Set<HttpAddress> getAddresses() {
-        return getRouter().getDomainsByAddress().keySet();
-    }
-
-    @Override
-    public void dispatch(HttpRequestBuilder httpRequestBuilder,
-                         HttpResponseBuilder httpResponseBuilder) {
-        final Application application = this;
-        ApplicationCallable<?> applicationCallable = new ApplicationCallable<>() {
-            @Override
-            public Object call() {
-                getRouter().route(application, httpRequestBuilder, httpResponseBuilder);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                httpRequestBuilder.release();
-                httpResponseBuilder.release();
-            }
-        };
-        Future<?> future = builder.executor.submit(applicationCallable);
-        logger.log(Level.FINEST, "dispatched " + future);
-    }
-
-    @Override
-    public void dispatch(HttpRequestBuilder httpRequestBuilder,
-                         HttpResponseBuilder httpResponseBuilder,
-                         HttpResponseStatus httpResponseStatus) {
-        HttpServerContext httpServerContext = createContext(null, httpRequestBuilder, httpResponseBuilder);
-        ApplicationCallable<?> applicationCallable = new ApplicationCallable<>() {
-            @Override
-            public Object call() {
-                getRouter().routeStatus(httpResponseStatus, httpServerContext);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                httpRequestBuilder.release();
-                httpResponseBuilder.release();
-            }
-        };
-        Future<?> future = builder.executor.submit(applicationCallable);
-        logger.log(Level.FINEST, "dispatched status " + future);
+        return builder.httpRouter.getDomainsByAddress().keySet();
     }
 
     @Override
@@ -242,13 +225,13 @@ public class BaseApplication implements Application {
     @Override
     public void onCreated(Session session) {
         logger.log(Level.FINER, "session name = " + sessionName + " created = " + session);
-        builder.applicationModuleList.forEach(module -> module.onOpen(session));
+        applicationModuleList.forEach(module -> module.onOpen(session));
     }
 
     @Override
     public void onDestroy(Session session) {
         logger.log(Level.FINER, "session name = " + sessionName + " destroyed = " + session);
-        builder.applicationModuleList.forEach(module -> module.onClose(session));
+        applicationModuleList.forEach(module -> module.onClose(session));
     }
 
     @Override
@@ -264,12 +247,12 @@ public class BaseApplication implements Application {
                 incomingSessionHandler.handle(httpServerContext);
             }
             // call modules after request/cookie/session setup
-            builder.applicationModuleList.forEach(module -> module.onOpen(httpServerContext));
+            applicationModuleList.forEach(module -> module.onOpen(httpServerContext));
         } catch (HttpException e) {
-            getRouter().routeException(e);
+            builder.httpRouter.routeException(e);
             httpServerContext.fail();
         } catch (Throwable t) {
-            getRouter().routeToErrorHandler(httpServerContext, t);
+            builder.httpRouter.routeToErrorHandler(httpServerContext, t);
             httpServerContext.fail();
         }
     }
@@ -278,7 +261,7 @@ public class BaseApplication implements Application {
     public void onClose(HttpServerContext httpServerContext) {
         try {
             // call modules before session/cookie
-            builder.applicationModuleList.forEach(module -> module.onClose(httpServerContext));
+            applicationModuleList.forEach(module -> module.onClose(httpServerContext));
             if (builder.sessionsEnabled && outgoingSessionHandler != null) {
                 outgoingSessionHandler.handle(httpServerContext);
             }
@@ -286,9 +269,9 @@ public class BaseApplication implements Application {
                 outgoingCookieHandler.handle(httpServerContext);
             }
         } catch (HttpException e) {
-            getRouter().routeException(e);
+            builder.httpRouter.routeException(e);
         } catch (Throwable t) {
-            getRouter().routeToErrorHandler(httpServerContext, t);
+            builder.httpRouter.routeToErrorHandler(httpServerContext, t);
         } finally {
             try {
                 if (httpResponseRenderer != null) {
@@ -298,6 +281,16 @@ public class BaseApplication implements Application {
                 logger.log(Level.WARNING, e.getMessage(), e);
             }
         }
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return builder.executor;
+    }
+
+    @Override
+    public HttpRouter getRouter() {
+        return builder.httpRouter;
     }
 
     @Override
@@ -321,18 +314,9 @@ public class BaseApplication implements Application {
     @Override
     public void close() throws IOException {
         logger.log(Level.INFO, "application closing");
-        // stop dispatching and stop dispatched requests
         builder.executor.shutdown();
-        try {
-            if (!builder.executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                List<Runnable> list = builder.executor.shutdownNow();
-                logger.log(Level.WARNING, "unable to stop runnables " + list);
-            }
-        } catch (InterruptedException e) {
-            List<Runnable> list = builder.executor.shutdownNow();
-            logger.log(Level.WARNING, "unable to stop runnables " + list);
-        }
-        builder.applicationModuleList.forEach(module -> {
+        // stop dispatching and stop dispatched requests
+        applicationModuleList.forEach(module -> {
             logger.log(Level.FINE, "application closing module " + module);
             module.onClose();
         });

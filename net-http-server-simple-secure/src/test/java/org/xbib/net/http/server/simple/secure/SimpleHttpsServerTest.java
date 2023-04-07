@@ -9,7 +9,10 @@ import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.application.BaseApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
+import org.xbib.net.http.server.executor.BaseExecutor;
+import org.xbib.net.http.server.executor.Executor;
 import org.xbib.net.http.server.route.BaseHttpRouter;
+import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.service.BaseHttpService;
 import org.xbib.net.http.server.HttpServerConfig;
 import org.xbib.net.http.server.simple.SimpleHttpServer;
@@ -33,37 +36,44 @@ public class SimpleHttpsServerTest {
         serverConfig.setServerName("SimpleSecureHttpServer", SimpleHttpServer.class.getPackage().getImplementationVersion());
         serverConfig.setNetworkClass(NetworkClass.LOOPBACK);
         serverConfig.setDebug(true);
+
+        HttpRouter router = BaseHttpRouter.builder()
+                .addDomain(BaseHttpDomain.builder()
+                        .setHttpAddress(httpsAddress)
+                        .addService(BaseHttpService.builder()
+                                .setPath("/favicon.ico")
+                                .setHandler(ctx -> ctx.response()
+                                        .setResponseStatus(HttpResponseStatus.NOT_FOUND)
+                                        .build()
+                                        .flush())
+                                .build())
+                        .addService(BaseHttpService.builder()
+                                .setPath("/secure")
+                                .setHandler(ctx -> {
+                                    ctx.response()
+                                            .setResponseStatus(HttpResponseStatus.OK)
+                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .setCharset(StandardCharsets.UTF_8);
+                                    ctx.write("secure domain: " +
+                                            " SNI host = " + ctx.httpRequest().as(HttpsRequest.class).getSNIHost() +
+                                            " SSL peer host = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
+                                            " base URL = " + ctx.httpRequest().getBaseURL() +
+                                            " parameter = " + ctx.httpRequest().getParameter() +
+                                            " local address = " + ctx.httpRequest().getLocalAddress() +
+                                            " remote address = " + ctx.httpRequest().getRemoteAddress());
+                                })
+                                .build())
+                        .build())
+                .build();
+
+        Executor executor = BaseExecutor.builder()
+                .build();
+
         try (SimpleHttpServer server = SimpleHttpsServer.builder()
                 .setHttpServerConfig(serverConfig)
                 .setApplication(BaseApplication.builder()
-                    .setRouter(BaseHttpRouter.builder()
-                        .addDomain(BaseHttpDomain.builder()
-                                .setHttpAddress(httpsAddress)
-                                .addService(BaseHttpService.builder()
-                                        .setPath("/favicon.ico")
-                                        .setHandler(ctx -> ctx.response()
-                                                .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                                                .build()
-                                                .flush())
-                                        .build())
-                                .addService(BaseHttpService.builder()
-                                        .setPath("/secure")
-                                        .setHandler(ctx -> {
-                                            ctx.response()
-                                                    .setResponseStatus(HttpResponseStatus.OK)
-                                                    .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                                    .setCharset(StandardCharsets.UTF_8);
-                                            ctx.write("secure domain: " +
-                                                " SNI host = " + ctx.httpRequest().as(HttpsRequest.class).getSNIHost() +
-                                                " SSL peer host = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
-                                                " base URL = " + ctx.httpRequest().getBaseURL() +
-                                                " parameter = " + ctx.httpRequest().getParameter() +
-                                                " local address = " + ctx.httpRequest().getLocalAddress() +
-                                                " remote address = " + ctx.httpRequest().getRemoteAddress());
-                                        })
-                                        .build())
-                                .build())
-                        .build())
+                        .setExecutor(executor)
+                        .setRouter(router)
                    .build())
                 .build()) {
             server.bind();

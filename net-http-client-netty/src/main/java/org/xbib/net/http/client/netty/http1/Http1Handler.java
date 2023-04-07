@@ -21,8 +21,7 @@ public class Http1Handler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof FullHttpResponse) {
-            FullHttpResponse httpResponse = (FullHttpResponse) msg;
+        if (msg instanceof FullHttpResponse httpResponse) {
             try {
                 interaction.responseReceived(ctx.channel(), null, httpResponse);
             } finally {
@@ -35,6 +34,7 @@ public class Http1Handler extends ChannelDuplexHandler {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+        logger.log(Level.FINEST, "event " + evt.getClass().getName());
         ctx.fireUserEventTriggered(evt);
     }
 

@@ -3,7 +3,9 @@ package org.xbib.net.http.server;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.BindException;
-import org.xbib.net.http.server.application.Application;
+import java.util.Collection;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.domain.HttpDomain;
 
 public interface HttpServer extends Closeable {
 
@@ -11,5 +13,13 @@ public interface HttpServer extends Closeable {
 
     void loop() throws IOException;
 
-    Application getApplication();
+    void dispatch(HttpRequestBuilder requestBuilder,
+                  HttpResponseBuilder responseBuilder);
+
+    void dispatch(HttpRequestBuilder requestBuilder,
+                  HttpResponseBuilder responseBuilder,
+                  HttpResponseStatus responseStatus);
+
+    Collection<HttpDomain> getDomains();
+
 }

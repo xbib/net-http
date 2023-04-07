@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
@@ -49,8 +51,11 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     protected boolean done;
 
+    protected List<Part> parts;
+
     protected BaseHttpRequestBuilder() {
         this.httpHeaders = new HttpHeaders();
+        this.parts = new ArrayList<>();
     }
 
     @Override
@@ -261,6 +266,14 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
             return this;
         }
         this.requestId = requestId;
+        return this;
+    }
+
+    public BaseHttpRequestBuilder addPart(Part part) {
+        if (done) {
+            return this;
+        }
+        this.parts.add(part);
         return this;
     }
 

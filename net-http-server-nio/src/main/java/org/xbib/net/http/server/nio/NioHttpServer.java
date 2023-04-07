@@ -1,11 +1,13 @@
 package org.xbib.net.http.server.nio;
 
+import java.util.Collection;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
+import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
-import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.HttpServer;
 
 import java.io.IOException;
@@ -30,6 +32,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.executor.CallableReleasable;
+import org.xbib.net.http.server.route.HttpRouter;
 
 public class NioHttpServer implements HttpServer {
 
@@ -101,7 +106,7 @@ public class NioHttpServer implements HttpServer {
                                     httpAddress,
                                     (InetSocketAddress) socketChannel.getLocalAddress(),
                                     (InetSocketAddress) socketChannel.getRemoteAddress());
-                            builder.application.dispatch(requestBuilder, responseBuilder);
+                            dispatch(requestBuilder, responseBuilder);
                             socketChannel.close();
                         } catch (IOException e) {
                             logger.log(Level.SEVERE, e.getMessage(), e);
@@ -128,8 +133,50 @@ public class NioHttpServer implements HttpServer {
     }
 
     @Override
-    public Application getApplication() {
-        return builder.application;
+    public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
+                         org.xbib.net.http.server.HttpResponseBuilder responseBuilder) {
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                router.route(builder.application, requestBuilder, responseBuilder);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
+                         org.xbib.net.http.server.HttpResponseBuilder responseBuilder,
+                         HttpResponseStatus responseStatus) {
+        HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                router.routeStatus(responseStatus, httpServerContext);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public Collection<HttpDomain> getDomains() {
+        return builder.application.getDomains();
     }
 
     @Override

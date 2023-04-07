@@ -16,8 +16,7 @@ public class HttpChunkContentCompressor extends HttpContentCompressor {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg instanceof ByteBuf) {
-            ByteBuf byteBuf = (ByteBuf) msg;
+        if (msg instanceof ByteBuf byteBuf) {
             if (byteBuf.isReadable()) {
                 msg = new DefaultHttpContent(byteBuf);
             }

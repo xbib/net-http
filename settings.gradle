@@ -4,7 +4,7 @@ dependencyResolutionManagement {
             version('gradle', '8.0.2')
             version('junit', '5.9.2')
             version('groovy', '4.0.11')
-            version('netty', '4.1.90.Final')
+            version('netty', '4.1.91.Final')
             version('netty-tcnative', '2.0.59.Final')
             version('datastructures', '2.0.0')
             version('config', '5.0.2')

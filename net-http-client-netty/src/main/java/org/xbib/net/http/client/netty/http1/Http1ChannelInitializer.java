@@ -85,17 +85,21 @@ public class Http1ChannelInitializer implements HttpChannelInitializer {
                                 Interaction interaction) throws IOException {
         NettyHttpClientConfig nettyHttpClientConfig = nettyHttpClient.getClientConfig();
         ChannelPipeline pipeline = channel.pipeline();
-        pipeline.addLast("http-client-chunk-writer",
-                new ChunkedWriteHandler());
-        pipeline.addLast("http-client-codec", new HttpClientCodec(nettyHttpClientConfig.getMaxInitialLineLength(), 
+        pipeline.addLast("http-client-codec", new HttpClientCodec(nettyHttpClientConfig.getMaxInitialLineLength(),
                 nettyHttpClientConfig.getMaxHeadersSize(), nettyHttpClientConfig.getMaxChunkSize()));
         if (nettyHttpClientConfig.isGzipEnabled()) {
             pipeline.addLast("http-client-decompressor", new HttpContentDecompressor());
         }
-        HttpObjectAggregator httpObjectAggregator =
-                new HttpObjectAggregator(nettyHttpClientConfig.getMaxContentLength(), false);
-        httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpClientConfig.getMaxCompositeBufferComponents());
-        pipeline.addLast("http-client-aggregator", httpObjectAggregator);
+        if (nettyHttpClientConfig.isObjectAggregationEnabled()) {
+            HttpObjectAggregator httpObjectAggregator =
+                    new HttpObjectAggregator(nettyHttpClientConfig.getMaxContentLength(), false);
+            httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpClientConfig.getMaxCompositeBufferComponents());
+            pipeline.addLast("http-client-aggregator", httpObjectAggregator);
+        }
+        if (nettyHttpClientConfig.isChunkWriteEnabled()) {
+            //pipeline.addLast("http-client-chunk-content-compressor", new HttpChunkContentCompressor());
+            pipeline.addLast("http-client-chunked-writer", new ChunkedWriteHandler());
+        }
         pipeline.addLast("http-client-response", new Http1Handler(interaction));
         interaction.settingsReceived(null);
     }

@@ -25,6 +25,7 @@ import org.xbib.net.http.server.netty.HttpChannelInitializer;
 import org.xbib.net.http.server.netty.NettyCustomizer;
 import org.xbib.net.http.server.netty.NettyHttpServer;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
+import org.xbib.net.http.server.netty.http1.HttpFileUploadHandler;
 import org.xbib.net.http.server.netty.http1.HttpPipeliningHandler;
 import org.xbib.net.http.server.netty.IdleTimeoutHandler;
 import org.xbib.net.http.server.netty.TrafficLoggingHandler;
@@ -50,13 +51,12 @@ public class Https1ChannelInitializer implements HttpChannelInitializer {
         final NettyHttpsServerConfig nettyHttpsServerConfig = (NettyHttpsServerConfig) nettyHttpServer.getNettyHttpServerConfig();
         final ServerNameIndicationHandler serverNameIndicationHandler =
                 new ServerNameIndicationHandler(nettyHttpsServerConfig, httpAddress,
-                        nettyHttpsServerConfig.getDomainNameMapping(nettyHttpServer.getApplication().getDomains()));
+                        nettyHttpsServerConfig.getDomainNameMapping(nettyHttpServer.getDomains()));
         channel.attr(NettyHttpsServerConfig.ATTRIBUTE_KEY_SNI_HANDLER).set(serverNameIndicationHandler);
         ChannelPipeline pipeline = channel.pipeline();
         pipeline.addLast("server-sni", serverNameIndicationHandler);
         HttpServerCodec httpServerCodec = new HttpServerCodec(nettyHttpsServerConfig.getMaxInitialLineLength(),
                 nettyHttpsServerConfig.getMaxHeadersSize(), nettyHttpsServerConfig.getMaxChunkSize());
-        pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
         pipeline.addLast("server-codec", httpServerCodec);
         if (nettyHttpsServerConfig.isCompressionEnabled()) {
             pipeline.addLast("server-compressor", new HttpContentCompressor());
@@ -64,9 +64,18 @@ public class Https1ChannelInitializer implements HttpChannelInitializer {
         if (nettyHttpsServerConfig.isDecompressionEnabled()) {
             pipeline.addLast("server-decompressor", new HttpContentDecompressor());
         }
-        HttpObjectAggregator httpObjectAggregator = new HttpObjectAggregator(nettyHttpsServerConfig.getMaxContentLength());
-        httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpsServerConfig.getMaxCompositeBufferComponents());
-        pipeline.addLast("server-aggregator", httpObjectAggregator);
+        if (nettyHttpsServerConfig.isObjectAggregationEnabled()) {
+            HttpObjectAggregator httpObjectAggregator = new HttpObjectAggregator(nettyHttpsServerConfig.getMaxContentLength());
+            httpObjectAggregator.setMaxCumulationBufferComponents(nettyHttpsServerConfig.getMaxCompositeBufferComponents());
+            pipeline.addLast("server-aggregator", httpObjectAggregator);
+        }
+        if (nettyHttpsServerConfig.isFileUploadEnabled()) {
+            HttpFileUploadHandler httpFileUploadHandler = new HttpFileUploadHandler(nettyHttpServer);
+            pipeline.addLast("server-file-upload", httpFileUploadHandler);
+        }
+        if (nettyHttpsServerConfig.isChunkedWriteEnabled()) {
+            pipeline.addLast("server-chunked-write", new ChunkedWriteHandler());
+        }
         if (nettyHttpsServerConfig.isPipeliningEnabled()) {
             pipeline.addLast("server-pipelining", new HttpPipeliningHandler(nettyHttpsServerConfig.getPipeliningCapacity()));
         }

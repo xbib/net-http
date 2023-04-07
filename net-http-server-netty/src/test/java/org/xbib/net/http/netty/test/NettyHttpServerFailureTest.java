@@ -23,6 +23,9 @@ import org.xbib.net.http.client.netty.NettyHttpClient;
 import org.xbib.net.http.client.netty.NettyHttpClientConfig;
 import org.xbib.net.http.server.application.BaseApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
+import org.xbib.net.http.server.executor.BaseExecutor;
+import org.xbib.net.http.server.executor.Executor;
+import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.service.BaseHttpService;
 import org.xbib.net.http.server.netty.NettyHttpServer;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
@@ -42,30 +45,37 @@ public class NettyHttpServerFailureTest {
         nettyHttpServerConfig.setNetworkClass(NetworkClass.LOCAL);
         nettyHttpServerConfig.setDebug(true);
         nettyHttpServerConfig.setPipelining(false);
+
+        HttpRouter router = BaseHttpRouter.builder()
+                .addDomain(BaseHttpDomain.builder()
+                        .setHttpAddress(httpAddress1)
+                        .addService(BaseHttpService.builder()
+                                .setPath("/domain")
+                                .setHandler(ctx -> {
+                                    ctx.response()
+                                            .setResponseStatus(HttpResponseStatus.OK)
+                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .setCharset(StandardCharsets.UTF_8);
+                                    ctx.write("domain" +
+                                            " parameter = " + ctx.httpRequest().getParameter().allToString() +
+                                            " local address = " + ctx.httpRequest().getLocalAddress() +
+                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
+                                            " attributes = " + ctx.getAttributes()
+                                    );
+                                })
+                                .build())
+                        .build())
+                .build();
+
+        Executor executor = BaseExecutor.builder()
+                .build();
+
         try (NettyHttpServer server = NettyHttpServer.builder()
                 .setHttpServerConfig(nettyHttpServerConfig)
                 .setApplication(BaseApplication.builder()
                         .setHome(Paths.get("."))
-                        .setRouter(BaseHttpRouter.builder()
-                                .addDomain(BaseHttpDomain.builder()
-                                        .setHttpAddress(httpAddress1)
-                                        .addService(BaseHttpService.builder()
-                                                .setPath("/domain")
-                                                .setHandler(ctx -> {
-                                                    ctx.response()
-                                                            .setResponseStatus(HttpResponseStatus.OK)
-                                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                                            .setCharset(StandardCharsets.UTF_8);
-                                                    ctx.write("domain" +
-                                                            " parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
-                                                            " attributes = " + ctx.getAttributes()
-                                                    );
-                                                })
-                                                .build())
-                                        .build())
-                                .build())
+                        .setExecutor(executor)
+                        .setRouter(router)
                         .build())
                 .build()) {
             server.bind();

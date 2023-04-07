@@ -1,11 +1,13 @@
 package org.xbib.net.http.server.simple;
 
+import java.util.Collection;
 import org.xbib.net.NetworkClass;
 import org.xbib.net.NetworkUtils;
 import org.xbib.net.SocketConfig;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
-import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
@@ -31,6 +33,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.xbib.net.http.server.domain.HttpDomain;
+import org.xbib.net.http.server.executor.CallableReleasable;
+import org.xbib.net.http.server.route.HttpRouter;
 
 public class SimpleHttpServer implements HttpServer {
 
@@ -108,7 +113,7 @@ public class SimpleHttpServer implements HttpServer {
                                         httpAddress,
                                         (InetSocketAddress) socket.getLocalSocketAddress(),
                                         (InetSocketAddress) socket.getRemoteSocketAddress());
-                                builder.application.dispatch(httpRequestBuilder, httpResponseBuilder);
+                                dispatch(httpRequestBuilder, httpResponseBuilder);
                             } catch (Throwable t) {
                                 logger.log(Level.SEVERE, t.getMessage(), t);
                             } finally {
@@ -130,6 +135,53 @@ public class SimpleHttpServer implements HttpServer {
     }
 
     @Override
+    public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
+                         org.xbib.net.http.server.HttpResponseBuilder responseBuilder) {
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                router.route(builder.application, requestBuilder, responseBuilder);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
+                         org.xbib.net.http.server.HttpResponseBuilder responseBuilder,
+                         HttpResponseStatus responseStatus) {
+        HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
+            @Override
+            public Object call() {
+                HttpRouter router = builder.application.getRouter();
+                router.routeStatus(responseStatus, httpServerContext);
+                return true;
+            }
+
+            @Override
+            public void release() {
+                requestBuilder.release();
+                responseBuilder.release();
+            }
+        };
+        builder.application.getExecutor().execute(callableReleasable);
+    }
+
+    @Override
+    public Collection<HttpDomain> getDomains() {
+        return builder.application.getDomains();
+    }
+
+    @Override
     public void loop() throws IOException {
         CountDownLatch latch = new CountDownLatch(1);
         try {
@@ -137,11 +189,6 @@ public class SimpleHttpServer implements HttpServer {
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
-    }
-
-    @Override
-    public Application getApplication() {
-        return builder.application;
     }
 
     @Override
@@ -248,5 +295,4 @@ public class SimpleHttpServer implements HttpServer {
         }
         return result.toString();
     }
-
 }

@@ -2,6 +2,10 @@ package org.xbib.net.http.server.netty;
 
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.multipart.FileUpload;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
@@ -13,44 +17,47 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import org.xbib.net.http.server.Part;
 
 public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
-    protected FullHttpRequest fullHttpRequest;
+    private static final Logger logger = Logger.getLogger(HttpRequestBuilder.class.getName());
 
     protected ByteBuffer byteBuffer;
 
     protected HttpRequestBuilder() {
     }
 
+    public HttpRequestBuilder setHttpRequest(io.netty.handler.codec.http.HttpRequest httpRequest) {
+        if (httpRequest != null) {
+            setVersion(HttpVersion.valueOf(httpRequest.protocolVersion().text()));
+            setMethod(HttpMethod.valueOf(httpRequest.method().name()));
+            setRequestURI(httpRequest.uri());
+            httpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
+        }
+        return this;
+    }
+
     public HttpRequestBuilder setFullHttpRequest(FullHttpRequest fullHttpRequest) {
-        if (fullHttpRequest != null) {
-            // retain request, so we can read the body later without refCnt=0 error
-            this.fullHttpRequest = fullHttpRequest.retain();
-            setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
-            setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
-            setRequestURI(fullHttpRequest.uri());
-            fullHttpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
+        setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
+        setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
+        setRequestURI(fullHttpRequest.uri());
+        fullHttpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
+        // read all bytes from request into a JDK ByteBuffer. This might be expensive.
+        if (fullHttpRequest.content() != null) {
+            byteBuffer = ByteBuffer.wrap(ByteBufUtil.getBytes(fullHttpRequest.content()));
         }
         return this;
     }
 
     @Override
     public ByteBuffer getBody() {
-        if (byteBuffer != null) {
-            return byteBuffer;
-        }
-        // read all bytes from request into a JDK ByteBuffer. This might be expensive.
-        if (fullHttpRequest.content() != null) {
-            byteBuffer = ByteBuffer.wrap(ByteBufUtil.getBytes(fullHttpRequest.content()));
-        }
         return byteBuffer;
     }
 
     @Override
     public CharBuffer getBodyAsChars(Charset charset) {
-        return fullHttpRequest.content() != null ?
-                CharBuffer.wrap(fullHttpRequest.content().toString(charset)) : null;
+        return byteBuffer != null ? charset.decode(byteBuffer) : null;
     }
 
     @Override
@@ -101,6 +108,17 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
         return this;
     }
 
+    public HttpRequestBuilder addFileUpload(FileUpload fileUpload) throws IOException {
+        logger.log(Level.FINE, "add file upload = " + fileUpload);
+        Part part = new Part(fileUpload.getContentType(),
+                fileUpload.getContentTransferEncoding(),
+                fileUpload.getFilename(),
+                fileUpload.isInMemory() ? null : fileUpload.getFile().toPath(),
+                ByteBuffer.wrap(fileUpload.get()));
+        super.parts.add(part);
+        return this;
+    }
+
     protected Parameter getParameter() {
         return super.parameter;
     }
@@ -112,8 +130,6 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     @Override
     public void release() {
-        if (fullHttpRequest != null) {
-            fullHttpRequest.release();
-        }
+
     }
 }

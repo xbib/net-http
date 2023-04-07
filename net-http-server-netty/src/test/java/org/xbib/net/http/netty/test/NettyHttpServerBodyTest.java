@@ -12,7 +12,6 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.client.netty.HttpRequest;
 import org.xbib.net.http.client.netty.NettyHttpClient;
 import org.xbib.net.http.client.netty.NettyHttpClientConfig;
@@ -20,26 +19,25 @@ import org.xbib.net.http.server.application.BaseApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
 import org.xbib.net.http.server.executor.BaseExecutor;
 import org.xbib.net.http.server.executor.Executor;
-import org.xbib.net.http.server.route.HttpRouter;
-import org.xbib.net.http.server.service.BaseHttpService;
 import org.xbib.net.http.server.netty.NettyHttpServer;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
 import org.xbib.net.http.server.route.BaseHttpRouter;
+import org.xbib.net.http.server.route.HttpRouter;
+import org.xbib.net.http.server.service.BaseHttpService;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class NettyHttp2ServerTest {
+public class NettyHttpServerBodyTest {
 
-    private static final Logger logger = Logger.getLogger(NettyHttp2ServerTest.class.getName());
+    private static final Logger logger = Logger.getLogger(NettyHttpServerBodyTest.class.getName());
 
     @Test
-    public void testHttp2() throws Exception {
-        // note that h2c in cleartext is very uncommon, browser do not support this.
-        URL url = URL.from("http://localhost:8008/domain");
-        HttpAddress httpAddress1 = HttpAddress.http2(url);
+    public void testHttp() throws Exception {
+        URL url = URL.from("http://localhost:8008/domain/");
+        HttpAddress httpAddress1 = HttpAddress.http1(url);
         NettyHttpServerConfig nettyHttpServerConfig = new NettyHttpServerConfig();
-        nettyHttpServerConfig.setServerName("NettyHttp2ClearTextServer",
+        nettyHttpServerConfig.setServerName("NettyHttpServer",
                 Bootstrap.class.getPackage().getImplementationVersion());
-        nettyHttpServerConfig.setNetworkClass(NetworkClass.ANY);
+        nettyHttpServerConfig.setNetworkClass(NetworkClass.LOCAL);
         nettyHttpServerConfig.setDebug(true);
 
         HttpRouter router = BaseHttpRouter.builder()
@@ -48,14 +46,17 @@ public class NettyHttp2ServerTest {
                         .addService(BaseHttpService.builder()
                                 .setPath("/domain")
                                 .setHandler(ctx -> {
+                                    String body = ctx.request().getBodyAsChars(StandardCharsets.UTF_8).toString();
                                     ctx.response()
                                             .setResponseStatus(HttpResponseStatus.OK)
                                             .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain " +
-                                            ctx.httpRequest().getParameter() + " " +
-                                            ctx.httpRequest().getLocalAddress() +  " " +
-                                            ctx.httpRequest().getRemoteAddress());
+                                    ctx.write("parameter = " + ctx.httpRequest().getParameter().allToString() +
+                                            " local address = " + ctx.httpRequest().getLocalAddress() +
+                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
+                                            " attributes = " + ctx.getAttributes() +
+                                            " body = " + body
+                                    );
                                 })
                                 .build())
                         .build())
@@ -69,7 +70,7 @@ public class NettyHttp2ServerTest {
                 .setApplication(BaseApplication.builder()
                         .setExecutor(executor)
                         .setRouter(router)
-                    .build())
+                  .build())
                 .build()) {
             server.bind();
             NettyHttpClientConfig config = new NettyHttpClientConfig()
@@ -78,14 +79,16 @@ public class NettyHttp2ServerTest {
             try (NettyHttpClient client = NettyHttpClient.builder()
                     .setConfig(config)
                     .build()) {
-                HttpRequest request = HttpRequest.get()
+                HttpRequest request = HttpRequest.post()
                         .setURL(url)
-                        .setVersion(HttpVersion.HTTP_2_0)
+                        .content("Hello, I'm a simple POST body for Jörg",
+                                "text/plain",
+                                StandardCharsets.UTF_8)
                         .setResponseListener(resp -> {
-                            logger.log(Level.INFO, "got HTTP/2 response: " +
-                                " status = " + resp.getStatus() +
-                                " header = " + resp.getHeaders() +
-                                " body = " + resp.getBodyAsChars(StandardCharsets.UTF_8));
+                            logger.log(Level.INFO, "got response:" +
+                                    " status = " + resp.getStatus() +
+                                    " header = " + resp.getHeaders() +
+                                    " body = " + resp.getBodyAsChars(StandardCharsets.UTF_8));
                             received.set(true);
                         })
                         .build();
