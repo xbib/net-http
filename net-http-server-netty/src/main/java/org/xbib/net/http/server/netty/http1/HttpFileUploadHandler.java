@@ -39,37 +39,29 @@ public class HttpFileUploadHandler extends SimpleChannelInboundHandler<HttpObjec
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject httpObject) {
-        logger.log(Level.FINEST, "checking file upload");
         HttpRequest httpRequest = null;
         HttpPostRequestDecoder httpDecoder = null;
         if (httpObject instanceof HttpRequest) {
             httpRequest = (HttpRequest) httpObject;
             // peek into request if we have a POST request
             if (httpRequest.method() == HttpMethod.POST) {
-                logger.log(Level.FINEST, "checking HTTP POST:  success");
                 HttpDataFactory factory = new DefaultHttpDataFactory(nettyHttpServer.getNettyHttpServerConfig().getFileUploadDiskThreshold());
                 httpDecoder = new HttpPostRequestDecoder(factory, httpRequest);
             }
         }
         if (httpDecoder != null) {
             if (httpObject instanceof HttpContent chunk) {
-                logger.log(Level.FINEST, "got chunk");
                 httpDecoder.offer(chunk);
                 try {
                     while (httpDecoder.hasNext()) {
                         InterfaceHttpData data = httpDecoder.next();
-                        logger.log(Level.FINEST, "got data");
                         if (data != null) {
-                            try {
-                                if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload) {
-                                    logger.log(Level.FINEST, "got file upload");
-                                    FileUpload fileUpload = (FileUpload) data;
-                                    requestReceived(ctx, httpRequest, fileUpload);
-                                } else {
-                                    logger.log(Level.FINEST, "got HTTP data type = " + data.getHttpDataType());
-                                }
-                            } finally {
-                                data.release();
+                            if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload) {
+                                logger.log(Level.FINEST, "got file upload");
+                                FileUpload fileUpload = (FileUpload) data;
+                                requestReceived(ctx, httpRequest, fileUpload);
+                            } else {
+                                logger.log(Level.FINEST, "got HTTP data type = " + data.getHttpDataType());
                             }
                         }
                     }
@@ -77,7 +69,8 @@ public class HttpFileUploadHandler extends SimpleChannelInboundHandler<HttpObjec
                     logger.log(Level.FINEST, "end of data decoder exception");
                 }
                 if (chunk instanceof LastHttpContent) {
-                    //httpDecoder.destroy();
+                    logger.log(Level.FINEST, "destroying HTTP decode");
+                    httpDecoder.destroy();
                 }
             } else {
                 logger.log(Level.FINEST, "not a HttpContent: " );

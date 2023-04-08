@@ -1,12 +1,9 @@
 package org.xbib.net.http.client.netty.http1;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
@@ -34,6 +31,7 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.client.Part;
+import org.xbib.net.http.client.netty.NettyHttpClientConfig;
 import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.client.cookie.CookieDecoder;
 import org.xbib.net.http.client.cookie.CookieEncoder;
@@ -131,25 +129,16 @@ public class Http1Interaction extends BaseInteraction {
                 }
                 io.netty.handler.codec.http.HttpRequest httpRequest = httpPostRequestEncoder.finalizeRequest();
                 channel.write(httpRequest);
-            } else {
-                channel.write(fullHttpRequest);
             }
+            channel.write(fullHttpRequest);
             if (httpPostRequestEncoder != null && httpPostRequestEncoder.isChunked()) {
-                logger.log(Level.FINEST, "finish chunked HTTP POST encoder");
                 channel.write(httpPostRequestEncoder);
-            } else {
-                logger.log(Level.FINEST, "HTTP POST encoder not chunked");
             }
             channel.flush();
         } catch (HttpPostRequestEncoder.ErrorDataEncoderException e) {
             throw new IOException(e);
         } finally {
-            if (httpPostRequestEncoder != null) {
-                logger.log(Level.FINEST, "cleaning files of HTTP POST encoder");
-                //httpPostRequestEncoder.cleanFiles();
-            }
-            logger.log(Level.FINEST, "clean all http data");
-            //httpDataFactory.cleanAllHttpData();
+            channel.attr(NettyHttpClientConfig.ATTRIBUTE_HTTP_DATAFACTORY).set(httpDataFactory);
         }
         return this;
     }

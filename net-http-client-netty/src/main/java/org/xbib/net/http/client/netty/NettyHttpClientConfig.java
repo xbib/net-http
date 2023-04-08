@@ -2,11 +2,13 @@ package org.xbib.net.http.client.netty;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.WriteBufferWaterMark;
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.proxy.Socks4ProxyHandler;
 import io.netty.handler.proxy.Socks5ProxyHandler;
+import io.netty.util.AttributeKey;
 import java.util.ArrayList;
 import java.util.List;
 import org.xbib.net.SocketConfig;
@@ -15,6 +17,8 @@ import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.client.BackOff;
 
 public class NettyHttpClientConfig {
+
+    public static final AttributeKey<HttpDataFactory> ATTRIBUTE_HTTP_DATAFACTORY = AttributeKey.valueOf("http_datafactory");
 
     /**
      * If frame logging /traffic logging is enabled or not.

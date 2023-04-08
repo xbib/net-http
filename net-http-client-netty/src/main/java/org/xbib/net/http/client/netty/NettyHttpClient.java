@@ -2,9 +2,11 @@ package org.xbib.net.http.client.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelPoolHandler;
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.util.concurrent.Future;
 import java.io.Closeable;
 import java.io.IOException;
@@ -84,6 +86,14 @@ public class NettyHttpClient implements HttpClient<HttpRequest, HttpResponse>, C
         return new ChannelInitializer<>() {
             @Override
             protected void initChannel(Channel channel) throws Exception {
+                channel.closeFuture().addListener((ChannelFuture future) -> {
+                    Channel ch = future.channel();
+                    HttpDataFactory httpDataFactory = ch.attr(NettyHttpClientConfig.ATTRIBUTE_HTTP_DATAFACTORY).get();
+                    if (httpDataFactory != null) {
+                        logger.log(Level.FINEST, "cleaning http data factory");
+                        httpDataFactory.cleanAllHttpData();
+                    }
+                });
                 interaction.setSettingsPromise(channel.newPromise());
                 lookupChannelInitializer(httpAddress)
                         .init(channel, httpAddress, getClient(), builder.nettyCustomizer, interaction);
