@@ -40,7 +40,6 @@ public class NettyHttpServerTest {
                 Bootstrap.class.getPackage().getImplementationVersion());
         nettyHttpServerConfig.setNetworkClass(NetworkClass.LOCAL);
         nettyHttpServerConfig.setDebug(true);
-        nettyHttpServerConfig.setPipelining(false);
 
         HttpRouter router = BaseHttpRouter.builder()
                 .addDomain(BaseHttpDomain.builder()
@@ -56,8 +55,8 @@ public class NettyHttpServerTest {
                                             " parameter = " + ctx.httpRequest().getParameter().allToString() +
                                             " local address = " + ctx.httpRequest().getLocalAddress() +
                                             " remote address = " + ctx.httpRequest().getRemoteAddress() +
-                                            " attributes = " + ctx.getAttributes()
-                                    );
+                                            " attributes = " + ctx.getAttributes());
+                                    ctx.done();
                                 })
                                 .build())
                         .build())

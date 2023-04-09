@@ -33,13 +33,16 @@ public class NettyHttpServerMultiRequestLoadTest {
     private static final Logger logger = Logger.getLogger(NettyHttpServerMultiRequestLoadTest.class.getName());
 
     @Test
-    public void loadTestHttp1() throws Exception {
+    public void testHttp1Multi() throws Exception {
+
+        int requests = 1024;
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+
         URL url = URL.from("http://localhost:8008/domain");
         HttpAddress httpAddress = HttpAddress.http1(url);
         NettyHttpServerConfig serverConfig = new NettyHttpServerConfig();
         serverConfig.setServerName("NettyHttpServer", Bootstrap.class.getPackage().getImplementationVersion());
-        serverConfig.setNetworkClass(NetworkClass.LOOPBACK);
+        serverConfig.setNetworkClass(NetworkClass.LOCAL);
 
         HttpRouter router = BaseHttpRouter.builder()
                 .addDomain(BaseHttpDomain.builder()
@@ -57,6 +60,7 @@ public class NettyHttpServerMultiRequestLoadTest {
                                             " attributes = " + ctx.getAttributes() +
                                             " local address = " + ctx.httpRequest().getLocalAddress() +
                                             " remote address = " + ctx.httpRequest().getRemoteAddress());
+                                    ctx.done();
                                 })
                                 .build())
                         .build())
@@ -74,7 +78,6 @@ public class NettyHttpServerMultiRequestLoadTest {
                 .build()) {
             server.bind();
             NettyHttpClientConfig config = new NettyHttpClientConfig();
-            int requests = 1024;
             AtomicInteger count = new AtomicInteger();
             try (NettyHttpClient client = NettyHttpClient.builder()
                     .setConfig(config)

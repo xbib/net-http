@@ -31,7 +31,7 @@ public interface HttpRequestBuilder {
 
     HttpRequestBuilder addHeader(String name, String value);
 
-    HttpRequestBuilder addPart(Part part);
+    HttpRequestBuilder addPart(Message message);
 
     URL getBaseURL();
 

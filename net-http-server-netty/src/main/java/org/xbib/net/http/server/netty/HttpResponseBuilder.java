@@ -193,7 +193,7 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         super.trailingHeaders.entries().forEach(e -> trailingHeaders.add(e.getKey(), e.getValue()));
         HttpVersion httpVersion = HttpVersion.valueOf(version.text());
         FullHttpResponse fullHttpResponse =
-                new DefaultFullHttpResponse(httpVersion, responseStatus, byteBuf.retain(), headers, trailingHeaders);
+                new DefaultFullHttpResponse(httpVersion, responseStatus, byteBuf, headers, trailingHeaders);
         ChannelFuture channelFuture;
         if (sequenceId != null) {
             HttpPipelinedResponse httpPipelinedResponse = new HttpPipelinedResponse(fullHttpResponse,

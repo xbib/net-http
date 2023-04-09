@@ -270,7 +270,8 @@ public abstract class BaseInteraction implements Interaction {
 
     protected abstract Channel nextChannel() throws IOException;
 
-    protected HttpRequest continuation(HttpRequest request, HttpResponse httpResponse) throws URLSyntaxException {
+    protected HttpRequest continuation(HttpRequest request,
+                                       HttpResponse httpResponse) throws URLSyntaxException {
         if (httpResponse == null) {
             return null;
         }
@@ -282,13 +283,7 @@ public abstract class BaseInteraction implements Interaction {
             if (request.canRedirect()) {
                 int status = httpResponse.getStatus().code();
                 switch (status) {
-                    case 300:
-                    case 301:
-                    case 302:
-                    case 303:
-                    case 305:
-                    case 307:
-                    case 308:
+                    case 300, 301, 302, 303, 305, 307, 308 -> {
                         String location = httpResponse.getHeaders().get(HttpHeaderNames.LOCATION);
                         location = new PercentDecoder(StandardCharsets.UTF_8.newDecoder()).decode(location);
                         if (location != null) {
@@ -298,7 +293,7 @@ public abstract class BaseInteraction implements Interaction {
                             HttpRequestBuilder newHttpRequestHttpRequestBuilder = HttpRequest.builder(method, request)
                                     .setURL(redirUrl);
                             request.getURL().getQueryParams().forEach(pair ->
-                                newHttpRequestHttpRequestBuilder.addParameter(pair.getKey(), pair.getValue())
+                                    newHttpRequestHttpRequestBuilder.addParameter(pair.getKey(), pair.getValue())
                             );
                             request.cookies().forEach(newHttpRequestHttpRequestBuilder::addCookie);
                             HttpRequest newHttpRequest = newHttpRequestHttpRequestBuilder.build();
@@ -311,9 +306,9 @@ public abstract class BaseInteraction implements Interaction {
                             logger.log(Level.FINE, "redirect url: " + redirUrl);
                             return newHttpRequest;
                         }
-                        break;
-                    default:
-                        break;
+                    }
+                    default -> {
+                    }
                 }
             }
         } catch (MalformedInputException | UnmappableCharacterException e) {
@@ -331,20 +326,13 @@ public abstract class BaseInteraction implements Interaction {
             // push promise or something else
             return null;
         }
-        if (request.isBackOff()) {
+        if (request.isBackOffEnabled()) {
             BackOff backOff = request.getBackOff() != null ?
                     request.getBackOff() :
                     nettyHttpClient.getClientConfig().getBackOff();
             int status = httpResponse.getStatus ().code();
             switch (status) {
-                case 403:
-                case 404:
-                case 500:
-                case 502:
-                case 503:
-                case 504:
-                case 507:
-                case 509:
+                case 403, 404, 500, 502, 503, 504, 507, 509 -> {
                     if (backOff != null) {
                         long millis = backOff.nextBackOffMillis();
                         if (millis != BackOff.STOP) {
@@ -357,9 +345,9 @@ public abstract class BaseInteraction implements Interaction {
                             return request;
                         }
                     }
-                    break;
-                default:
-                    break;
+                }
+                default -> {
+                }
             }
         }
         return null;

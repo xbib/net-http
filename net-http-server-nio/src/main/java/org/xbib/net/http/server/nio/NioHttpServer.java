@@ -1,6 +1,7 @@
 package org.xbib.net.http.server.nio;
 
 import java.util.Collection;
+import java.util.concurrent.Callable;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaders;
@@ -33,7 +34,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.xbib.net.http.server.domain.HttpDomain;
-import org.xbib.net.http.server.executor.CallableReleasable;
 import org.xbib.net.http.server.route.HttpRouter;
 
 public class NioHttpServer implements HttpServer {
@@ -135,21 +135,12 @@ public class NioHttpServer implements HttpServer {
     @Override
     public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
                          org.xbib.net.http.server.HttpResponseBuilder responseBuilder) {
-        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
-            @Override
-            public Object call() {
-                HttpRouter router = builder.application.getRouter();
-                router.route(builder.application, requestBuilder, responseBuilder);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                requestBuilder.release();
-                responseBuilder.release();
-            }
+        Callable<?> callable = (Callable<Object>) () -> {
+            HttpRouter router = builder.application.getRouter();
+            router.route(builder.application, requestBuilder, responseBuilder);
+            return true;
         };
-        builder.application.getExecutor().execute(callableReleasable);
+        builder.application.getExecutor().execute(callable);
     }
 
     @Override
@@ -157,21 +148,12 @@ public class NioHttpServer implements HttpServer {
                          org.xbib.net.http.server.HttpResponseBuilder responseBuilder,
                          HttpResponseStatus responseStatus) {
         HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
-        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
-            @Override
-            public Object call() {
-                HttpRouter router = builder.application.getRouter();
-                router.routeStatus(responseStatus, httpServerContext);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                requestBuilder.release();
-                responseBuilder.release();
-            }
+        Callable<?> callable = (Callable<Object>) () -> {
+            HttpRouter router = builder.application.getRouter();
+            router.routeStatus(responseStatus, httpServerContext);
+            return true;
         };
-        builder.application.getExecutor().execute(callableReleasable);
+        builder.application.getExecutor().execute(callable);
     }
 
     @Override

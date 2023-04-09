@@ -74,24 +74,29 @@ class Http1Handler extends ChannelDuplexHandler {
     protected void requestReceived(ChannelHandlerContext ctx,
                                    FullHttpRequest fullHttpRequest,
                                    Integer sequenceId) {
-        HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
+        HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_ADDRESS).get();
         try {
-            HttpResponseBuilder serverResponseBuilder = HttpResponse.builder()
+            HttpResponseBuilder httpResponseBuilder = HttpResponse.builder()
                     .setChannelHandlerContext(ctx);
             if (nettyHttpServer.getNettyHttpServerConfig().isPipeliningEnabled()) {
-                serverResponseBuilder.setSequenceId(sequenceId);
+                httpResponseBuilder.setSequenceId(sequenceId);
             }
-            serverResponseBuilder.shouldClose("close".equalsIgnoreCase(fullHttpRequest.headers().get(HttpHeaderNames.CONNECTION)));
+            httpResponseBuilder.shouldClose("close".equalsIgnoreCase(fullHttpRequest.headers().get(HttpHeaderNames.CONNECTION)));
+            ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_RESPONSE).set(httpResponseBuilder);
+            final InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+            final InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
             // the base URL construction may fail with exception. In that case, we return a built-in 400 Bad Request.
-            HttpRequestBuilder serverRequestBuilder = HttpRequest.builder()
+            HttpRequestBuilder httpRequestBuilder = HttpRequest.builder()
                     .setFullHttpRequest(fullHttpRequest)
                     .setBaseURL(httpAddress,
                             fullHttpRequest.uri(),
                             fullHttpRequest.headers().get(HttpHeaderNames.HOST))
-                    .setLocalAddress((InetSocketAddress) ctx.channel().localAddress())
-                    .setRemoteAddress((InetSocketAddress) ctx.channel().remoteAddress())
+                    .setLocalAddress(localAddress)
+                    .setRemoteAddress(remoteAddress)
                     .setSequenceId(sequenceId);
-            nettyHttpServer.dispatch(serverRequestBuilder, serverResponseBuilder);
+            ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_REQUEST).set(httpRequestBuilder);
+            logger.log(Level.FINEST, () -> "incoming connection: " + remoteAddress + " -> " + localAddress);
+            nettyHttpServer.dispatch(httpRequestBuilder, httpResponseBuilder);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "bad request: " + e.getMessage(), e);
             DefaultFullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,

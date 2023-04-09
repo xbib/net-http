@@ -16,7 +16,6 @@ public class HttpsRequestBuilder extends HttpRequestBuilder {
     }
 
     public HttpsRequest build() {
-        this.headers = validateHeaders(headers);
         return new HttpsRequest(this);
     }
 }

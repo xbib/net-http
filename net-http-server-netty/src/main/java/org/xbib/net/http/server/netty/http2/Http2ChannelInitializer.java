@@ -49,7 +49,7 @@ public class Http2ChannelInitializer implements HttpChannelInitializer {
 
     @Override
     public void init(Channel channel, NettyHttpServer nettyHttpServer, NettyCustomizer customizer) {
-        final HttpAddress httpAddress = channel.attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
+        final HttpAddress httpAddress = channel.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_ADDRESS).get();
         final NettyHttpServerConfig nettyHttpServerConfig = nettyHttpServer.getNettyHttpServerConfig();
         ChannelPipeline pipeline = channel.pipeline();
         if (nettyHttpServerConfig.isDebug()) {

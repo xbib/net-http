@@ -65,7 +65,7 @@ public class Https1Handler extends ChannelDuplexHandler {
     }
 
     protected void requestReceived(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest, Integer sequenceId) {
-        HttpAddress httpAddress = ctx.channel().attr(NettyHttpsServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
+        HttpAddress httpAddress = ctx.channel().attr(NettyHttpsServerConfig.ATTRIBUTE_HTTP_ADDRESS).get();
         try {
             HttpResponseBuilder serverResponseBuilder = HttpResponse.builder()
                     .setChannelHandlerContext(ctx);

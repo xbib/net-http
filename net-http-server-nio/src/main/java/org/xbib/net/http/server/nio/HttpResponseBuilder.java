@@ -48,6 +48,8 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
                 internalWrite(fileChannel, bufferSize);
             } else if (inputStream != null) {
                 internalWrite(inputStream, bufferSize);
+            } else {
+                internalFlush();
             }
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage(), e);

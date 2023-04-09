@@ -91,7 +91,7 @@ public class NettyHttpClientConfig {
 
     private HttpVersion poolVersion = HttpVersion.HTTP_1_1;
 
-    private Boolean poolSecure = false;
+    private boolean poolSecure = false;
 
     private Http2Settings http2Settings = Http2Settings.defaultSettings();
 
@@ -99,9 +99,11 @@ public class NettyHttpClientConfig {
 
     private BackOff backOff = BackOff.ZERO_BACKOFF;
 
-    private Boolean isChunkWriteEnabled = true;
+    private boolean isChunkWriteEnabled = true;
 
-    private Boolean isObjectAggregationEnabled = true;
+    private boolean isObjectAggregationEnabled = true;
+
+    private boolean isFileUploadEnabled = true;
 
     public NettyHttpClientConfig() {
         this.byteBufAllocator = ByteBufAllocator.DEFAULT;
@@ -343,7 +345,7 @@ public class NettyHttpClientConfig {
         return this;
     }
 
-    public Boolean isChunkWriteEnabled() {
+    public boolean isChunkWriteEnabled() {
         return isChunkWriteEnabled;
     }
 
@@ -352,7 +354,16 @@ public class NettyHttpClientConfig {
         return this;
     }
 
-    public Boolean isObjectAggregationEnabled() {
+    public boolean isObjectAggregationEnabled() {
         return isObjectAggregationEnabled;
+    }
+
+    public NettyHttpClientConfig setFileUploadEnabled(boolean fileUploadEnabled) {
+        isFileUploadEnabled = fileUploadEnabled;
+        return this;
+    }
+
+    public boolean isFileUploadEnabled() {
+        return isFileUploadEnabled;
     }
 }

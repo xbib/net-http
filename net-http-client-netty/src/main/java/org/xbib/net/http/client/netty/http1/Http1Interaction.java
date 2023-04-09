@@ -30,7 +30,7 @@ import org.xbib.net.URLSyntaxException;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.client.Part;
+import org.xbib.net.http.client.Message;
 import org.xbib.net.http.client.netty.NettyHttpClientConfig;
 import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.client.cookie.CookieDecoder;
@@ -105,40 +105,43 @@ public class Http1Interaction extends BaseInteraction {
         // headers
         request.getHeaders().entries().forEach(p -> fullHttpRequest.headers().add(p.getKey(), p.getValue()));
         // file upload
-        HttpDataFactory httpDataFactory = new DefaultHttpDataFactory();
-        HttpPostRequestEncoder httpPostRequestEncoder = null;
-        try {
-            if (!request.getParts().isEmpty()) {
-                httpPostRequestEncoder = new HttpPostRequestEncoder(httpDataFactory,
-                                fullHttpRequest,
-                                true,
-                                StandardCharsets.UTF_8,
-                                HttpPostRequestEncoder.EncoderMode.RFC1738);
-                for (Part part : request.getParts()) {
-                    Path path = part.getPath();
-                    if (Files.exists(path)) {
-                        FileUpload fileUpload = httpDataFactory.createFileUpload(fullHttpRequest, part.getName(),
-                                path.toFile().getName(), part.getContentType(), part.getContentTransferEncoding(),
-                                part.getCharset(), Files.size(path));
-                        fileUpload.setContent(path.toFile());
-                        logger.log(Level.FINEST, "HTTP FORM file upload = " + fileUpload);
-                        httpPostRequestEncoder.addBodyHttpData(fileUpload);
-                    } else {
-                        logger.log(Level.WARNING, " does not exist : " + path);
-                    }
-                }
-                io.netty.handler.codec.http.HttpRequest httpRequest = httpPostRequestEncoder.finalizeRequest();
-                channel.write(httpRequest);
-            }
-            channel.write(fullHttpRequest);
-            if (httpPostRequestEncoder != null && httpPostRequestEncoder.isChunked()) {
-                channel.write(httpPostRequestEncoder);
-            }
-            channel.flush();
-        } catch (HttpPostRequestEncoder.ErrorDataEncoderException e) {
-            throw new IOException(e);
-        } finally {
+        if (nettyHttpClient.getClientConfig().isFileUploadEnabled()) {
+            HttpDataFactory httpDataFactory = new DefaultHttpDataFactory();
             channel.attr(NettyHttpClientConfig.ATTRIBUTE_HTTP_DATAFACTORY).set(httpDataFactory);
+            HttpPostRequestEncoder httpPostRequestEncoder = null;
+            try {
+                if (!request.getMessages().isEmpty()) {
+                    httpPostRequestEncoder = new HttpPostRequestEncoder(httpDataFactory,
+                            fullHttpRequest,
+                            true,
+                            StandardCharsets.UTF_8,
+                            HttpPostRequestEncoder.EncoderMode.RFC1738);
+                    for (Message message : request.getMessages()) {
+                        Path path = message.getPath();
+                        if (Files.exists(path)) {
+                            FileUpload fileUpload = httpDataFactory.createFileUpload(fullHttpRequest, message.getName(),
+                                    path.toFile().getName(), message.getContentType(), message.getContentTransferEncoding(),
+                                    message.getCharset(), Files.size(path));
+                            fileUpload.setContent(path.toFile());
+                            logger.log(Level.FINEST, "HTTP FORM file upload = " + fileUpload);
+                            httpPostRequestEncoder.addBodyHttpData(fileUpload);
+                        } else {
+                            logger.log(Level.WARNING, " does not exist : " + path);
+                        }
+                    }
+                    io.netty.handler.codec.http.HttpRequest httpRequest = httpPostRequestEncoder.finalizeRequest();
+                    channel.write(httpRequest);
+                }
+                channel.write(fullHttpRequest);
+                if (httpPostRequestEncoder != null && httpPostRequestEncoder.isChunked()) {
+                    channel.write(httpPostRequestEncoder);
+                }
+                channel.flush();
+            } catch (HttpPostRequestEncoder.ErrorDataEncoderException e) {
+                throw new IOException(e);
+            }
+        } else {
+            channel.write(fullHttpRequest);
         }
         return this;
     }

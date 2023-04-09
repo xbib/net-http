@@ -2,7 +2,6 @@ package org.xbib.net.http.server;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.List;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
@@ -40,7 +39,7 @@ public interface HttpRequest extends Request {
 
     InputStream getInputStream();
 
-    List<Part> getParts();
+    List<Message> getMessages();
 
     Attributes getAttributes();
 }

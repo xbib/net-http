@@ -51,11 +51,11 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
     protected boolean done;
 
-    protected List<Part> parts;
+    protected List<Message> messages;
 
     protected BaseHttpRequestBuilder() {
         this.httpHeaders = new HttpHeaders();
-        this.parts = new ArrayList<>();
+        this.messages = new ArrayList<>();
     }
 
     @Override
@@ -269,17 +269,22 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
         return this;
     }
 
-    public BaseHttpRequestBuilder addPart(Part part) {
+    public BaseHttpRequestBuilder addPart(Message message) {
         if (done) {
             return this;
         }
-        this.parts.add(part);
+        this.messages.add(message);
         return this;
     }
 
     @Override
     public void done() {
         this.done = true;
+    }
+
+    @Override
+    public void release() {
+        // do nothing for now
     }
 
     private static String stripPort(String hostMaybePort) {
@@ -297,5 +302,4 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
         int i = hostMaybePort.lastIndexOf(':');
         return i >= 0 ? hostMaybePort.substring(i + 1) : null;
     }
-
 }

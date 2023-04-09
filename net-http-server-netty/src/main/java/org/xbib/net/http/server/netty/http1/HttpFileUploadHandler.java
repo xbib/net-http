@@ -10,7 +10,6 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
@@ -45,7 +44,9 @@ public class HttpFileUploadHandler extends SimpleChannelInboundHandler<HttpObjec
             httpRequest = (HttpRequest) httpObject;
             // peek into request if we have a POST request
             if (httpRequest.method() == HttpMethod.POST) {
-                HttpDataFactory factory = new DefaultHttpDataFactory(nettyHttpServer.getNettyHttpServerConfig().getFileUploadDiskThreshold());
+                HttpDataFactory factory = new DefaultHttpDataFactory(nettyHttpServer.getNettyHttpServerConfig()
+                        .getFileUploadDiskThreshold());
+                ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_DATAFACTORY).set(factory);
                 httpDecoder = new HttpPostRequestDecoder(factory, httpRequest);
             }
         }
@@ -68,12 +69,6 @@ public class HttpFileUploadHandler extends SimpleChannelInboundHandler<HttpObjec
                 } catch (HttpPostRequestDecoder.EndOfDataDecoderException e) {
                     logger.log(Level.FINEST, "end of data decoder exception");
                 }
-                if (chunk instanceof LastHttpContent) {
-                    logger.log(Level.FINEST, "destroying HTTP decode");
-                    httpDecoder.destroy();
-                }
-            } else {
-                logger.log(Level.FINEST, "not a HttpContent: " );
             }
         }
     }
@@ -87,7 +82,7 @@ public class HttpFileUploadHandler extends SimpleChannelInboundHandler<HttpObjec
     protected void requestReceived(ChannelHandlerContext ctx,
                                    HttpRequest httpRequest,
                                    FileUpload fileUpload) {
-        HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
+        HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_ADDRESS).get();
         try {
             HttpResponseBuilder serverResponseBuilder = HttpResponse.builder()
                     .setChannelHandlerContext(ctx);

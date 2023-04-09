@@ -39,7 +39,7 @@ public class NettyHttp2ServerTest {
         NettyHttpServerConfig nettyHttpServerConfig = new NettyHttpServerConfig();
         nettyHttpServerConfig.setServerName("NettyHttp2ClearTextServer",
                 Bootstrap.class.getPackage().getImplementationVersion());
-        nettyHttpServerConfig.setNetworkClass(NetworkClass.ANY);
+        nettyHttpServerConfig.setNetworkClass(NetworkClass.LOCAL);
         nettyHttpServerConfig.setDebug(true);
 
         HttpRouter router = BaseHttpRouter.builder()
@@ -52,10 +52,11 @@ public class NettyHttp2ServerTest {
                                             .setResponseStatus(HttpResponseStatus.OK)
                                             .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain " +
+                                    ctx.write("Hello, here is my response: " +
                                             ctx.httpRequest().getParameter() + " " +
                                             ctx.httpRequest().getLocalAddress() +  " " +
                                             ctx.httpRequest().getRemoteAddress());
+                                    ctx.done();
                                 })
                                 .build())
                         .build())

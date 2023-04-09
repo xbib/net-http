@@ -19,7 +19,7 @@ public interface HttpRequestBuilder {
 
     HttpRequestBuilder setBody(ByteBuffer byteBuffer);
 
-    HttpRequestBuilder addPart(Part part);
+    HttpRequestBuilder addMessage(Message message);
 
     HttpRequest build() throws UnmappableCharacterException, MalformedInputException;
 }

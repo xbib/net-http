@@ -8,9 +8,9 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.AttributeKey;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +32,6 @@ import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.HttpServer;
 import org.xbib.net.http.server.domain.HttpDomain;
-import org.xbib.net.http.server.executor.CallableReleasable;
 import org.xbib.net.http.server.route.HttpRouter;
 
 /**
@@ -94,27 +94,44 @@ public class NettyHttpServer implements HttpServer {
         for (HttpAddress httpAddress : httpAddressSet) {
             SocketConfig socketConfig = httpAddress.getSocketConfig();
             ServerBootstrap bootstrap = new ServerBootstrap()
-                    .group(parentEventLoopGroup, childEventLoopGroup)
-                    .channel(socketChannelClass)
-                    .option(ChannelOption.ALLOCATOR, builder.byteBufAllocator)
-                    .option(ChannelOption.SO_REUSEADDR, socketConfig.isReuseAddr())
-                    .option(ChannelOption.SO_RCVBUF, socketConfig.getTcpReceiveBufferSize())
-                    .option(ChannelOption.SO_BACKLOG, socketConfig.getBackLogSize())
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, socketConfig.getConnectTimeoutMillis())
-                    .childOption(ChannelOption.ALLOCATOR, builder.byteBufAllocator)
-                    .childOption(ChannelOption.SO_REUSEADDR, socketConfig.isReuseAddr())
-                    .childOption(ChannelOption.TCP_NODELAY, socketConfig.isTcpNodelay())
-                    .childOption(ChannelOption.SO_SNDBUF, socketConfig.getTcpSendBufferSize())
-                    .childOption(ChannelOption.SO_RCVBUF, socketConfig.getTcpReceiveBufferSize())
-                    .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, socketConfig.getConnectTimeoutMillis())
-                    .childHandler(new ChannelInitializer<>() {
-                                      @Override
-                                      protected void initChannel(Channel ch) {
-                                          AttributeKey<HttpAddress> key = AttributeKey.valueOf("_address");
-                                          ch.attr(key).set(httpAddress);
-                                          createChannelInitializer(httpAddress).init(ch, getServer(), builder.nettyCustomizer);
-                                      }
-                                  });
+                .group(parentEventLoopGroup, childEventLoopGroup)
+                .channel(socketChannelClass)
+                .option(ChannelOption.ALLOCATOR, builder.byteBufAllocator)
+                .option(ChannelOption.SO_REUSEADDR, socketConfig.isReuseAddr())
+                .option(ChannelOption.SO_RCVBUF, socketConfig.getTcpReceiveBufferSize())
+                .option(ChannelOption.SO_BACKLOG, socketConfig.getBackLogSize())
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, socketConfig.getConnectTimeoutMillis())
+                .childOption(ChannelOption.ALLOCATOR, builder.byteBufAllocator)
+                .childOption(ChannelOption.SO_REUSEADDR, socketConfig.isReuseAddr())
+                .childOption(ChannelOption.TCP_NODELAY, socketConfig.isTcpNodelay())
+                .childOption(ChannelOption.SO_SNDBUF, socketConfig.getTcpSendBufferSize())
+                .childOption(ChannelOption.SO_RCVBUF, socketConfig.getTcpReceiveBufferSize())
+                .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, socketConfig.getConnectTimeoutMillis())
+                .childHandler(new ChannelInitializer<>() {
+                    @Override
+                    protected void initChannel(Channel channel) {
+                        channel.closeFuture().addListener((ChannelFuture future) -> {
+                            Channel ch = future.channel();
+                            HttpRequestBuilder httpRequest = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_REQUEST).get();
+                            if (httpRequest != null) {
+                                logger.log(Level.FINEST, "releasing HttpRequestBuilder");
+                                httpRequest.release();
+                            }
+                            HttpResponseBuilder httpResponse = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_RESPONSE).get();
+                            if (httpResponse != null) {
+                                logger.log(Level.FINEST, "releasing HttpResponseBuilder");
+                                httpResponse.release();
+                            }
+                            HttpDataFactory httpDataFactory = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_DATAFACTORY).get();
+                            if (httpDataFactory != null) {
+                                logger.log(Level.FINEST, "cleaning http data factory");
+                                httpDataFactory.cleanAllHttpData();
+                            }
+                        });
+                        channel.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_ADDRESS).set(httpAddress);
+                        createChannelInitializer(httpAddress).init(channel, getServer(), builder.nettyCustomizer);
+                    }
+                });
             if (getNettyHttpServerConfig().isDebug()) {
                 bootstrap.handler(new LoggingHandler("server-logging", LogLevel.DEBUG));
             }
@@ -168,43 +185,25 @@ public class NettyHttpServer implements HttpServer {
     @Override
     public void dispatch(HttpRequestBuilder requestBuilder,
                          HttpResponseBuilder responseBuilder) {
-        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
-            @Override
-            public Object call() {
-                HttpRouter router = builder.application.getRouter();
-                router.route(builder.application, requestBuilder, responseBuilder);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                requestBuilder.release();
-                responseBuilder.release();
-            }
+        Callable<?> callable = (Callable<Object>) () -> {
+            HttpRouter router = builder.application.getRouter();
+            router.route(builder.application, requestBuilder, responseBuilder);
+            return true;
         };
-        builder.application.getExecutor().execute(callableReleasable);
+        builder.application.getExecutor().execute(callable);
     }
 
     @Override
     public void dispatch(HttpRequestBuilder requestBuilder,
                          HttpResponseBuilder responseBuilder,
                          HttpResponseStatus responseStatus) {
-        CallableReleasable<?> callableReleasable = new CallableReleasable<>() {
-            @Override
-            public Object call() {
-                HttpRouter router = builder.application.getRouter();
-                HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
-                router.routeStatus(responseStatus, httpServerContext);
-                return true;
-            }
-
-            @Override
-            public void release() {
-                requestBuilder.release();
-                responseBuilder.release();
-            }
+        Callable<?> callable = (Callable<Object>) () -> {
+            HttpRouter router = builder.application.getRouter();
+            HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+            router.routeStatus(responseStatus, httpServerContext);
+            return true;
         };
-        builder.application.getExecutor().execute(callableReleasable);
+        builder.application.getExecutor().execute(callable);
     }
 
     @Override

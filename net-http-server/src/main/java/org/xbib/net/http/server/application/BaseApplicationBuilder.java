@@ -158,7 +158,7 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
 
     @Override
     public Application build() {
-        Objects.requireNonNull(httpRouter);
+        Objects.requireNonNull(httpRouter, "http router must not be null");
         return new BaseApplication(this);
     }
 }

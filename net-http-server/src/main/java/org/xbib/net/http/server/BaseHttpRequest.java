@@ -87,8 +87,8 @@ public abstract class BaseHttpRequest implements HttpRequest {
     }
 
     @Override
-    public List<Part> getParts() {
-        return builder.parts;
+    public List<Message> getMessages() {
+        return builder.messages;
     }
 
     @Override

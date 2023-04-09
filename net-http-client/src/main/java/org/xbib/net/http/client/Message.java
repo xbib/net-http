@@ -1,10 +1,10 @@
-package org.xbib.net.http.server;
+package org.xbib.net.http.client;
 
-import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class Part {
+public class Message {
 
     private final String contentType;
 
@@ -14,18 +14,18 @@ public class Part {
 
     private final Path path;
 
-    private final ByteBuffer byteBuffer;
+    private final Charset charset;
 
-    public Part(String contentType,
-                String contentTransferEncoding,
-                String name,
-                Path path,
-                ByteBuffer byteBuffer) {
+    public Message(String contentType,
+                   String contentTransferEncoding,
+                   String name,
+                   Path path,
+                   Charset charset) {
         this.contentType = contentType;
         this.contentTransferEncoding = contentTransferEncoding;
         this.name = name;
         this.path = path;
-        this.byteBuffer = byteBuffer;
+        this.charset = charset;
     }
 
     public String getContentType() {
@@ -44,12 +44,12 @@ public class Part {
         return path;
     }
 
-    public ByteBuffer getByteBuffer() {
-        return byteBuffer;
+    public Charset getCharset() {
+        return charset;
     }
 
     @Override
     public String toString() {
-        return "Part[name=" + name + ",path=" + path + ",bytebuffer=" + (byteBuffer != null ? UTF_8.decode(byteBuffer) : "") + "]";
+        return "Message[name=" + name + ",path=" + path + "]";
     }
 }

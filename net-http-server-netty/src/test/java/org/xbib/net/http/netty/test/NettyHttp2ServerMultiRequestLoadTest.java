@@ -33,8 +33,11 @@ public class NettyHttp2ServerMultiRequestLoadTest {
     private static final Logger logger = Logger.getLogger(NettyHttp2ServerMultiRequestLoadTest.class.getName());
 
     @Test
-    public void testHttp2Load() throws Exception {
+    public void testHttp2Multi() throws Exception {
+
+        int requests = 1024;
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+
         URL url = URL.from("http://localhost:8008/domain");
         HttpAddress httpAddress = HttpAddress.http2(url);
         NettyHttpServerConfig serverConfig = new NettyHttpServerConfig();
@@ -74,7 +77,6 @@ public class NettyHttp2ServerMultiRequestLoadTest {
                 .build()) {
             server.bind();
             NettyHttpClientConfig config = new NettyHttpClientConfig();
-            int requests = 1024;
             AtomicInteger count = new AtomicInteger();
             try (NettyHttpClient client = NettyHttpClient.builder()
                     .setConfig(config)

@@ -2,6 +2,7 @@ package org.xbib.net.http.server.executor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,8 +21,8 @@ public class BaseExecutor implements Executor {
     }
 
     @Override
-    public void execute(CallableReleasable<?> callableReleasable) {
-        builder.executor.submit(callableReleasable);
+    public void execute(Callable<?> callable) {
+        builder.executor.submit(callable);
     }
 
     @Override

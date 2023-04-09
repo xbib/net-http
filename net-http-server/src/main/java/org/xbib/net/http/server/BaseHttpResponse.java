@@ -7,4 +7,9 @@ public abstract class BaseHttpResponse implements HttpResponse {
     protected BaseHttpResponse(BaseHttpResponseBuilder builder) {
         this.builder = builder;
     }
+
+    @Override
+    public void release() {
+        builder.release();
+    }
 }

@@ -17,11 +17,13 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import org.xbib.net.http.server.Part;
+import org.xbib.net.http.server.Message;
 
 public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     private static final Logger logger = Logger.getLogger(HttpRequestBuilder.class.getName());
+
+    private FullHttpRequest httpRequest;
 
     protected ByteBuffer byteBuffer;
 
@@ -39,13 +41,16 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     }
 
     public HttpRequestBuilder setFullHttpRequest(FullHttpRequest fullHttpRequest) {
-        setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
-        setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
-        setRequestURI(fullHttpRequest.uri());
-        fullHttpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
-        // read all bytes from request into a JDK ByteBuffer. This might be expensive.
-        if (fullHttpRequest.content() != null) {
-            byteBuffer = ByteBuffer.wrap(ByteBufUtil.getBytes(fullHttpRequest.content()));
+        if (fullHttpRequest != null) {
+            this.httpRequest = fullHttpRequest;
+            setVersion(HttpVersion.valueOf(fullHttpRequest.protocolVersion().text()));
+            setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
+            setRequestURI(fullHttpRequest.uri());
+            fullHttpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
+            // read all bytes from request into a JDK ByteBuffer. This might be expensive.
+            if (fullHttpRequest.content() != null) {
+                byteBuffer = ByteBuffer.wrap(ByteBufUtil.getBytes(fullHttpRequest.content()));
+            }
         }
         return this;
     }
@@ -110,12 +115,14 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     public HttpRequestBuilder addFileUpload(FileUpload fileUpload) throws IOException {
         logger.log(Level.FINE, "add file upload = " + fileUpload);
-        Part part = new Part(fileUpload.getContentType(),
+        Message message = new Message(fileUpload.getContentType(),
                 fileUpload.getContentTransferEncoding(),
                 fileUpload.getFilename(),
                 fileUpload.isInMemory() ? null : fileUpload.getFile().toPath(),
+                // can be expensive
                 ByteBuffer.wrap(fileUpload.get()));
-        super.parts.add(part);
+        super.messages.add(message);
+        // we do not need to fileUpload.release() because we let clean up the factory object at the end of channel handling
         return this;
     }
 
@@ -130,6 +137,11 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     @Override
     public void release() {
-
+        super.release();
+        if (httpRequest != null) {
+            if (httpRequest.refCnt() > 0) {
+                httpRequest.release();
+            }
+        }
     }
 }

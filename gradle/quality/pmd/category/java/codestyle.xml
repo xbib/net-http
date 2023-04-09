@@ -760,7 +760,7 @@ public class HelloWorldBean {
             <![CDATA[
 public class Foo {
     void bar() {
-        for (;true;) true; // No Init or Update part, may as well be: while (true)
+        for (;true;) true; // No Init or Update message, may as well be: while (true)
     }
 }
 ]]>

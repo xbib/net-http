@@ -1,12 +1,19 @@
 package org.xbib.net.http.server.netty;
 
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.util.AttributeKey;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.server.HttpServerConfig;
 
 public class NettyHttpServerConfig extends HttpServerConfig {
 
-    public static final AttributeKey<HttpAddress> ATTRIBUTE_KEY_HTTP_ADDRESS = AttributeKey.valueOf("_address");
+    public static final AttributeKey<HttpAddress> ATTRIBUTE_HTTP_ADDRESS = AttributeKey.valueOf("_address");
+
+    public static final AttributeKey<HttpRequestBuilder> ATTRIBUTE_HTTP_REQUEST = AttributeKey.valueOf("_request");
+
+    public static final AttributeKey<HttpResponseBuilder> ATTRIBUTE_HTTP_RESPONSE = AttributeKey.valueOf("response");
+
+    public static final AttributeKey<HttpDataFactory> ATTRIBUTE_HTTP_DATAFACTORY = AttributeKey.valueOf("_datafactory");
 
     /**
      * Enforce the transport class name if many transport providers are given.

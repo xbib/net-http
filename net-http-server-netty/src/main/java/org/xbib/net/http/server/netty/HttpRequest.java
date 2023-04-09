@@ -24,12 +24,6 @@ public class HttpRequest extends BaseHttpRequest {
     }
 
     @Override
-    public InputStream getInputStream() {
-        //return new ByteBufInputStream(builder.fullHttpRequest.content());
-        return builder.byteBuffer != null ? new ByteBufferInputStream(builder.byteBuffer) : null;
-    }
-
-    @Override
     public ByteBuffer getBody() {
         return builder.getBody();
     }
@@ -37,6 +31,11 @@ public class HttpRequest extends BaseHttpRequest {
     @Override
     public CharBuffer getBodyAsChars(Charset charset) {
         return builder.getBodyAsChars(charset);
+    }
+
+    @Override
+    public InputStream getInputStream() {
+        return builder.byteBuffer != null ? new ByteBufferInputStream(builder.byteBuffer) : null;
     }
 
     @Override

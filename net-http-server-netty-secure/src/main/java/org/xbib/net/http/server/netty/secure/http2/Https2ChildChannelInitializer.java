@@ -33,7 +33,7 @@ public class Https2ChildChannelInitializer extends ChannelInitializer<Channel> {
     @Override
     protected void initChannel(Channel channel) {
         NettyHttpsServerConfig nettyHttpsServerConfig = (NettyHttpsServerConfig) server.getNettyHttpServerConfig();
-        channel.attr(NettyHttpsServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).set(httpAddress);
+        channel.attr(NettyHttpsServerConfig.ATTRIBUTE_HTTP_ADDRESS).set(httpAddress);
         channel.attr(NettyHttpsServerConfig.ATTRIBUTE_KEY_SNI_HANDLER).set(serverNameIndicationHandler);
         ChannelPipeline pipeline = channel.pipeline();
         pipeline.addLast("server-frame-converter", new Http2StreamFrameToHttpObjectCodec(true));

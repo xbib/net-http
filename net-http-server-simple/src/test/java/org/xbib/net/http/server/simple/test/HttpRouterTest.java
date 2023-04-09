@@ -8,6 +8,7 @@ import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.application.BaseApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
 import org.xbib.net.http.server.route.BaseHttpRouter;
@@ -30,6 +31,7 @@ public class HttpRouterTest {
     public void routerTest() throws Exception {
         URL baseURL = URL.http().host("localhost").port(8008).build();
         HttpAddress httpAddress = HttpAddress.of(baseURL);
+
         BaseHttpRouter router = BaseHttpRouter.builder()
                 .addDomain(BaseHttpDomain.builder()
                         .setHttpAddress(httpAddress)
@@ -47,16 +49,25 @@ public class HttpRouterTest {
                                 .build())
                         .build())
                 .build();
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
         HttpResponseBuilder httpResponse = HttpResponse.builder()
                 .setOutputStream(outputStream);
+
         HttpRequestBuilder httpRequest = HttpRequest.builder()
                 .setBaseURL(baseURL)
                 .setVersion(HttpVersion.HTTP_1_1)
                 .setMethod(HttpMethod.DELETE)
                 .setRequestURI("/demo")
                 .addHeader(HttpHeaderNames.HOST, httpAddress.hostAndPort());
-        router.route(BaseApplication.builder().build(), httpRequest, httpResponse);
+
+        Application application = BaseApplication.builder()
+                .setRouter(router)
+                .build();
+
+        router.route(application, httpRequest, httpResponse);
+
         String string = outputStream.toString(StandardCharsets.UTF_8);
         Logger.getAnonymousLogger().log(Level.INFO, "the response string is = " + string);
         assertTrue(string.contains("/demo"));

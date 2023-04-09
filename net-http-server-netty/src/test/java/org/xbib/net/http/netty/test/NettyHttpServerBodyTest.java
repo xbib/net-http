@@ -55,8 +55,8 @@ public class NettyHttpServerBodyTest {
                                             " local address = " + ctx.httpRequest().getLocalAddress() +
                                             " remote address = " + ctx.httpRequest().getRemoteAddress() +
                                             " attributes = " + ctx.getAttributes() +
-                                            " body = " + body
-                                    );
+                                            " body = " + body);
+                                    ctx.done();
                                 })
                                 .build())
                         .build())

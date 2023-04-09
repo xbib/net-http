@@ -1,5 +1,6 @@
 package org.xbib.net.http.server.netty.http2;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -8,6 +9,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http2.HttpConversionUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -37,7 +39,7 @@ public class Http2Handler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) throws IOException {
         if (object instanceof FullHttpRequest fullHttpRequest) {
-            HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_KEY_HTTP_ADDRESS).get();
+            HttpAddress httpAddress = ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_ADDRESS).get();
             try {
                 Integer streamId = fullHttpRequest.headers().getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());
                 HttpResponseBuilder httpResponseBuilder = HttpResponse.builder()
@@ -47,23 +49,26 @@ public class Http2Handler extends ChannelDuplexHandler {
                 if (streamId != null) {
                     httpResponseBuilder.setStreamId(streamId + 1);
                 }
-                HttpRequestBuilder serverRequestBuilder = HttpRequest.builder()
+                ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_RESPONSE).set(httpResponseBuilder);
+                final InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
+                final InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+                HttpRequestBuilder httpRequestBuilder = HttpRequest.builder()
                         .setFullHttpRequest(fullHttpRequest)
                         .setBaseURL(httpAddress,
                                 fullHttpRequest.uri(),
                                 fullHttpRequest.headers().get(HttpHeaderNames.HOST))
-                        .setLocalAddress((InetSocketAddress) ctx.channel().localAddress())
-                        .setRemoteAddress((InetSocketAddress) ctx.channel().remoteAddress())
+                        .setLocalAddress(localAddress)
+                        .setRemoteAddress(remoteAddress)
                         .setStreamId(streamId);
-                nettyHttpServer.dispatch(serverRequestBuilder, httpResponseBuilder);
+                ctx.channel().attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_REQUEST).set(httpRequestBuilder);
+                logger.log(Level.FINEST, () -> "incoming connection: " + remoteAddress + " -> " + localAddress);
+                nettyHttpServer.dispatch(httpRequestBuilder, httpResponseBuilder);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "bad request:" + e.getMessage(), e);
                 DefaultFullHttpResponse fullHttpResponse =
                         new DefaultFullHttpResponse(io.netty.handler.codec.http.HttpVersion.valueOf(httpAddress.getVersion().text()),
                                 HttpResponseStatus.BAD_REQUEST);
                 ctx.writeAndFlush(fullHttpResponse).addListener(ChannelFutureListener.CLOSE);
-            } finally {
-                fullHttpRequest.release();
             }
         }
     }
@@ -77,5 +82,25 @@ public class Http2Handler extends ChannelDuplexHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         logger.log(Level.SEVERE, cause.getMessage(), cause);
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        Channel ch = ctx.channel();
+        HttpRequestBuilder httpRequest = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_REQUEST).get();
+        if (httpRequest != null) {
+            logger.log(Level.FINEST, "releasing HttpRequestBuilder");
+            httpRequest.release();
+        }
+        HttpResponseBuilder httpResponse = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_RESPONSE).get();
+        if (httpResponse != null) {
+            logger.log(Level.FINEST, "releasing HttpResponseBuilder");
+            httpResponse.release();
+        }
+        HttpDataFactory httpDataFactory = ch.attr(NettyHttpServerConfig.ATTRIBUTE_HTTP_DATAFACTORY).get();
+        if (httpDataFactory != null) {
+            logger.log(Level.FINEST, "cleaning http data factory");
+            httpDataFactory.cleanAllHttpData();
+        }
     }
 }

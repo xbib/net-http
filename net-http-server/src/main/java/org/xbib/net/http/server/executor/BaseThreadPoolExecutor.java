@@ -45,10 +45,5 @@ public class BaseThreadPoolExecutor extends ThreadPoolExecutor {
             logger.log(Level.SEVERE, terminationCause.getMessage(), terminationCause);
             return;
         }
-        if (runnable instanceof Task<?> task) {
-            CallableReleasable<?> callableReleasable = (CallableReleasable<?>) task.getCallable();
-            logger.log(Level.FINEST, () -> "releasing " + callableReleasable);
-            callableReleasable.release();
-        }
     }
 }
