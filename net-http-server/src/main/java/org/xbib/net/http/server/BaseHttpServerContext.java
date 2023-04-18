@@ -38,8 +38,6 @@ public class BaseHttpServerContext implements HttpServerContext {
 
     private static final String PATH_SEPARATOR = "/";
 
-    private static final String BOM = "\uffff";
-
     private final Application application;
 
     private final HttpRequestBuilder httpRequestBuilder;
@@ -237,9 +235,6 @@ public class BaseHttpServerContext implements HttpServerContext {
         if (contentType != null && contentType.contains(HttpHeaderValues.APPLICATION_JSON)) {
             String content = httpRequestBuilder.getBodyAsChars(StandardCharsets.UTF_8).toString();
             try {
-                if (content.startsWith(BOM)) {
-                    content = content.substring(BOM.length());
-                }
                 Map<String, Object> map = Json.toMap(content);
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
                     if (entry.getValue() instanceof Iterable<?> iterable) {
