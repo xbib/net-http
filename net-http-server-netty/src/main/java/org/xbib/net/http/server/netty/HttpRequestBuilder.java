@@ -1,5 +1,6 @@
 package org.xbib.net.http.server.netty;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
@@ -27,6 +28,8 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     protected ByteBuffer byteBuffer;
 
+    protected CharBuffer charBuffer;
+
     protected HttpRequestBuilder() {
     }
 
@@ -47,9 +50,10 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
             setMethod(HttpMethod.valueOf(fullHttpRequest.method().name()));
             setRequestURI(fullHttpRequest.uri());
             fullHttpRequest.headers().entries().forEach(e -> addHeader(e.getKey(), e.getValue()));
-            // read all bytes from request into a JDK ByteBuffer. This might be expensive.
             if (fullHttpRequest.content() != null) {
-                byteBuffer = ByteBuffer.wrap(ByteBufUtil.getBytes(fullHttpRequest.content()));
+                ByteBuf byteBuf = fullHttpRequest.content();
+                byte[] bytes = ByteBufUtil.getBytes(byteBuf);
+                byteBuffer = ByteBuffer.wrap(bytes);
             }
         }
         return this;
@@ -62,7 +66,10 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
 
     @Override
     public CharBuffer getBodyAsChars(Charset charset) {
-        return byteBuffer != null ? charset.decode(byteBuffer) : null;
+        if (charBuffer == null) {
+            charBuffer = byteBuffer != null ? charset.decode(byteBuffer) : null;
+        }
+        return charBuffer;
     }
 
     @Override

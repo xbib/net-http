@@ -38,6 +38,8 @@ public class BaseHttpServerContext implements HttpServerContext {
 
     private static final String PATH_SEPARATOR = "/";
 
+    private static final String BOM = "\uffff";
+
     private final Application application;
 
     private final HttpRequestBuilder httpRequestBuilder;
@@ -220,7 +222,8 @@ public class BaseHttpServerContext implements HttpServerContext {
                 .charset(charset, CodingErrorAction.REPLACE)
                 .path(httpRequestBuilder.getRequestURI())
                 .build();
-        ParameterBuilder formParameterBuilder = Parameter.builder().domain(Parameter.Domain.FORM);
+        ParameterBuilder formParameterBuilder = Parameter.builder().domain(Parameter.Domain.FORM)
+                .enableDuplicates();
         // https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4
         if (HttpMethod.POST.equals(httpRequestBuilder.getMethod()) &&
                 (mimeType != null && mimeType.contains(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED))) {
@@ -234,6 +237,9 @@ public class BaseHttpServerContext implements HttpServerContext {
         if (contentType != null && contentType.contains(HttpHeaderValues.APPLICATION_JSON)) {
             String content = httpRequestBuilder.getBodyAsChars(StandardCharsets.UTF_8).toString();
             try {
+                if (content.startsWith(BOM)) {
+                    content = content.substring(BOM.length());
+                }
                 Map<String, Object> map = Json.toMap(content);
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
                     if (entry.getValue() instanceof Iterable<?> iterable) {
