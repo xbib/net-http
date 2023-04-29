@@ -11,7 +11,7 @@ import org.xbib.net.Resource;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class WebRootResourceResolver implements ResourceResolver {
 
@@ -25,12 +25,12 @@ public class WebRootResourceResolver implements ResourceResolver {
     }
 
     @Override
-    public Resource resolveResource(HttpServerContext httpServerContext,
+    public Resource resolveResource(HttpRouterContext httpRouterContext,
                                     String templateName,
                                     List<String> indexFiles) throws IOException {
-        String pathSpec = httpServerContext.getAttributes().containsKey("forwardedPath") ?
-                (String) httpServerContext.getAttributes().get("forwardedPath") :
-                templateName != null ? templateName : httpServerContext.httpRequest().getRequestPath();
+        String pathSpec = httpRouterContext.getAttributes().containsKey("forwardedPath") ?
+                (String) httpRouterContext.getAttributes().get("forwardedPath") :
+                templateName != null ? templateName : httpRouterContext.getRequest().getRequestPath();
         if (pathSpec == null || pathSpec.isEmpty()) {
             throw new IllegalArgumentException("path must not be null or empty");
         }
@@ -48,7 +48,7 @@ public class WebRootResourceResolver implements ResourceResolver {
             resource = createResource(pathSpec);
             if (Files.isDirectory(resource.getPath())) {
                 // we need to move temporarily to the directory, and the browser must know about this.
-                HttpRequest request = httpServerContext.httpRequest();
+                HttpRequest request = httpRouterContext.getRequest();
                 URL url = request.getBaseURL();  //response.server().getPublishURL(request);
                 String loc = url.resolve(resource.getName() + '/')
                         .mutator()
@@ -56,9 +56,8 @@ public class WebRootResourceResolver implements ResourceResolver {
                         .fragment(request.getBaseURL().getFragment())
                         .build()
                         .toString();
-                httpServerContext.response()
-                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT)
-                        .setHeader("location", loc);
+                httpRouterContext.status(HttpResponseStatus.TEMPORARY_REDIRECT)
+                        .header("location", loc);
             }
         }
         return resource;

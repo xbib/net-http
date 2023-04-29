@@ -1,6 +1,5 @@
 package org.xbib.net.http.server.session.jdbc;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.sql.Connection;
@@ -13,9 +12,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.xbib.net.http.server.persist.Codec;
 import org.xbib.net.http.server.session.BaseSession;
@@ -23,7 +19,7 @@ import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.SessionListener;
 import org.xbib.net.util.JsonUtil;
 
-public class JdbcSessionCodec implements Codec<Session>, Closeable {
+public class JdbcSessionCodec implements Codec<Session> {
 
     private final String name;
 
@@ -43,8 +39,6 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
 
     private final String purgeSessionStringStatement;
 
-    private final ScheduledExecutorService scheduledExecutorService;
-
     public JdbcSessionCodec(String name,
                             SessionListener sessionListener,
                             int sessionCacheSize,
@@ -63,8 +57,6 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
         this.writeSessionStringStatement = writeSessionStringStatement;
         this.deleteSessionStringStatement = deleteSessionStringStatement;
         this.purgeSessionStringStatement = purgeSessionStringStatement;
-        this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        this.scheduledExecutorService.schedule(() -> purgeDatabase(sessionDuration.getSeconds()), 0L, TimeUnit.SECONDS);
     }
 
     @Override
@@ -113,7 +105,30 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
     @Override
     public void purge(long expiredAfterSeconds) {
         if (expiredAfterSeconds > 0L) {
-            purgeDatabase(expiredAfterSeconds);
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime expiredBefore = now.minusSeconds(expiredAfterSeconds);
+            List<String> list = new ArrayList<>();
+            try {
+                Connection connection = dataSource.getConnection();
+                try (PreparedStatement preparedStatement = connection.prepareStatement(purgeSessionStringStatement)) {
+                    preparedStatement.setTimestamp(1, Timestamp.valueOf(expiredBefore)); // created
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    while (resultSet.next()) {
+                        list.add(resultSet.getString(1));
+                    }
+                    resultSet.close();
+                }
+                try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSessionStringStatement)) {
+                    for (String key : list) {
+                        if (key != null) {
+                            preparedStatement.setString(1, key);
+                            preparedStatement.execute();
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                throw new UncheckedIOException(new IOException(e));
+            }
         }
     }
 
@@ -147,37 +162,5 @@ public class JdbcSessionCodec implements Codec<Session>, Closeable {
             preparedStatement.setString(1, key);
             preparedStatement.execute();
         }
-    }
-
-    private void purgeDatabase(long seconds) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiredBefore = now.minusSeconds(seconds);
-        List<String> list = new ArrayList<>();
-        try {
-            Connection connection = dataSource.getConnection();
-            try (PreparedStatement preparedStatement = connection.prepareStatement(purgeSessionStringStatement)) {
-                preparedStatement.setTimestamp(1, Timestamp.valueOf(expiredBefore)); // created
-                ResultSet resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    list.add(resultSet.getString(1));
-                }
-                resultSet.close();
-            }
-            try (PreparedStatement preparedStatement = connection.prepareStatement(deleteSessionStringStatement)) {
-                for (String key : list) {
-                    if (key != null) {
-                        preparedStatement.setString(1, key);
-                        preparedStatement.execute();
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new UncheckedIOException(new IOException(e));
-        }
-    }
-
-    @Override
-    public void close() throws IOException {
-        this.scheduledExecutorService.shutdown();
     }
 }

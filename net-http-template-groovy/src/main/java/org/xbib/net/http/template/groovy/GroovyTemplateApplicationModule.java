@@ -4,7 +4,7 @@ import groovy.text.markup.BaseTemplate;
 import org.xbib.net.http.server.application.BaseApplicationModule;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -50,25 +50,25 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext) {
+    public void onOpen(HttpRouterContext httpRouterContext) {
         try {
-            groovyMarkupTemplateHandler.handle(httpServerContext);
+            groovyMarkupTemplateHandler.handle(httpRouterContext);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
-        httpServerContext.getAttributes().put("request", httpRequest);
-        httpServerContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
-        application.getModules().forEach(module -> httpServerContext.getAttributes().put(module.getName(), module));
+    public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
+        httpRouterContext.getAttributes().put("request", httpRequest);
+        httpRouterContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
+        application.getModules().forEach(module -> httpRouterContext.getAttributes().put(module.getName(), module));
     }
 
     @Override
-    public void onClose(HttpServerContext httpServerContext) {
+    public void onClose(HttpRouterContext httpRouterContext) {
         try {
-            groovyTemplateRenderer.handle(httpServerContext);
+            groovyTemplateRenderer.handle(httpRouterContext);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

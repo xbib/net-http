@@ -1,7 +1,7 @@
 package org.xbib.net.http.server.application;
 
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.settings.Settings;
@@ -26,15 +26,15 @@ public abstract class BaseApplicationModule implements ApplicationModule {
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext) {
+    public void onOpen(HttpRouterContext httpRouterContext) {
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
+    public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
     }
 
     @Override
-    public void onClose(HttpServerContext httpServerContext) {
+    public void onClose(HttpRouterContext httpRouterContext) {
     }
 
     @Override

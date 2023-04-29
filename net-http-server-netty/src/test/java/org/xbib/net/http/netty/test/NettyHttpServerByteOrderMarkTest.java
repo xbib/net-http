@@ -56,21 +56,19 @@ class NettyHttpServerByteOrderMarkTest {
                                 .setMethod(HttpMethod.POST)
                                 .setHandler(ctx -> {
                                     logger.log(Level.FINEST, "handler starting");
-                                    String content = ctx.request().getBodyAsChars(StandardCharsets.UTF_8).toString();
+                                    String content = ctx.getRequestBuilder().getBodyAsChars(StandardCharsets.UTF_8).toString();
                                     logger.log(Level.FINEST, "got content = " + content);
-                                    logger.log(Level.FINEST, "got FORM params op = " + ctx.httpRequest().getParameter().getAll("op", Parameter.Domain.FORM));
-                                    logger.log(Level.FINEST, "got FORM params key = " + ctx.httpRequest().getParameter().getAll("key", Parameter.Domain.FORM));
-                                    logger.log(Level.FINEST, "got FORM params query = " + ctx.httpRequest().getParameter().getAll("query", Parameter.Domain.FORM));
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
+                                    logger.log(Level.FINEST, "got FORM params op = " + ctx.getRequest().getParameter().getAll("op", Parameter.Domain.FORM));
+                                    logger.log(Level.FINEST, "got FORM params key = " + ctx.getRequest().getParameter().getAll("key", Parameter.Domain.FORM));
+                                    logger.log(Level.FINEST, "got FORM params query = " + ctx.getRequest().getParameter().getAll("query", Parameter.Domain.FORM));
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " local address = " + ctx.getRequest().getLocalAddress() +
+                                            " remote address = " + ctx.getRequest().getRemoteAddress() +
                                             " attributes = " + ctx.getAttributes() +
-                                            " content = " + content
-                                    );
+                                            " content = " + content);
                                 })
                                 .build())
                         .build())

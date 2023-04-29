@@ -1,7 +1,7 @@
 package org.xbib.net.http.template.groovy;
 
 import org.xbib.net.Resource;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.resource.HtmlTemplateResourceHandler;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class GroovyTemplateResourceHandler extends HtmlTemplateResourceHandler {
     }
 
     @Override
-    protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        return new GroovyTemplateResource(this, httpServerContext);
+    protected Resource createResource(HttpRouterContext httpRouterContext) throws IOException {
+        return new GroovyTemplateResource(this, httpRouterContext);
     }
 }

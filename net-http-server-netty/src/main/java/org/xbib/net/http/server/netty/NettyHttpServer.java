@@ -29,7 +29,7 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.HttpServer;
 import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.route.HttpRouter;
@@ -199,8 +199,8 @@ public class NettyHttpServer implements HttpServer {
                          HttpResponseStatus responseStatus) {
         Callable<?> callable = (Callable<Object>) () -> {
             HttpRouter router = builder.application.getRouter();
-            HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
-            router.routeStatus(responseStatus, httpServerContext);
+            HttpRouterContext httpRouterContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+            router.routeStatus(responseStatus, httpRouterContext);
             return true;
         };
         builder.application.getExecutor().execute(callable);

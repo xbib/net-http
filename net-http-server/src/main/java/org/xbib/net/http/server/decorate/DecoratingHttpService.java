@@ -6,7 +6,7 @@ import java.util.Objects;
 import org.xbib.net.ParameterDefinition;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.domain.HttpSecurityDomain;
 import org.xbib.net.http.server.service.HttpService;
 
@@ -24,7 +24,7 @@ public class DecoratingHttpService implements HttpService {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         handler.handle(context);
         delegate.handle(context);
     }

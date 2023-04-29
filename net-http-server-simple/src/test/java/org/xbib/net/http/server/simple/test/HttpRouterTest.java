@@ -39,12 +39,11 @@ public class HttpRouterTest {
                                 .setMethod(HttpMethod.DELETE)
                                 .setPath("/demo")
                                 .setHandler(ctx -> {
-                                    Logger.getAnonymousLogger().log(Level.INFO, "got request: " + ctx.request().getRequestURI());
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write(ctx.request().getRequestURI());
+                                    Logger.getAnonymousLogger().log(Level.INFO, "got request: " + ctx.getRequestBuilder().getRequestURI());
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body(ctx.getRequestBuilder().getRequestURI());
                                 })
                                 .build())
                         .build())

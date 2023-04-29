@@ -3,7 +3,9 @@ package org.xbib.net.http.server.handler;
 import java.io.IOException;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpErrorHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
+
+import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 
 public class NotFoundHandler implements HttpErrorHandler {
 
@@ -11,10 +13,10 @@ public class NotFoundHandler implements HttpErrorHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
-        context.response()
-                .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                .setContentType("text/plain;charset=utf-8")
-                .write("Not found");
+    public void handle(HttpRouterContext context) throws IOException {
+        context.status(HttpResponseStatus.NOT_FOUND)
+                .header(CONTENT_TYPE, "text/plain;charset=utf-8")
+                .body("Not found")
+                .done();
     }
 }

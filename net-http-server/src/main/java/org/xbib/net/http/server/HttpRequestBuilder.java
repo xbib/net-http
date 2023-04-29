@@ -8,6 +8,7 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public interface HttpRequestBuilder {
 
@@ -21,7 +22,7 @@ public interface HttpRequestBuilder {
 
     HttpRequestBuilder setParameter(Parameter parameter);
 
-    HttpRequestBuilder setContext(HttpServerContext context);
+    HttpRequestBuilder setContext(HttpRouterContext context);
 
     HttpRequestBuilder setVersion(HttpVersion version);
 

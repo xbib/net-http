@@ -16,12 +16,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.cookie.SameSite;
-import org.xbib.net.http.server.BaseHttpServerContext;
-import org.xbib.net.http.server.HttpException;
+import org.xbib.net.http.server.route.BaseHttpRouterContext;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.cookie.IncomingCookieHandler;
 import org.xbib.net.http.server.cookie.OutgoingCookieHandler;
 import org.xbib.net.http.server.domain.HttpDomain;
@@ -44,30 +43,15 @@ public class BaseApplication implements Application {
 
     protected BaseApplicationBuilder builder;
 
-    private final HttpRequestValidator httpRequestValidator;
-
     protected final String sessionName;
 
-    private final HttpHandler incomingCookieHandler;
-
-    private final HttpHandler outgoingCookieHandler;
-
     private final HttpResponseRenderer httpResponseRenderer;
-
-    private Codec<Session> sessionCodec;
-
-    private HttpHandler incomingSessionHandler;
-
-    private HttpHandler outgoingSessionHandler;
 
     protected List<ApplicationModule> applicationModuleList;
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
         this.sessionName = getSettings().get("session.name", "SESS");
-        this.httpRequestValidator = newRequestValidator();
-        this.incomingCookieHandler = newIncomingCookieHandler();
-        this.outgoingCookieHandler = newOutgoingCookieHandler();
         this.httpResponseRenderer = newResponseRenderer();
         this.applicationModuleList = new ArrayList<>();
         for (Map.Entry<String, Settings> entry : builder.settings.getGroups("module").entrySet()) {
@@ -155,19 +139,29 @@ public class BaseApplication implements Application {
     }
 
     @Override
-    public HttpServerContext createContext(HttpDomain domain,
+    public HttpRouterContext createContext(HttpDomain domain,
                                            HttpRequestBuilder requestBuilder,
                                            HttpResponseBuilder responseBuilder) {
-        HttpServerContext httpServerContext = new BaseHttpServerContext(this, domain, requestBuilder, responseBuilder);
-        httpServerContext.getAttributes().put("requestbuilder", requestBuilder);
-        httpServerContext.getAttributes().put("responsebuilder", responseBuilder);
-        this.sessionCodec = newSessionCodec(httpServerContext);
-        if (sessionCodec != null) {
-            httpServerContext.getAttributes().put("sessioncodec", sessionCodec);
+        HttpRouterContext httpRouterContext = new BaseHttpRouterContext(this, domain, requestBuilder, responseBuilder);
+        httpRouterContext.addOpenHandler(newRequestValidator());
+        httpRouterContext.addOpenHandler(newIncomingCookieHandler());
+        if (builder.sessionsEnabled) {
+            Codec<Session> sessionCodec = newSessionCodec(httpRouterContext);
+            httpRouterContext.getAttributes().put("sessioncodec", sessionCodec);
+            httpRouterContext.addOpenHandler(newIncomingSessionHandler(sessionCodec));
+            httpRouterContext.addCloseHandler(newOutgoingSessionHandler(sessionCodec));
         }
-        this.incomingSessionHandler = newIncomingSessionHandler(httpServerContext);
-        this.outgoingSessionHandler = newOutgoingSessionHandler(httpServerContext);
-        return httpServerContext;
+        httpRouterContext.addCloseHandler(newOutgoingCookieHandler());
+        return httpRouterContext;
+    }
+
+    @Override
+    public void releaseContext(HttpRouterContext httpRouterContext) {
+        try {
+            httpRouterContext.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected HttpRequestValidator newRequestValidator() {
@@ -186,13 +180,11 @@ public class BaseApplication implements Application {
         return new HttpResponseRenderer();
     }
 
-    protected Codec<Session> newSessionCodec(HttpServerContext httpServerContext) {
+    protected Codec<Session> newSessionCodec(HttpRouterContext httpRouterContext) {
         return new MemoryPropertiesSessionCodec(sessionName,this, 1024, Duration.ofDays(1));
     }
 
-    protected HttpHandler newIncomingSessionHandler(HttpServerContext httpServerContext) {
-        @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
+    protected HttpHandler newIncomingSessionHandler(Codec<Session> sessionCodec) {
         return new IncomingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
@@ -204,9 +196,7 @@ public class BaseApplication implements Application {
                 () -> RandomUtil.randomString(16));
     }
 
-    protected HttpHandler newOutgoingSessionHandler(HttpServerContext httpServerContext) {
-        @SuppressWarnings("unchecked")
-        Codec<Session> sessionCodec = httpServerContext.getAttributes().get(Codec.class, "sessioncodec");
+    protected HttpHandler newOutgoingSessionHandler(Codec<Session> sessionCodec) {
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
@@ -235,47 +225,27 @@ public class BaseApplication implements Application {
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext) {
+    public void onOpen(HttpRouterContext httpRouterContext) {
         try {
-            if (httpRequestValidator != null) {
-                httpRequestValidator.handle(httpServerContext);
-            }
-            if (incomingCookieHandler != null) {
-                incomingCookieHandler.handle(httpServerContext);
-            }
-            if (builder.sessionsEnabled && incomingSessionHandler != null) {
-                incomingSessionHandler.handle(httpServerContext);
-            }
             // call modules after request/cookie/session setup
-            applicationModuleList.forEach(module -> module.onOpen(httpServerContext));
-        } catch (HttpException e) {
-            builder.httpRouter.routeException(e);
-            httpServerContext.fail();
+            applicationModuleList.forEach(module -> module.onOpen(httpRouterContext));
         } catch (Throwable t) {
-            builder.httpRouter.routeToErrorHandler(httpServerContext, t);
-            httpServerContext.fail();
+            builder.httpRouter.routeToErrorHandler(httpRouterContext, t);
+            httpRouterContext.fail();
         }
     }
 
     @Override
-    public void onClose(HttpServerContext httpServerContext) {
+    public void onClose(HttpRouterContext httpRouterContext) {
         try {
             // call modules before session/cookie
-            applicationModuleList.forEach(module -> module.onClose(httpServerContext));
-            if (builder.sessionsEnabled && outgoingSessionHandler != null) {
-                outgoingSessionHandler.handle(httpServerContext);
-            }
-            if (outgoingCookieHandler != null) {
-                outgoingCookieHandler.handle(httpServerContext);
-            }
-        } catch (HttpException e) {
-            builder.httpRouter.routeException(e);
+            applicationModuleList.forEach(module -> module.onClose(httpRouterContext));
         } catch (Throwable t) {
-            builder.httpRouter.routeToErrorHandler(httpServerContext, t);
+            builder.httpRouter.routeToErrorHandler(httpRouterContext, t);
         } finally {
             try {
                 if (httpResponseRenderer != null) {
-                    httpResponseRenderer.handle(httpServerContext);
+                    httpResponseRenderer.handle(httpRouterContext);
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, e.getMessage(), e);
@@ -320,26 +290,6 @@ public class BaseApplication implements Application {
             logger.log(Level.FINE, "application closing module " + module);
             module.onClose();
         });
-        if (outgoingSessionHandler != null && (outgoingSessionHandler instanceof Closeable)) {
-            logger.log(Level.FINE, "application closing outgoing session handler");
-            ((Closeable) outgoingSessionHandler).close();
-        }
-        if (incomingSessionHandler != null && (incomingSessionHandler instanceof Closeable)) {
-            logger.log(Level.FINE, "application closing incoming session handler");
-            ((Closeable) incomingSessionHandler).close();
-        }
-        if (sessionCodec != null && sessionCodec instanceof Closeable) {
-            logger.log(Level.FINE, "application closing session codec");
-            ((Closeable) sessionCodec).close();
-        }
-        if (outgoingCookieHandler != null && (outgoingCookieHandler instanceof Closeable)) {
-            logger.log(Level.FINE, "application closing outgoing cookie handler");
-            ((Closeable) outgoingCookieHandler).close();
-        }
-        if (incomingCookieHandler != null && (incomingCookieHandler instanceof Closeable)) {
-            logger.log(Level.FINE, "application closing incoming cookie handler");
-            ((Closeable) incomingCookieHandler).close();
-        }
         logger.log(Level.INFO, "application closed");
     }
 }

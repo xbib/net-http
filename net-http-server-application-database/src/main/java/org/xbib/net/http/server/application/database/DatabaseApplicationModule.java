@@ -3,11 +3,10 @@ package org.xbib.net.http.server.application.database;
 import org.xbib.jdbc.connection.pool.PoolConfig;
 import org.xbib.jdbc.connection.pool.PoolDataSource;
 import org.xbib.jdbc.query.DatabaseProvider;
-import org.xbib.jdbc.query.Flavor;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.application.BaseApplicationModule;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
 
@@ -29,16 +28,16 @@ public class DatabaseApplicationModule extends BaseApplicationModule {
         this.dataSource = createDataSource();
         String flavor = System.getProperty("database.flavor");
         this.databaseProvider = flavor != null ?
-                DatabaseProvider.builder(dataSource, Flavor.valueOf(flavor)).build() : null;
+                DatabaseProvider.builder(dataSource, flavor).build() : null;
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
+    public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
         if (dataSource != null) {
-            httpServerContext.getAttributes().put("datasource", dataSource);
+            httpRouterContext.getAttributes().put("datasource", dataSource);
         }
         if (databaseProvider != null) {
-            httpServerContext.getAttributes().put("databaseprovider", databaseProvider);
+            httpRouterContext.getAttributes().put("databaseprovider", databaseProvider);
         }
     }
 

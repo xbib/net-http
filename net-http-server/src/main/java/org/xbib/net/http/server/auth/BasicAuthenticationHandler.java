@@ -10,7 +10,7 @@ import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class BasicAuthenticationHandler extends LoginAuthenticationHandler implements HttpHandler {
 
@@ -21,8 +21,8 @@ public class BasicAuthenticationHandler extends LoginAuthenticationHandler imple
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
-        HttpRequest httpRequest = context.httpRequest();
+    public void handle(HttpRouterContext context) throws IOException {
+        HttpRequest httpRequest = context.getRequest();
         UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         if (userProfile != null && userProfile.getUserId() != null) {
             return;
@@ -49,7 +49,7 @@ public class BasicAuthenticationHandler extends LoginAuthenticationHandler imple
             logger.log(Level.WARNING, "no authorization header");
         }
         logger.log(Level.INFO, "unauthenticated");
-        context.response().setResponseStatus(HttpResponseStatus.UNAUTHORIZED)
-                        .setHeader("WWW-Authenticate", "Basic realm=\"" + securityRealm.getName() + "\"");
+        context.status(HttpResponseStatus.UNAUTHORIZED)
+                        .header("WWW-Authenticate", "Basic realm=\"" + securityRealm.getName() + "\"");
     }
 }

@@ -5,7 +5,6 @@ import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.domain.HttpDomain;
 
@@ -17,9 +16,9 @@ public interface HttpRouter {
 
     void route(Application application, HttpRequestBuilder requestBuilder, HttpResponseBuilder responseBuilder);
 
-    void routeStatus(HttpResponseStatus httpResponseStatus, HttpServerContext httpServerContext);
+    void routeStatus(HttpResponseStatus httpResponseStatus, HttpRouterContext httpRouterContext);
 
-    void routeToErrorHandler(HttpServerContext httpServerContext, Throwable t);
+    void routeToErrorHandler(HttpRouterContext httpRouterContext, Throwable t);
 
     void routeException(HttpException e);
 

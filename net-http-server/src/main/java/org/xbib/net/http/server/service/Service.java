@@ -1,7 +1,7 @@
 package org.xbib.net.http.server.service;
 
 import org.xbib.net.http.server.HttpServerConfig;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.decorate.Unwrappable;
 import static java.util.Objects.requireNonNull;
 
@@ -11,7 +11,7 @@ public interface Service extends Unwrappable {
     default void serviceAdded(HttpServerConfig cfg) throws Exception {
     }
 
-    void serve(HttpServerContext ctx) throws Exception;
+    void serve(HttpRouterContext ctx) throws Exception;
 
     /**
      * Unwraps this {@link Service} into the object of the specified {@code type}.

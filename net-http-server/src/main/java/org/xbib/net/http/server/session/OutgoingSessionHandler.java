@@ -20,7 +20,7 @@ import org.xbib.net.http.cookie.DefaultCookie;
 import org.xbib.net.http.cookie.SameSite;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.cookie.CookieSignatureException;
 import org.xbib.net.http.server.cookie.CookieSignatureUtil;
@@ -77,12 +77,12 @@ public class OutgoingSessionHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws HttpException {
+    public void handle(HttpRouterContext context) throws HttpException {
         if (context.getContextURL() == null) {
             // emergency message
             return;
         }
-        String suffix = SessionUtil.extractExtension(context.request().getRequestPath());
+        String suffix = SessionUtil.extractExtension(context.getRequestBuilder().getRequestPath());
         if (suffix != null && suffixes.contains(suffix)) {
             logger.log(Level.FINEST, () -> "suffix " + suffix + " blocking outgoing session handling");
             return;

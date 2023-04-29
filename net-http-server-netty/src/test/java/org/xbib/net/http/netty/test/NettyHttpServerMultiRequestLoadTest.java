@@ -50,17 +50,16 @@ public class NettyHttpServerMultiRequestLoadTest {
                         .addService(BaseHttpService.builder()
                                 .setPath("/domain")
                                 .setHandler(ctx -> {
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain: " +
-                                            " base URL = " + ctx.httpRequest().getBaseURL() +
-                                            " parameter = " + ctx.httpRequest().getParameter().allToString() +
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("domain: " +
+                                            " base URL = " + ctx.getRequest().getBaseURL() +
+                                            " parameter = " + ctx.getRequest().getParameter().allToString() +
                                             " attributes = " + ctx.getAttributes() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress());
-                                    ctx.done();
+                                            " local address = " + ctx.getRequest().getLocalAddress() +
+                                            " remote address = " + ctx.getRequest().getRemoteAddress())
+                                            .done();
                                 })
                                 .build())
                         .build())

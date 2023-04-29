@@ -9,7 +9,7 @@ import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.domain.HttpSecurityDomain;
 
 public class BaseHttpService implements HttpService {
@@ -57,7 +57,7 @@ public class BaseHttpService implements HttpService {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         if (builder.handlers != null) {
             for (HttpHandler handler : builder.handlers) {
                 handler.handle(context);

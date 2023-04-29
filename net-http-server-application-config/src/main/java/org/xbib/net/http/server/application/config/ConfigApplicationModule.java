@@ -9,7 +9,7 @@ import org.xbib.config.SystemConfigLogger;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.application.BaseApplicationModule;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.settings.Settings;
 
@@ -47,9 +47,9 @@ public class ConfigApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest) {
-        httpServerContext.getAttributes().put("configparams", configParams);
-        httpServerContext.getAttributes().put("configloader", configLoader);
-        httpServerContext.getAttributes().put("settings", settings);
+    public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
+        httpRouterContext.getAttributes().put("configparams", configParams);
+        httpRouterContext.getAttributes().put("configloader", configLoader);
+        httpRouterContext.getAttributes().put("settings", settings);
     }
 }

@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpErrorHandler;
 import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
+
+import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 
 public class InternalServerErrorHandler implements HttpErrorHandler {
 
@@ -16,23 +18,22 @@ public class InternalServerErrorHandler implements HttpErrorHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         Throwable throwable = context.getAttributes().get(Throwable.class, "_throwable");
         if (throwable != null) {
             logger.log(Level.SEVERE, throwable.getMessage(), throwable);
         }
         HttpResponseStatus status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
         String message;
-        if (throwable instanceof HttpException) {
-            HttpException httpException = (HttpException) throwable;
+        if (throwable instanceof HttpException httpException) {
             status = httpException.getResponseStatus();
             message = httpException.getMessage();
         } else {
             message = throwable != null ? throwable.getMessage() : "";
         }
-        context.response()
-                .setResponseStatus(status)
-                .setContentType("text/plain;charset=utf-8")
-                .write(message);
+        context.status(status)
+                .header(CONTENT_TYPE, "text/plain;charset=utf-8")
+                .body(message)
+                .done();
     }
 }

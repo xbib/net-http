@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.URL;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.application.Application;
 
 public class HtmlTemplateResource implements HttpServerResource {
@@ -41,17 +41,17 @@ public class HtmlTemplateResource implements HttpServerResource {
     protected final boolean negotiateLocale;
 
     protected HtmlTemplateResource(HtmlTemplateResourceHandler templateResourceHandler,
-                                   HttpServerContext httpServerContext) throws IOException {
+                                   HttpRouterContext httpRouterContext) throws IOException {
         this.templateResourceHandler = templateResourceHandler;
         String indexFileName = templateResourceHandler.getIndexFileName();
-        Application application = httpServerContext.getAttributes().get(Application.class, "application");
+        Application application = httpRouterContext.getAttributes().get(Application.class, "application");
         this.negotiateLocale = application.getSettings().getAsBoolean("negotiateLocale", false);
         Path root = templateResourceHandler.getRoot();
         root = root != null ? root : application.getHome();
         if (root == null) {
             throw new IllegalArgumentException("no home path set for template resource resolving");
         }
-        this.resourcePath = httpServerContext.request().getRequestPath().substring(1);
+        this.resourcePath = httpRouterContext.getRequestBuilder().getRequestPath().substring(1);
         this.path = resourcePath.length() > 0 ? root.resolve(resourcePath) : root;
         logger.log(Level.FINEST, "class = " + getClass().getName() +
                 " root = " + root +
@@ -167,7 +167,7 @@ public class HtmlTemplateResource implements HttpServerResource {
     }
 
     @Override
-    public void render(HttpServerContext httpServerContext) throws IOException {
+    public void render(HttpRouterContext httpRouterContext) throws IOException {
         // to be overriden
     }
 }

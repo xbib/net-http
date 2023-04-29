@@ -42,8 +42,7 @@ public class FileJsonSessionCodec implements Codec<Session> {
                                 SessionListener sessionListener,
                                 int sessionCacheSize,
                                 Duration sessionDuration,
-                                Path path
-                                ) {
+                                Path path) {
         this.name = name;
         this.sessionListener = sessionListener;
         this.path = path;

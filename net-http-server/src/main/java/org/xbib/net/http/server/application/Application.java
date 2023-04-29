@@ -10,7 +10,7 @@ import java.util.Set;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.executor.Executor;
 import org.xbib.net.http.server.route.HttpRouter;
@@ -40,13 +40,15 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
 
     Collection<ApplicationModule> getModules();
 
-    HttpServerContext createContext(HttpDomain domain,
+    HttpRouterContext createContext(HttpDomain domain,
                                     HttpRequestBuilder httpRequestBuilder,
                                     HttpResponseBuilder httpResponseBuilder);
 
-    void onOpen(HttpServerContext httpServerContext);
+    void onOpen(HttpRouterContext httpRouterContext);
 
-    void onClose(HttpServerContext httpServerContext);
+    void onClose(HttpRouterContext httpRouterContext);
+
+    void releaseContext(HttpRouterContext httpRouterContext);
 
     Executor getExecutor();
 

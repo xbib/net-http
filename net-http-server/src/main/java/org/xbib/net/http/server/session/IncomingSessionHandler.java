@@ -18,7 +18,7 @@ import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.cookie.CookieBox;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.auth.BaseUserProfile;
 import org.xbib.net.http.server.cookie.CookieSignatureException;
 import org.xbib.net.http.server.cookie.CookieSignatureUtil;
@@ -66,8 +66,8 @@ public class IncomingSessionHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws HttpException {
-        String suffix = SessionUtil.extractExtension(context.request().getRequestPath());
+    public void handle(HttpRouterContext context) throws HttpException {
+        String suffix = SessionUtil.extractExtension(context.getRequestBuilder().getRequestPath());
         if (suffix != null && suffixes.contains(suffix)) {
             return;
         }

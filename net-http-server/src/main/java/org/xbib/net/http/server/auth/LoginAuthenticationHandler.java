@@ -13,7 +13,7 @@ import org.xbib.net.UserDetails;
 import org.xbib.net.UserProfile;
 import org.xbib.net.UsersProvider;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class LoginAuthenticationHandler implements HttpHandler {
 
@@ -34,7 +34,7 @@ public class LoginAuthenticationHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         UserProfile userProfile = context.getAttributes().get(UserProfile.class, "userprofile");
         if (userProfile != null && userProfile.getUserId() != null) {
             return;
@@ -42,9 +42,9 @@ public class LoginAuthenticationHandler implements HttpHandler {
         userProfile = new BaseUserProfile();
         try {
             authenticate(userProfile,
-                    (String) context.httpRequest().getParameter().get(userParameterName, Parameter.Domain.FORM),
-                    (String) context.httpRequest().getParameter().get(passwordParameterName, Parameter.Domain.FORM),
-                    context.httpRequest());
+                    (String) context.getRequest().getParameter().get(userParameterName, Parameter.Domain.FORM),
+                    (String) context.getRequest().getParameter().get(passwordParameterName, Parameter.Domain.FORM),
+                    context.getRequest());
             context.getAttributes().put("userprofile", userProfile);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "authentication error");

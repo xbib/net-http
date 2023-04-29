@@ -2,47 +2,49 @@ package org.xbib.net.http.server;
 
 import java.io.IOException;
 import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.server.route.BaseHttpRouterContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 @SuppressWarnings("serial")
 public class HttpException extends IOException {
 
-    private final HttpServerContext httpServerContext;
+    private final HttpRouterContext httpRouterContext;
 
     private final HttpResponseStatus httpResponseStatus;
 
     public HttpException(HttpResponseBuilder httpResponseBuilder,
                          HttpResponseStatus httpResponseStatus) {
         this(httpResponseStatus.codeAsText(),
-                new BaseHttpServerContext(null, null, null, httpResponseBuilder),
+                new BaseHttpRouterContext(null, null, null, httpResponseBuilder),
                 httpResponseStatus);
     }
 
     public HttpException(String message,
-                         HttpServerContext httpServerContext,
+                         HttpRouterContext httpRouterContext,
                          HttpResponseStatus httpResponseStatus) {
         super(message);
-        this.httpServerContext = httpServerContext;
+        this.httpRouterContext = httpRouterContext;
         this.httpResponseStatus = httpResponseStatus;
     }
 
     public HttpException(String message, Throwable throwable,
-                         HttpServerContext httpServerContext,
+                         HttpRouterContext httpRouterContext,
                          HttpResponseStatus httpResponseStatus) {
         super(message, throwable);
-        this.httpServerContext = httpServerContext;
+        this.httpRouterContext = httpRouterContext;
         this.httpResponseStatus = httpResponseStatus;
     }
 
     public HttpException(Throwable throwable,
-                         HttpServerContext httpServerContext,
+                         HttpRouterContext httpRouterContext,
                          HttpResponseStatus httpResponseStatus) {
         super(throwable);
-        this.httpServerContext = httpServerContext;
+        this.httpRouterContext = httpRouterContext;
         this.httpResponseStatus = httpResponseStatus;
     }
 
-    public HttpServerContext getHttpServerContext() {
-        return httpServerContext;
+    public HttpRouterContext getHttpServerContext() {
+        return httpRouterContext;
     }
 
     public HttpResponseStatus getResponseStatus() {

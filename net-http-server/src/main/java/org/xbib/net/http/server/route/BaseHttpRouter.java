@@ -1,9 +1,16 @@
 package org.xbib.net.http.server.route;
 
 import java.io.IOException;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
@@ -12,22 +19,33 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.datastructures.common.LinkedHashSetMultiMap;
 import org.xbib.datastructures.common.MultiMap;
+import org.xbib.datastructures.json.tiny.Json;
+import org.xbib.net.Parameter;
+import org.xbib.net.ParameterBuilder;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.HttpHeaderValues;
+import org.xbib.net.http.HttpHeaders;
+import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.cookie.CookieBox;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.handler.InternalServerErrorHandler;
 import org.xbib.net.http.server.service.HttpService;
+
+import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 import static org.xbib.net.http.HttpResponseStatus.NOT_FOUND;
 
 public class BaseHttpRouter implements HttpRouter {
+
+    private static final String PATH_SEPARATOR = "/";
 
     private final Logger logger = Logger.getLogger(BaseHttpRouter.class.getName());
 
@@ -76,51 +94,69 @@ public class BaseHttpRouter implements HttpRouter {
                 requestBuilder.getRequestPath(),
                 true);
         builder.httpRouteResolver.resolve(httpRoute, httpRouteResolverResults::add);
-        HttpServerContext httpServerContext = application.createContext(httpDomain, requestBuilder, responseBuilder);
-        application.onOpen(httpServerContext);
+        HttpRouterContext httpRouterContext = application.createContext(httpDomain,
+                requestBuilder, responseBuilder);
+        // before open: invoke security, incoming cookie/session
+        httpRouterContext.getOpenHandlers().forEach(h -> {
+            try {
+                h.handle(httpRouterContext);
+            } catch (Exception e) {
+                routeToErrorHandler(httpRouterContext, e);
+            }
+        });
+        application.onOpen(httpRouterContext);
         try {
-            route(application, httpServerContext, httpRouteResolverResults);
+            route(application, httpRouterContext, httpRouteResolverResults);
         } finally {
-            application.onClose(httpServerContext);
+            application.onClose(httpRouterContext);
+            // outgoing cookie/session
+            httpRouterContext.getCloseHandlers().forEach(h -> {
+                try {
+                    h.handle(httpRouterContext);
+                } catch (Exception e) {
+                    routeToErrorHandler(httpRouterContext, e);
+                }
+            });
+            application.releaseContext(httpRouterContext);
         }
     }
 
     protected void route(Application application,
-                         HttpServerContext httpServerContext,
+                         HttpRouterContext httpRouterContext,
                          List<HttpRouteResolver.Result<HttpService>> httpRouteResolverResults) {
-        if (httpServerContext.isFailed()) {
+        if (httpRouterContext.isFailed()) {
             return;
         }
         if (httpRouteResolverResults.isEmpty()) {
             logger.log(Level.FINE, "route resolver results is empty, generating a not found message");
-            httpServerContext.setResolverResult(null);
-            routeStatus(NOT_FOUND, httpServerContext);
+            setResolverResult(httpRouterContext, null);
+            routeStatus(NOT_FOUND, httpRouterContext);
             return;
         }
         for (HttpRouteResolver.Result<HttpService> httpRouteResolverResult : httpRouteResolverResults) {
             try {
                 // first: create the final request
-                httpServerContext.setResolverResult(httpRouteResolverResult);
+                setResolverResult(httpRouterContext, httpRouteResolverResult);
                 HttpService httpService = httpRouteResolverResult.getValue();
-                HttpRequest httpRequest = httpServerContext.httpRequest();
-                application.getModules().forEach(module -> module.onOpen(httpServerContext, httpService, httpRequest));
+                HttpRequest httpRequest = httpRouterContext.getRequest();
+                application.getModules().forEach(module -> module.onOpen(httpRouterContext, httpService, httpRequest));
                 // second: security check, authentication etc.
                 if (httpService.getSecurityDomain() != null) {
                     logger.log(Level.FINEST, () -> "handling security domain service " + httpService);
                     for (HttpHandler httpHandler : httpService.getSecurityDomain().getHandlers()) {
                         logger.log(Level.FINEST, () -> "handling security domain handler " + httpHandler);
-                        httpHandler.handle(httpServerContext);
+                        httpHandler.handle(httpRouterContext);
                     }
                 }
-                if (httpServerContext.isDone() || httpServerContext.isFailed()) {
+                if (httpRouterContext.isDone() || httpRouterContext.isFailed()) {
                     break;
                 }
                 // after security checks, accept service, open and execute service
-                httpServerContext.getAttributes().put("service", httpService);
+                httpRouterContext.getAttributes().put("service", httpService);
                 logger.log(Level.FINEST, () -> "handling service " + httpService);
-                httpService.handle(httpServerContext);
+                httpService.handle(httpRouterContext);
                 // if service signals that work is done, break
-                if (httpServerContext.isDone() || httpServerContext.isFailed()) {
+                if (httpRouterContext.isDone() || httpRouterContext.isFailed()) {
                     break;
                 }
             } catch (HttpException e) {
@@ -129,10 +165,136 @@ public class BaseHttpRouter implements HttpRouter {
                 break;
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, t.getMessage(), t);
-                routeToErrorHandler(httpServerContext, t);
+                routeToErrorHandler(httpRouterContext, t);
                 break;
             }
         }
+    }
+
+    protected void setResolverResult(HttpRouterContext httpRouterContext,
+                                     HttpRouteResolver.Result<HttpService> pathResolverResult) {
+        if (pathResolverResult != null) {
+            httpRouterContext.getAttributes().put("context", pathResolverResult.getContext());
+            httpRouterContext.getAttributes().put("handler", pathResolverResult.getValue());
+            httpRouterContext.getAttributes().put("pathparams", pathResolverResult.getParameter());
+            String contextPath = pathResolverResult.getContext() != null ?
+                    PATH_SEPARATOR + String.join(PATH_SEPARATOR, pathResolverResult.getContext()) : null;
+            httpRouterContext.setContextPath(contextPath);
+            httpRouterContext.setContextURL(httpRouterContext.getRequestBuilder().getBaseURL().resolve(contextPath != null ? contextPath + "/" : ""));
+        } else {
+            // path resolver result null means "404 not found". Set default values.
+            httpRouterContext.getAttributes().put("context", null);
+            httpRouterContext.getAttributes().put("handler", null);
+            httpRouterContext.getAttributes().put("pathparams", null);
+            httpRouterContext.setContextPath(PATH_SEPARATOR);
+            httpRouterContext.setContextURL(httpRouterContext.getRequestBuilder().getBaseURL());
+        }
+        HttpRequest httpRequest = createRequest(httpRouterContext, pathResolverResult);
+        httpRouterContext.setRequest(httpRequest);
+        httpRouterContext.getAttributes().put("request", httpRequest);
+    }
+
+    protected HttpRequest createRequest(HttpRouterContext httpRouterContext,
+                                        HttpRouteResolver.Result<HttpService> pathResolverResult) {
+        HttpRequestBuilder httpRequestBuilder = httpRouterContext.getRequestBuilder();
+        HttpHeaders headers = httpRequestBuilder.getHeaders();
+        String mimeType = headers.get(CONTENT_TYPE);
+        Charset charset = StandardCharsets.UTF_8;
+        if (mimeType != null) {
+            charset = getCharset(mimeType, charset);
+        }
+        ParameterBuilder parameterBuilder = Parameter.builder().charset(charset);
+        // helper URL to collect parameters in request URI
+        URL url = URL.builder()
+                .charset(charset, CodingErrorAction.REPLACE)
+                .path(httpRequestBuilder.getRequestURI())
+                .build();
+        ParameterBuilder formParameterBuilder = Parameter.builder().domain(Parameter.Domain.FORM)
+                .enableDuplicates();
+        // https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4
+        if (HttpMethod.POST.equals(httpRequestBuilder.getMethod()) &&
+                (mimeType != null && mimeType.contains(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED))) {
+            Charset htmlCharset = getCharset(mimeType, StandardCharsets.ISO_8859_1);
+            CharBuffer charBuffer = httpRequestBuilder.getBodyAsChars(htmlCharset);
+            if (charBuffer != null) {
+                formParameterBuilder.addPercentEncodedBody(charBuffer.toString());
+            }
+        }
+        String contentType = httpRequestBuilder.getHeaders().get(HttpHeaderNames.CONTENT_TYPE);
+        if (contentType != null && contentType.contains(HttpHeaderValues.APPLICATION_JSON)) {
+            String content = httpRequestBuilder.getBodyAsChars(StandardCharsets.UTF_8).toString();
+            try {
+                Map<String, Object> map = Json.toMap(content);
+                for (Map.Entry<String, Object> entry : map.entrySet()) {
+                    if (entry.getValue() instanceof Iterable<?> iterable) {
+                        iterable.forEach(it -> formParameterBuilder.add(entry.getKey(), it));
+                    } else {
+                        formParameterBuilder.add(entry.getKey(), entry.getValue());
+                    }
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "unable to decode json body: " + e.getMessage(), e);
+            }
+        }
+        CookieBox cookieBox = httpRouterContext.getAttributes().get(CookieBox.class, "incomingcookies");
+        ParameterBuilder cookieParameterBuilder = Parameter.builder().domain(Parameter.Domain.COOKIE);
+        if (cookieBox != null) {
+            cookieBox.forEach(c -> cookieParameterBuilder.add(c.name(), c.value()));
+        }
+        Parameter queryParameter = url.getQueryParams();
+        logger.log(Level.FINER, "adding query parameters = " + queryParameter.getDomain() + " " + queryParameter.allToString());
+        parameterBuilder.add(queryParameter);
+        Parameter formParameter = formParameterBuilder.build();
+        logger.log(Level.FINER, "adding form parameters = " + formParameter.getDomain() + " " + formParameter.allToString());
+        parameterBuilder.add(formParameter);
+        Parameter cookieParameter = cookieParameterBuilder.build();
+        logger.log(Level.FINER, "adding cookie parameters = " + cookieParameter.getDomain() + " " + cookieParameter.allToString());
+        parameterBuilder.add(cookieParameter);
+        if (pathResolverResult != null) {
+            Parameter pathParameter = pathResolverResult.getParameter();
+            logger.log(Level.FINER, "adding path parameters = " + pathParameter.getDomain() + " " + pathParameter.allToString());
+            parameterBuilder.add(pathParameter);
+        }
+        httpRequestBuilder.setParameter(parameterBuilder.build());
+        httpRequestBuilder.setContext(httpRouterContext);
+        return httpRequestBuilder.build();
+    }
+
+    private static Charset getCharset(String contentTypeValue, Charset defaultCharset) {
+        if (contentTypeValue != null) {
+            CharSequence charsetRaw = getCharsetAsSequence(contentTypeValue);
+            if (charsetRaw != null) {
+                if (charsetRaw.length() > 2) {
+                    if (charsetRaw.charAt(0) == '"' && charsetRaw.charAt(charsetRaw.length() - 1) == '"') {
+                        charsetRaw = charsetRaw.subSequence(1, charsetRaw.length() - 1);
+                    }
+                }
+                try {
+                    return Charset.forName(charsetRaw.toString());
+                } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
+                    // just return the default charset
+                }
+            }
+        }
+        return defaultCharset;
+    }
+
+    private static CharSequence getCharsetAsSequence(String contentTypeValue) {
+        Objects.requireNonNull(contentTypeValue);
+        int indexOfCharset = contentTypeValue.indexOf("charset=");
+        if (indexOfCharset == -1) {
+            return null;
+        }
+        int indexOfEncoding = indexOfCharset + "charset=".length();
+        if (indexOfEncoding < contentTypeValue.length()) {
+            CharSequence charsetCandidate = contentTypeValue.subSequence(indexOfEncoding, contentTypeValue.length());
+            int indexOfSemicolon = charsetCandidate.toString().indexOf(";");
+            if (indexOfSemicolon == -1) {
+                return charsetCandidate;
+            }
+            return charsetCandidate.subSequence(0, indexOfSemicolon);
+        }
+        return null;
     }
 
     @Override
@@ -142,7 +304,7 @@ public class BaseHttpRouter implements HttpRouter {
 
     @Override
     public void routeStatus(HttpResponseStatus httpResponseStatus,
-                            HttpServerContext httpServerContext) {
+                            HttpRouterContext httpRouterContext) {
         logger.log(Level.FINER, "routing status " + httpResponseStatus);
         try {
             HttpHandler httpHandler = getHandler(httpResponseStatus);
@@ -150,9 +312,9 @@ public class BaseHttpRouter implements HttpRouter {
                 logger.log(Level.FINER, "handler for " + httpResponseStatus + " not present, using default error handler");
                 httpHandler = new InternalServerErrorHandler();
             }
-            httpServerContext.response().reset();
-            httpHandler.handle(httpServerContext);
-            httpServerContext.done();
+            httpRouterContext.reset();
+            httpHandler.handle(httpRouterContext);
+            httpRouterContext.done();
             logger.log(Level.FINER, "routing status " + httpResponseStatus + " done");
         } catch (IOException ioe) {
             throw new IllegalStateException("unable to route response status, reason: " + ioe.getMessage(), ioe);
@@ -160,10 +322,10 @@ public class BaseHttpRouter implements HttpRouter {
     }
 
     @Override
-    public void routeToErrorHandler(HttpServerContext httpServerContext, Throwable t) {
-        httpServerContext.getAttributes().put("_throwable", t);
-        httpServerContext.fail();
-        routeStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR, httpServerContext);
+    public void routeToErrorHandler(HttpRouterContext httpRouterContext, Throwable t) {
+        httpRouterContext.getAttributes().put("_throwable", t);
+        httpRouterContext.fail();
+        routeStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR, httpRouterContext);
     }
 
     private HttpDomain findDomain(URL url) {

@@ -34,14 +34,13 @@ public class NioHttpServerTest {
                         .addService(BaseHttpService.builder()
                                 .setPath("/domain1")
                                 .setHandler(ctx -> {
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain1 " +
-                                            ctx.httpRequest().getParameter().toString() + " " +
-                                            ctx.httpRequest().getLocalAddress() +  " " +
-                                            ctx.httpRequest().getRemoteAddress());
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("domain1 " +
+                                            ctx.getRequest().getParameter().toString() + " " +
+                                            ctx.getRequest().getLocalAddress() +  " " +
+                                            ctx.getRequest().getRemoteAddress());
                                 })
                                 .build())
                         .build())
@@ -50,14 +49,13 @@ public class NioHttpServerTest {
                         .addService(BaseHttpService.builder()
                                 .setPath("/domain2")
                                 .setHandler(ctx -> {
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain2 " +
-                                            ctx.httpRequest().getParameter().toString() + " " +
-                                            ctx.httpRequest().getLocalAddress() +  " " +
-                                            ctx.httpRequest().getRemoteAddress());
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("domain2 " +
+                                            ctx.getRequest().getParameter().toString() + " " +
+                                            ctx.getRequest().getLocalAddress() +  " " +
+                                            ctx.getRequest().getRemoteAddress());
                                 })
                                 .build())
                         .build())

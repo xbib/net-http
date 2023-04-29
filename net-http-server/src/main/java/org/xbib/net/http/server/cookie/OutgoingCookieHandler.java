@@ -6,7 +6,7 @@ import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.cookie.CookieBox;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class OutgoingCookieHandler implements HttpHandler {
 
@@ -16,11 +16,11 @@ public class OutgoingCookieHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws HttpException {
+    public void handle(HttpRouterContext context) throws HttpException {
         CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "outgoingcookies");
         if (cookieBox != null) {
             for (Cookie cookie : cookieBox) {
-                context.response().addCookie(cookie);
+                context.cookie(cookie);
                 logger.log(Level.FINEST, "cookie prepared for outgoing = " + cookie);
             }
         }

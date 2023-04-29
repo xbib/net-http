@@ -3,7 +3,7 @@ package org.xbib.net.http.server.resource;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.xbib.net.Resource;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class HtmlTemplateResourceHandler extends AbstractResourceHandler {
 
@@ -22,8 +22,8 @@ public class HtmlTemplateResourceHandler extends AbstractResourceHandler {
     }
 
     @Override
-    protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        return new HtmlTemplateResource(this, httpServerContext);
+    protected Resource createResource(HttpRouterContext httpRouterContext) throws IOException {
+        return new HtmlTemplateResource(this, httpRouterContext);
     }
 
     @Override

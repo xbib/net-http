@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import org.xbib.net.PathNormalizer;
 import org.xbib.net.Resource;
 import org.xbib.net.URL;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
@@ -29,8 +29,8 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
     }
 
     @Override
-    protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        return new ClassLoaderResource(httpServerContext);
+    protected Resource createResource(HttpRouterContext httpRouterContext) throws IOException {
+        return new ClassLoaderResource(httpRouterContext);
     }
 
     @Override
@@ -73,8 +73,8 @@ public class ClassLoaderResourceHandler extends AbstractResourceHandler {
 
         private URL url;
 
-        protected ClassLoaderResource(HttpServerContext httpServerContext) throws IOException {
-            String contextPath = httpServerContext.getContextPath();
+        protected ClassLoaderResource(HttpRouterContext httpRouterContext) throws IOException {
+            String contextPath = httpRouterContext.getContextPath();
             this.mimeType = mimeTypeService.getContentType(contextPath);
             this.resourcePath = contextPath.startsWith("/") ? contextPath.substring(1) : contextPath;
             String path = resourcePrefix != null ? (resourcePrefix.endsWith("/") ? resourcePrefix : resourcePrefix + "/") : "/";

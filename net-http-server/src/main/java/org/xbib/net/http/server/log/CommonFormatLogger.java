@@ -10,7 +10,7 @@ import org.xbib.net.UserProfile;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class CommonFormatLogger implements HttpHandler {
 
@@ -20,16 +20,17 @@ public class CommonFormatLogger implements HttpHandler {
             "%1$s - %10$s - [%2$td/%2$tb/%2$tY:%2$tT %2$tz] \"%3$s %4$s %5$s\" %6$d %7$d";
 
     @Override
-    public void handle(HttpServerContext httpServerContext) throws IOException {
-        HttpRequest request = httpServerContext.httpRequest();
-        InetSocketAddress remote = httpServerContext.httpRequest().getRemoteAddress();
+    public void handle(HttpRouterContext httpRouterContext) throws IOException {
+        HttpRequest request = httpRouterContext.getRequest();
+        InetSocketAddress remote = httpRouterContext.getRequest().getRemoteAddress();
         String inetAddressString = remote.getHostName() + ":" + remote.getPort();
-        HttpResponseStatus httpResponseStatus = httpServerContext.response().getResponseStatus();
+        HttpResponseStatus httpResponseStatus = httpRouterContext.status();
         int statusInteger = httpResponseStatus != null ? httpResponseStatus.code() : 0;
-        Long contentLength = httpServerContext.response().getLength();
-        UserProfile userProfile = httpServerContext.getAttributes().get(UserProfile.class, "userprofile");
+        Long contentLength = httpRouterContext.lengthInBytes();
+        UserProfile userProfile = httpRouterContext.getAttributes().get(UserProfile.class, "userprofile");
         String user = userProfile != null ? userProfile.getEffectiveUserId() : "";
-        String message = String.format(Locale.US, LOG_FORMAT,
+        String message = String.format(Locale.US,
+                LOG_FORMAT,
                 inetAddressString,
                 ZonedDateTime.now(),
                 request.getMethod(),

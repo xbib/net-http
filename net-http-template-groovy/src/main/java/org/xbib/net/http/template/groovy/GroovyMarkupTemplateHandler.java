@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.application.Resolver;
 
 import java.io.IOException;
@@ -59,7 +59,7 @@ public class GroovyMarkupTemplateHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         DefaultTemplateResolver templateResolver = context.getAttributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver == null) {
             context.getAttributes().put("templateresolver", this.templateResolver);

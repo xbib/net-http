@@ -1,7 +1,7 @@
 package org.xbib.net.http.server.application;
 
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.session.Session;
 
@@ -9,11 +9,11 @@ public interface ApplicationModule {
 
     String getName();
 
-    void onOpen(HttpServerContext httpServerContext);
+    void onOpen(HttpRouterContext httpRouterContext);
 
-    void onOpen(HttpServerContext httpServerContext, HttpService httpService, HttpRequest httpRequest);
+    void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest);
 
-    void onClose(HttpServerContext httpServerContext);
+    void onClose(HttpRouterContext httpRouterContext);
 
     void onOpen(Session session);
 

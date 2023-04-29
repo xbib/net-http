@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 import org.xbib.net.PathNormalizer;
 import org.xbib.net.Resource;
 import org.xbib.net.URL;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.application.Application;
 
 public class FileResourceHandler extends AbstractResourceHandler {
@@ -35,23 +35,23 @@ public class FileResourceHandler extends AbstractResourceHandler {
     }
 
     @Override
-    protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        String pathSpec = httpServerContext.getAttributes().containsKey("templatePath") ?
-                (String) httpServerContext.getAttributes().get("templatePath") :
-                pathNameOfResource != null ? pathNameOfResource : httpServerContext.getContextPath();
+    protected Resource createResource(HttpRouterContext httpRouterContext) throws IOException {
+        String pathSpec = httpRouterContext.getAttributes().containsKey("templatePath") ?
+                (String) httpRouterContext.getAttributes().get("templatePath") :
+                pathNameOfResource != null ? pathNameOfResource : httpRouterContext.getContextPath();
         if (pathSpec == null || pathSpec.isEmpty()) {
             throw new IllegalArgumentException("path must not be null or empty");
         }
         Resource resource = null;
         if (pathSpec.endsWith("/")) {
             if (indexFileName != null) {
-                resource = new FileResource(httpServerContext, pathSpec + indexFileName);
+                resource = new FileResource(httpRouterContext, pathSpec + indexFileName);
             }
         } else {
-            resource = new FileResource(httpServerContext, pathSpec);
+            resource = new FileResource(httpRouterContext, pathSpec);
             if (resource.isDirectory() && resource.isExistsIndexFile()) {
                 logger.log(Level.FINER, "we have a directory and existing index file, so we redirect internally");
-                resource = new FileResource(httpServerContext, pathSpec + indexFileName);
+                resource = new FileResource(httpRouterContext, pathSpec + indexFileName);
             }
         }
         return resource;
@@ -103,9 +103,9 @@ public class FileResourceHandler extends AbstractResourceHandler {
 
         private final String suffix;
 
-        protected FileResource(HttpServerContext httpServerContext, String resourcePath) throws IOException {
+        protected FileResource(HttpRouterContext httpRouterContext, String resourcePath) throws IOException {
             this.resourcePath = resourcePath;
-            Application application = httpServerContext.getAttributes().get(Application.class, "application");
+            Application application = httpRouterContext.getAttributes().get(Application.class, "application");
             Path root = application.getHome();
             if (root == null) {
                 throw new IllegalArgumentException("no home path set for template resource resolving");
@@ -119,7 +119,7 @@ public class FileResourceHandler extends AbstractResourceHandler {
                     normalizedPath = normalizedPath.substring(1);
                 }
                 this.name = normalizedPath;
-                this.path = httpServerContext.resolve(webRoot).resolve(normalizedPath);
+                this.path = httpRouterContext.resolve(webRoot).resolve(normalizedPath);
             }
             this.mimeType = mimeTypeService.getContentType(resourcePath);
             if (Files.isDirectory(path) && getIndexFileName() != null) {

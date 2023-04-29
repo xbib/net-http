@@ -42,25 +42,21 @@ public class SimpleHttpsServerTest {
                         .setHttpAddress(httpsAddress)
                         .addService(BaseHttpService.builder()
                                 .setPath("/favicon.ico")
-                                .setHandler(ctx -> ctx.response()
-                                        .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                                        .build()
-                                        .flush())
+                                .setHandler(ctx -> ctx.status(HttpResponseStatus.NOT_FOUND))
                                 .build())
                         .addService(BaseHttpService.builder()
                                 .setPath("/secure")
                                 .setHandler(ctx -> {
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("secure domain: " +
-                                            " SNI host = " + ctx.httpRequest().as(HttpsRequest.class).getSNIHost() +
-                                            " SSL peer host = " + ctx.httpRequest().as(HttpsRequest.class).getSSLSession() +
-                                            " base URL = " + ctx.httpRequest().getBaseURL() +
-                                            " parameter = " + ctx.httpRequest().getParameter() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress());
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("secure domain: " +
+                                            " SNI host = " + ctx.getRequest().as(HttpsRequest.class).getSNIHost() +
+                                            " SSL peer host = " + ctx.getRequest().as(HttpsRequest.class).getSSLSession() +
+                                            " base URL = " + ctx.getRequest().getBaseURL() +
+                                            " parameter = " + ctx.getRequest().getParameter() +
+                                            " local address = " + ctx.getRequest().getLocalAddress() +
+                                            " remote address = " + ctx.getRequest().getRemoteAddress());
                                 })
                                 .build())
                         .build())

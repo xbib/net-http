@@ -8,7 +8,7 @@ import org.xbib.net.SecurityRealm;
 import org.xbib.net.URL;
 import org.xbib.net.UserProfile;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class FormAuthenticationHandler extends LoginAuthenticationHandler implements HttpHandler {
 
@@ -35,7 +35,7 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
     }
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         if (loginPage == null) {
             logger.log(Level.WARNING, "no loginPage configured");
             return;
@@ -48,7 +48,7 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
         // always add an "anonymous" user profile
         userProfile = new BaseUserProfile();
         context.getAttributes().put("userprofile", userProfile);
-        Parameter parameter = context.httpRequest().getParameter();
+        Parameter parameter = context.getRequest().getParameter();
         if (!parameter.containsKey(usernameParameter, Parameter.Domain.FORM)) {
             logger.log(Level.WARNING, "usernameParameter not set, unable to authenticate");
             prepareFormAuthentication(context);
@@ -63,7 +63,7 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
         String password = parameter.getAsString(passwordParameter, Parameter.Domain.FORM);
         logger.log(Level.FINE, "username and password found, ready for authentication");
         try {
-            authenticate(userProfile, username, password, context.httpRequest());
+            authenticate(userProfile, username, password, context.getRequest());
             logger.log(Level.FINE, "successful authentication");
             return;
         } catch (Exception e) {
@@ -72,13 +72,13 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
         prepareFormAuthentication(context);
     }
 
-    private void prepareFormAuthentication(HttpServerContext context) {
+    private void prepareFormAuthentication(HttpRouterContext context) {
         // this will redirect internally to login page, and back to the original path.
         // We need a full path resolve against the server URL.
         logger.log(Level.FINE, "templatePath = " + loginPage);
         context.getAttributes().put("templatePath", loginPage);
-        URL loc = context.getContextURL().resolve(context.httpRequest().getRequestURI()).normalize();
-        logger.log(Level.FINE, "context URL = " + context.getContextURL() + " request URI = " + context.httpRequest().getRequestURI() + " loc = " + loc);
+        URL loc = context.getContextURL().resolve(context.getRequest().getRequestURI()).normalize();
+        logger.log(Level.FINE, "context URL = " + context.getContextURL() + " request URI = " + context.getRequest().getRequestURI() + " loc = " + loc);
         context.getAttributes().put("originalPath", loc.toExternalForm());
     }
 }

@@ -9,6 +9,7 @@ import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.server.auth.BaseAttributes;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public abstract class BaseHttpRequest implements HttpRequest {
 
@@ -92,8 +93,8 @@ public abstract class BaseHttpRequest implements HttpRequest {
     }
 
     @Override
-    public HttpServerContext getContext() {
-        return builder.httpServerContext;
+    public HttpRouterContext getContext() {
+        return builder.httpRouterContext;
     }
 
     @Override

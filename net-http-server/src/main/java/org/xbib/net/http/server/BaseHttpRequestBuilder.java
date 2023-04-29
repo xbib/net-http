@@ -14,10 +14,11 @@ import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
 
-    protected HttpServerContext httpServerContext;
+    protected HttpRouterContext httpRouterContext;
 
     protected HttpAddress httpAddress;
 
@@ -59,11 +60,11 @@ public abstract class BaseHttpRequestBuilder implements HttpRequestBuilder {
     }
 
     @Override
-    public BaseHttpRequestBuilder setContext(HttpServerContext httpServerContext) {
+    public BaseHttpRequestBuilder setContext(HttpRouterContext httpRouterContext) {
         if (done) {
             return this;
         }
-        this.httpServerContext = httpServerContext;
+        this.httpRouterContext = httpRouterContext;
         return this;
     }
 

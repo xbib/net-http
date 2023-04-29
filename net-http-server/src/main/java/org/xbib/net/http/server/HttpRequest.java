@@ -10,12 +10,13 @@ import org.xbib.net.URL;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public interface HttpRequest extends Request {
 
     URL getServerURL();
 
-    HttpServerContext getContext();
+    HttpRouterContext getContext();
 
     String getRequestURI();
 

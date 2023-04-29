@@ -3,7 +3,7 @@ package org.xbib.net.http.template.groovy;
 import org.xbib.net.Resource;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -20,12 +20,12 @@ public class GroovyInternalServerErrorHandler extends GroovyTemplateResourceHand
     }
 
     @Override
-    protected Resource createResource(HttpServerContext httpServerContext) throws IOException {
-        return new GroovyHttpResonseStatusTemplateResource(this, httpServerContext, templateName,
-                HttpResponseStatus.INTERNAL_SERVER_ERROR, createMessage(httpServerContext));
+    protected Resource createResource(HttpRouterContext httpRouterContext) throws IOException {
+        return new GroovyHttpResonseStatusTemplateResource(this, httpRouterContext, templateName,
+                HttpResponseStatus.INTERNAL_SERVER_ERROR, createMessage(httpRouterContext));
     }
 
-    private String createMessage(HttpServerContext context) throws IOException {
+    private String createMessage(HttpRouterContext context) throws IOException {
         Throwable throwable = context.getAttributes().get(Throwable.class, "_throwable");
         if (throwable != null) {
             logger.log(Level.SEVERE, throwable.getMessage(), throwable);

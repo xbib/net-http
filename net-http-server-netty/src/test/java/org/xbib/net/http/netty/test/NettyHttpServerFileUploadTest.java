@@ -59,20 +59,18 @@ public class NettyHttpServerFileUploadTest {
                                 .setMethod(HttpMethod.POST)
                                 .setHandler(ctx -> {
                                     logger.log(Level.FINEST, "handler starting");
-                                    String message = ctx.httpRequest().getMessages().stream()
+                                    String message = ctx.getRequest().getMessages().stream()
                                             .map(m -> StandardCharsets.UTF_8.decode(m.getByteBuffer()))
                                             .collect(Collectors.joining());
 
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " local address = " + ctx.getRequest().getLocalAddress() +
+                                            " remote address = " + ctx.getRequest().getRemoteAddress() +
                                             " attributes = " + ctx.getAttributes() +
-                                            " message = " + message
-                                    );
+                                            " message = " + message);
                                 })
                                 .build())
                         .build())
@@ -139,7 +137,7 @@ public class NettyHttpServerFileUploadTest {
                                 .setPath("/")
                                 .setMethod(HttpMethod.POST)
                                 .setHandler(ctx -> {
-                                    List<org.xbib.net.http.server.Message> messages = ctx.httpRequest().getMessages();
+                                    List<org.xbib.net.http.server.Message> messages = ctx.getRequest().getMessages();
                                     for (org.xbib.net.http.server.Message message : messages) {
                                         if (message.getPath() != null) {
                                             try (InputStream inputStream = Files.newInputStream(message.getPath());
@@ -148,16 +146,14 @@ public class NettyHttpServerFileUploadTest {
                                             }
                                         }
                                     }
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " local address = " + ctx.getRequest().getLocalAddress() +
+                                            " remote address = " + ctx.getRequest().getRemoteAddress() +
                                             " attributes = " + ctx.getAttributes() +
-                                            " parts = " + messages.size()
-                                    );
+                                            " parts = " + messages.size());
                                 })
                                 .build())
                         .build())

@@ -8,7 +8,7 @@ import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpException;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.service.HttpService;
 import org.xbib.net.http.server.resource.negotiate.LocaleNegotiator;
 import org.xbib.net.http.server.resource.HtmlTemplateResource;
@@ -41,25 +41,25 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
     private static final ReentrantLock lock = new ReentrantLock();
 
     protected GroovyTemplateResource(HtmlTemplateResourceHandler templateResourceHandler,
-                                     HttpServerContext httpServerContext) throws IOException {
-        super(templateResourceHandler, httpServerContext);
+                                     HttpRouterContext httpRouterContext) throws IOException {
+        super(templateResourceHandler, httpRouterContext);
     }
 
     @Override
-    public void render(HttpServerContext httpServerContext) throws IOException {
+    public void render(HttpRouterContext httpRouterContext) throws IOException {
         logger.log(Level.FINEST, () -> "rendering groovy template, path = " + getPath() + " isExists = " + isExists() + " isDirectory =" + isDirectory() );
-        Application application = httpServerContext.getAttributes().get(Application.class, "application");
+        Application application = httpRouterContext.getAttributes().get(Application.class, "application");
         if (application == null) {
             logger.log(Level.WARNING, "application is null");
             return;
         }
-        TemplateEngine templateEngine = httpServerContext.getAttributes().get(TemplateEngine.class, "templateengine");
+        TemplateEngine templateEngine = httpRouterContext.getAttributes().get(TemplateEngine.class, "templateengine");
         if (templateEngine == null) {
             logger.log(Level.WARNING, "template engine is null");
             return;
         }
         Path templatePath = getPath();
-        HttpService service = httpServerContext.getAttributes().get(HttpService.class, "service");
+        HttpService service = httpRouterContext.getAttributes().get(HttpService.class, "service");
         if (service instanceof GroovyTemplateService groovyTemplateService) {
             if (groovyTemplateService.getTemplateName() != null) {
                 templatePath = application.resolve(groovyTemplateService.getTemplateName());
@@ -69,7 +69,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             }
         }
         // status response handlers have priority
-        GroovyHttpResonseStatusTemplateResource resource = httpServerContext.getAttributes().get(GroovyHttpResonseStatusTemplateResource.class, "_resource");
+        GroovyHttpResonseStatusTemplateResource resource = httpRouterContext.getAttributes().get(GroovyHttpResonseStatusTemplateResource.class, "_resource");
         if (resource != null) {
             String indexFileName = resource.getIndexFileName();
             if (indexFileName != null) {
@@ -78,7 +78,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             logger.log(Level.FINEST, "rendering Groovy HTTP status response with templatePath = " + templatePath);
         } else {
             // override if 'templatePath' attribute is set
-            String overridePath = httpServerContext.getAttributes().get(String.class, "templatePath");
+            String overridePath = httpRouterContext.getAttributes().get(String.class, "templatePath");
             if (overridePath != null) {
                 logger.log(Level.FINEST, "found override templatePath = " + overridePath);
                 templatePath = application.resolve(overridePath);
@@ -95,12 +95,12 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
                 templatePath = getPath().resolve(getIndexFileName());
             } else {
                 logger.log(Level.WARNING, "unable to render a directory without index file name, this is forbidden");
-                throw new HttpException("forbidden", httpServerContext, HttpResponseStatus.FORBIDDEN);
+                throw new HttpException("forbidden", httpRouterContext, HttpResponseStatus.FORBIDDEN);
             }
         }
         if (templatePath == null) {
             logger.log(Level.WARNING, "unable to render a null path");
-            throw new HttpException("internal path error", httpServerContext, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException("internal path error", httpRouterContext, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         templates.computeIfAbsent(templatePath, path -> {
             try {
@@ -113,22 +113,22 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
         Template template = templates.get(templatePath);
         Logger templateLogger = Logger.getLogger("template." + getName().replace('/', '.'));
         Binding binding = new Binding();
-        httpServerContext.getAttributes().forEach(binding::setVariable);
+        httpRouterContext.getAttributes().forEach(binding::setVariable);
         binding.setVariable("logger", templateLogger);
         binding.setVariable("log", templateLogger);
         application.getModules().forEach(m -> binding.setVariable(m.getName(), m));
-        DefaultTemplateResolver templateResolver = httpServerContext.getAttributes().get(DefaultTemplateResolver.class, "templateresolver");
+        DefaultTemplateResolver templateResolver = httpRouterContext.getAttributes().get(DefaultTemplateResolver.class, "templateresolver");
         if (templateResolver == null) {
             // for Groovy template engines without a resolver, no need to set a locale
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.getAttributes().put("writable", writable);
+            httpRouterContext.getAttributes().put("writable", writable);
             return;
         }
         if (!negotiateLocale) {
             // if no locale negotiation configured, set always the applicaiton locale. This constant value never changes.
             templateResolver.setLocale(application.getLocale());
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.getAttributes().put("writable", writable);
+            httpRouterContext.getAttributes().put("writable", writable);
             return;
         }
         // handle programmatic locale change plus template making under lock so no other request/response can interrupt us
@@ -137,7 +137,7 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
             lock.lock();
             templateResolver.setLocale(application.getLocale());
             // language from request overrides application locale
-            String acceptLanguage = httpServerContext.request().getHeaders().get(HttpHeaderNames.ACCEPT_LANGUAGE);
+            String acceptLanguage = httpRouterContext.getRequestBuilder().getHeaders().get(HttpHeaderNames.ACCEPT_LANGUAGE);
             if (acceptLanguage != null) {
                 Locale negotiatedLocale = LocaleNegotiator.findLocale(acceptLanguage);
                 if (negotiatedLocale != null) {
@@ -146,12 +146,12 @@ public class GroovyTemplateResource extends HtmlTemplateResource {
                 }
             }
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.getAttributes().put("writable", writable);
+            httpRouterContext.getAttributes().put("writable", writable);
         } catch (Exception e) {
             // fail silently by ignoring negotation
             templateResolver.setLocale(application.getLocale());
             Writable writable = template.make(binding.getVariables());
-            httpServerContext.getAttributes().put("writable", writable);
+            httpRouterContext.getAttributes().put("writable", writable);
         } finally {
             lock.unlock();
         }

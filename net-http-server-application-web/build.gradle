@@ -9,7 +9,6 @@ dependencies {
     implementation libs.webjars.jquery
     implementation libs.webjars.fontawesome
     runtimeOnly libs.net.bouncycastle
-    runtimeOnly libs.oracle
 }
 
 application {

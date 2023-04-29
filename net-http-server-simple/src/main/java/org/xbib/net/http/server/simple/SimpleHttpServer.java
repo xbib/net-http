@@ -8,7 +8,7 @@ import org.xbib.net.SocketConfig;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpResponseStatus;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
@@ -149,10 +149,10 @@ public class SimpleHttpServer implements HttpServer {
     public void dispatch(org.xbib.net.http.server.HttpRequestBuilder requestBuilder,
                          org.xbib.net.http.server.HttpResponseBuilder responseBuilder,
                          HttpResponseStatus responseStatus) {
-        HttpServerContext httpServerContext = builder.application.createContext(null, requestBuilder, responseBuilder);
+        HttpRouterContext httpRouterContext = builder.application.createContext(null, requestBuilder, responseBuilder);
         Callable<?> callable = (Callable<Object>) () -> {
             HttpRouter router = builder.application.getRouter();
-            router.routeStatus(responseStatus, httpServerContext);
+            router.routeStatus(responseStatus, httpRouterContext);
             return true;
         };
         builder.application.getExecutor().execute(callable);

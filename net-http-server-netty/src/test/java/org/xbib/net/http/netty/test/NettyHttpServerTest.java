@@ -47,16 +47,15 @@ public class NettyHttpServerTest {
                         .addService(BaseHttpService.builder()
                                 .setPath("/domain")
                                 .setHandler(ctx -> {
-                                    ctx.response()
-                                            .setResponseStatus(HttpResponseStatus.OK)
-                                            .setHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-                                            .setCharset(StandardCharsets.UTF_8);
-                                    ctx.write("domain" +
-                                            " parameter = " + ctx.httpRequest().getParameter().allToString() +
-                                            " local address = " + ctx.httpRequest().getLocalAddress() +
-                                            " remote address = " + ctx.httpRequest().getRemoteAddress() +
-                                            " attributes = " + ctx.getAttributes());
-                                    ctx.done();
+                                    ctx.status(HttpResponseStatus.OK)
+                                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+                                            .charset(StandardCharsets.UTF_8)
+                                            .body("domain" +
+                                                    " parameter = " + ctx.getRequest().getParameter().allToString() +
+                                                    " local address = " + ctx.getRequest().getLocalAddress() +
+                                                    " remote address = " + ctx.getRequest().getRemoteAddress() +
+                                                    " attributes = " + ctx.getAttributes())
+                                            .done();
                                 })
                                 .build())
                         .build())

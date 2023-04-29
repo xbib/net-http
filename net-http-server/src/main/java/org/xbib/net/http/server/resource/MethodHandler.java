@@ -3,7 +3,7 @@ package org.xbib.net.http.server.resource;
 import java.lang.reflect.Method;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 public class MethodHandler implements HttpHandler {
 
@@ -23,7 +23,7 @@ public class MethodHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpServerContext context) {
+    public void handle(HttpRouterContext context) {
         try {
             m.invoke(obj, context);
         } catch (Exception e) {

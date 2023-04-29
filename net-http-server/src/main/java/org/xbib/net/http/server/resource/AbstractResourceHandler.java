@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import org.xbib.net.Resource;
 import org.xbib.net.URL;
 import org.xbib.net.buffer.DataBuffer;
+import org.xbib.net.buffer.DataBufferFactory;
 import org.xbib.net.buffer.DataBufferUtil;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaders;
@@ -28,10 +29,11 @@ import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.HttpException;
 import org.xbib.net.http.server.HttpHandler;
-import org.xbib.net.http.server.HttpResponseBuilder;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.mime.MimeTypeService;
 import org.xbib.net.util.DateTimeUtil;
+
+import static org.xbib.net.http.HttpHeaderNames.CONTENT_TYPE;
 
 public abstract class AbstractResourceHandler implements HttpHandler {
 
@@ -42,7 +44,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     public AbstractResourceHandler() {
     }
 
-    protected abstract Resource createResource(HttpServerContext httpServerContext) throws IOException;
+    protected abstract Resource createResource(HttpRouterContext httpRouterContext) throws IOException;
 
     protected abstract boolean isETagResponseEnabled();
 
@@ -53,7 +55,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     protected abstract int getMaxAgeSeconds();
 
     @Override
-    public void handle(HttpServerContext context) throws IOException {
+    public void handle(HttpRouterContext context) throws IOException {
         logger.log(Level.FINEST, () -> "handle: before creating resource " + this.getClass().getName());
         Resource resource = createResource(context);
         logger.log(Level.FINEST, () -> "handle: resource = " + (resource != null ? resource.getClass().getName() + " " + resource : null));
@@ -66,7 +68,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         } else if (resource.isDirectory()) {
             logger.log(Level.FINEST, "we have a directory request");
             if (!resource.getResourcePath().isEmpty() && !resource.getResourcePath().endsWith("/")) {
-                URL url = context.request().getBaseURL();
+                URL url = context.getRequestBuilder().getBaseURL();
                 String loc = url.resolve(resource.getName() + '/')
                         .mutator()
                         .query(url.getQuery())
@@ -74,19 +76,15 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                         .build()
                         .toString();
                 logger.log(Level.FINEST, "client must add a /, external redirect to = " + loc);
-                context.response()
-                        .addHeader(HttpHeaderNames.LOCATION, loc)
-                        .setResponseStatus(HttpResponseStatus.TEMPORARY_REDIRECT) // 307
-                        .build();
+                context.header(HttpHeaderNames.LOCATION, loc)
+                        .status(HttpResponseStatus.TEMPORARY_REDIRECT);
             } else if (resource.isExistsIndexFile()) {
                 // internal redirect to default index file in this directory
                 logger.log(Level.FINEST, "internal redirect to default index file in this directory: " + resource.getIndexFileName());
                 generateCacheableResource(context, resource);
             } else {
                 // send forbidden, we do not allow directory access
-                context.response()
-                        .setResponseStatus(HttpResponseStatus.FORBIDDEN)
-                        .build();
+                context.status(HttpResponseStatus.FORBIDDEN);
             }
             context.done();
         } else {
@@ -95,24 +93,21 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         }
     }
 
-    private void generateCacheableResource(HttpServerContext context,
+    private void generateCacheableResource(HttpRouterContext context,
                                            Resource resource) throws IOException {
         // if resource is length of 0, there is nothing to send. Do not send any content
         if (resource.getLength() == 0) {
             logger.log(Level.FINEST, "the resource length is 0, return not found");
-            context.response()
-                    .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                    .build();
+            context.status(HttpResponseStatus.NOT_FOUND);
             return;
         }
-        HttpHeaders headers = context.request().getHeaders();
-        logger.log(Level.FINEST, () -> "before generating resource, the response headers are " + context.response().getHeaders());
+        HttpHeaders headers = context.getRequestBuilder().getHeaders();
         String contentType = resource.getMimeType();
-        context.response().addHeader(HttpHeaderNames.CONTENT_TYPE, contentType);
+        context.header(CONTENT_TYPE, contentType);
         // heuristic for inline disposition
         String disposition;
         if (!contentType.startsWith("text") && !contentType.startsWith("image") && !contentType.startsWith("font")) {
-            String accept = context.request().getHeaders().get(HttpHeaderNames.ACCEPT);
+            String accept = context.getRequestBuilder().getHeaders().get(HttpHeaderNames.ACCEPT);
             disposition = accept != null && accepts(accept, contentType) ? "inline" : "attachment";
         } else {
             disposition = "inline";
@@ -120,22 +115,19 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         if (resource.getBaseName() != null && resource.getSuffix() != null) {
             String contentDisposition = disposition + ";filename=\"" + resource.getBaseName() + '.' + resource.getSuffix() + '"';
             logger.log(Level.FINEST, () -> "content type = " + contentType + " content disposition = " + contentDisposition);
-            context.response()
-                    .addHeader(HttpHeaderNames.CONTENT_DISPOSITION, contentDisposition);
+            context.header(HttpHeaderNames.CONTENT_DISPOSITION, contentDisposition);
         }
         long expirationMillis = System.currentTimeMillis() + 1000L * getMaxAgeSeconds();
         String expires = DateTimeUtil.formatRfc1123(expirationMillis);
         if (isCacheResponseEnabled()) {
             String cacheControl = "public, max-age=" + getMaxAgeSeconds();
             logger.log(Level.FINEST, () -> "cache response, expires = " + expires + " cache control = " + cacheControl);
-            context.response()
-                    .addHeader(HttpHeaderNames.EXPIRES, expires)
-                    .addHeader(HttpHeaderNames.CACHE_CONTROL, cacheControl);
+            context.header(HttpHeaderNames.EXPIRES, expires)
+                    .header(HttpHeaderNames.CACHE_CONTROL, cacheControl);
         } else {
             logger.log(Level.FINEST, () -> "uncached response");
-            context.response()
-                    .addHeader(HttpHeaderNames.EXPIRES, "0")
-                    .addHeader(HttpHeaderNames.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+            context.header(HttpHeaderNames.EXPIRES, "0")
+                    .header(HttpHeaderNames.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
         }
         boolean sent = false;
         if (isETagResponseEnabled()) {
@@ -146,43 +138,34 @@ public abstract class AbstractResourceHandler implements HttpHandler {
             if (ifUnmodifiedSinceInstant != null &&
                     ifUnmodifiedSinceInstant.plusMillis(1000L).isAfter(lastModifiedInstant)) {
                 logger.log(Level.FINEST, () -> "precondition failed, lastModified = " + lastModifiedInstant + " ifUnmodifiedSince = " + ifUnmodifiedSinceInstant);
-                context.response()
-                        .setResponseStatus(HttpResponseStatus.PRECONDITION_FAILED)
-                        .build();
+                context.status(HttpResponseStatus.PRECONDITION_FAILED);
                 return;
             }
             String ifMatch = headers.get(HttpHeaderNames.IF_MATCH);
             if (ifMatch != null && !matches(ifMatch, eTag)) {
                 logger.log(Level.FINEST, () -> "precondition failed, ifMatch = " + ifMatch);
-                context.response()
-                        .setResponseStatus(HttpResponseStatus.PRECONDITION_FAILED)
-                        .build();
+                context.status(HttpResponseStatus.PRECONDITION_FAILED);
                 return;
             }
             String ifNoneMatch = headers.get(HttpHeaderNames.IF_NONE_MATCH);
             if (ifNoneMatch != null && matches(ifNoneMatch, eTag)) {
                 logger.log(Level.FINEST, () -> "not modified, eTag = " + eTag);
-                context.response()
-                        .addHeader(HttpHeaderNames.ETAG, eTag)
-                        .setResponseStatus(HttpResponseStatus.NOT_MODIFIED)
-                        .build();
+                context.header(HttpHeaderNames.ETAG, eTag)
+                        .status(HttpResponseStatus.NOT_MODIFIED);
                 return;
             }
             Instant ifModifiedSinceInstant = DateTimeUtil.parseDate(headers.get(HttpHeaderNames.IF_MODIFIED_SINCE));
             if (ifModifiedSinceInstant != null &&
                     ifModifiedSinceInstant.plusMillis(1000L).isAfter(lastModifiedInstant)) {
                 logger.log(Level.FINEST, () -> "not modified (after if-modified-since), eTag = " + eTag);
-                context.response()
-                        .addHeader(HttpHeaderNames.ETAG, eTag)
-                        .setResponseStatus(HttpResponseStatus.NOT_MODIFIED)
-                        .build();
+                context.header(HttpHeaderNames.ETAG, eTag)
+                        .status(HttpResponseStatus.NOT_MODIFIED);
                 return;
             }
             String lastModified = DateTimeUtil.formatRfc1123(lastModifiedInstant);
             logger.log(Level.FINEST, () -> "sending resource, lastModified = " + lastModified);
-            context.response()
-                    .addHeader(HttpHeaderNames.ETAG, eTag)
-                    .addHeader(HttpHeaderNames.LAST_MODIFIED, lastModified);
+            context.header(HttpHeaderNames.ETAG, eTag)
+                    .header(HttpHeaderNames.LAST_MODIFIED, lastModified);
             if (isRangeResponseEnabled()) {
                 performRangeResponse(context, resource, contentType, eTag, headers);
                 sent = true;
@@ -194,8 +177,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
             long length = resource.getLength();
             if (length > 0L) {
                 String string = Long.toString(resource.getLength());
-                context.response()
-                        .addHeader(HttpHeaderNames.CONTENT_LENGTH, string);
+                context.header(HttpHeaderNames.CONTENT_LENGTH, string);
                 logger.log(Level.FINEST, "length is known = " + resource.getLength());
                 send(resource, HttpResponseStatus.OK, contentType, context, 0L, resource.getLength());
             } else {
@@ -206,23 +188,21 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         logger.log(Level.FINEST, "generation done");
     }
 
-    private void performRangeResponse(HttpServerContext context,
+    private void performRangeResponse(HttpRouterContext context,
                                       Resource resource,
                                       String contentType,
                                       String eTag,
                                       HttpHeaders headers) throws IOException {
         long length = resource.getLength();
         logger.log(Level.FINEST, "performing range response on resource = " + resource);
-        context.response().addHeader(HttpHeaderNames.ACCEPT_RANGES, "bytes");
+        context.header(HttpHeaderNames.ACCEPT_RANGES, "bytes");
         Range full = new Range(0, length - 1, length);
         List<Range> ranges = new ArrayList<>();
         String range = headers.get(HttpHeaderNames.RANGE);
         if (range != null) {
             if (!range.matches("^bytes=\\d*-\\d*(,\\d*-\\d*)*$")) {
-                context.response()
-                        .addHeader(HttpHeaderNames.CONTENT_RANGE, "bytes */" + length)
-                        .setResponseStatus(HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
-                        .build();
+                context.header(HttpHeaderNames.CONTENT_RANGE, "bytes */" + length)
+                        .status(HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
                 return;
             }
             String ifRange = headers.get(HttpHeaderNames.IF_RANGE);
@@ -247,10 +227,8 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                         end = length - 1;
                     }
                     if (start > end) {
-                        context.response()
-                                .addHeader(HttpHeaderNames.CONTENT_RANGE, "bytes */" + length)
-                                .setResponseStatus(HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE)
-                                .build();
+                        context.header(HttpHeaderNames.CONTENT_RANGE, "bytes */" + length)
+                                .status(HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
                         return;
                     }
                     ranges.add(new Range(start, end, length));
@@ -258,23 +236,20 @@ public abstract class AbstractResourceHandler implements HttpHandler {
             }
         }
         if (ranges.isEmpty() || ranges.get(0) == full) {
-            context.response()
-                    .addHeader(HttpHeaderNames.CONTENT_RANGE, "bytes " + full.start + '-' + full.end + '/' + full.total)
-                    .addHeader(HttpHeaderNames.CONTENT_LENGTH, Long.toString(full.length));
+            context.header(HttpHeaderNames.CONTENT_RANGE, "bytes " + full.start + '-' + full.end + '/' + full.total)
+                    .header(HttpHeaderNames.CONTENT_LENGTH, Long.toString(full.length));
             send(resource, HttpResponseStatus.OK, contentType, context, full.start, full.length);
         } else if (ranges.size() == 1) {
             Range r = ranges.get(0);
-            context.response()
-                    .addHeader(HttpHeaderNames.CONTENT_RANGE, "bytes " + r.start + '-' + r.end + '/' + r.total)
-                    .addHeader(HttpHeaderNames.CONTENT_LENGTH, Long.toString(r.length));
+            context.header(HttpHeaderNames.CONTENT_RANGE, "bytes " + r.start + '-' + r.end + '/' + r.total)
+                    .header(HttpHeaderNames.CONTENT_LENGTH, Long.toString(r.length));
             send(resource, HttpResponseStatus.PARTIAL_CONTENT, contentType, context, r.start, r.length);
         } else {
-            context.response()
-                    .addHeader(HttpHeaderNames.CONTENT_TYPE, "multipart/byteranges; boundary=MULTIPART_BOUNDARY");
+            context.header(CONTENT_TYPE, "multipart/byteranges; boundary=MULTIPART_BOUNDARY");
             StringBuilder sb = new StringBuilder();
             for (Range r : ranges) {
                 try {
-                    DataBuffer dataBuffer = readBuffer(context.response(), resource.getURL(), r.start, r.length);
+                    DataBuffer dataBuffer = readBuffer(context.getDataBufferFactory(), resource.getURL(), r.start, r.length);
                     sb.append('\n')
                         .append("--MULTIPART_BOUNDARY").append('\n')
                         .append("content-type: ").append(contentType).append('\n')
@@ -287,10 +262,9 @@ public abstract class AbstractResourceHandler implements HttpHandler {
                     logger.log(Level.FINEST, e.getMessage(), e);
                 }
             }
-            context.response()
-                    .setResponseStatus(HttpResponseStatus.OK)
-                    .setContentType(contentType)
-                    .write(CharBuffer.wrap(sb), StandardCharsets.ISO_8859_1);
+            context.status(HttpResponseStatus.OK)
+                    .header(CONTENT_TYPE, contentType)
+                    .body(CharBuffer.wrap(sb), StandardCharsets.ISO_8859_1);
         }
     }
 
@@ -308,7 +282,7 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     protected void send(Resource resource,
                         HttpResponseStatus httpResponseStatus,
                         String contentType,
-                        HttpServerContext context,
+                        HttpRouterContext context,
                         long offset,
                         long size) throws IOException {
         if (resource instanceof HttpServerResource) {
@@ -319,41 +293,31 @@ public abstract class AbstractResourceHandler implements HttpHandler {
         URL url = resource.getURL();
         logger.log(Level.FINEST, "sending URL = " + url + " offset = " + offset + " size = " + size);
         if (url == null) {
-            context.response()
-                    .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                    .build();
-        } else if (context.request().getMethod() == HttpMethod.HEAD) {
+            context.status(HttpResponseStatus.NOT_FOUND);
+        } else if (context.getRequestBuilder().getMethod() == HttpMethod.HEAD) {
             logger.log(Level.FINEST, "HEAD request, do not send body");
-            context.response()
-                    .setResponseStatus(HttpResponseStatus.OK)
-                    .setContentType(contentType)
-                    .build();
+            context.status(HttpResponseStatus.OK)
+                    .header(CONTENT_TYPE, contentType);
         } else {
             if ("file".equals(url.getScheme())) {
                 Path path = resource.getPath();
                 try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path)) {
-                    send(fileChannel, httpResponseStatus, contentType, context.response(), offset, size);
+                    send(fileChannel, httpResponseStatus, contentType, context, offset, size);
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, e.getMessage() + " path=" + path, e);
-                    context.response()
-                            .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                            .build();
+                    context.status(HttpResponseStatus.NOT_FOUND);
                 }
             } else {
                 try (InputStream inputStream = url.openStream()) {
                     if (inputStream != null) {
-                        send(inputStream, httpResponseStatus, contentType, context.response(), offset, size);
+                        send(inputStream, httpResponseStatus, contentType, context, offset, size);
                     } else {
                         logger.log(Level.WARNING, "input stream is null, url = " + url);
-                        context.response()
-                                .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                                .build();
+                        context.status(HttpResponseStatus.NOT_FOUND);
                     }
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, e.getMessage() + " url=" + url, e);
-                    context.response()
-                            .setResponseStatus(HttpResponseStatus.NOT_FOUND)
-                            .build();
+                    context.status(HttpResponseStatus.NOT_FOUND);
                 }
             }
         }
@@ -362,18 +326,18 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     protected void send(FileChannel fileChannel,
                         HttpResponseStatus httpResponseStatus,
                         String contentType,
-                        HttpResponseBuilder responseBuilder,
+                        HttpRouterContext context,
                         long offset, long size) throws IOException {
         if (fileChannel == null ) {
             logger.log(Level.WARNING, "file channel is null, generating not found");
-            responseBuilder.setResponseStatus(HttpResponseStatus.NOT_FOUND).build();
+            context.status(HttpResponseStatus.NOT_FOUND);
         } else {
             fileChannel = fileChannel.position(offset);
             try (ReadableByteChannel channel = fileChannel) {
-                DataBuffer dataBuffer = DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
-                responseBuilder.setResponseStatus(httpResponseStatus)
-                        .setContentType(contentType)
-                        .write(dataBuffer);
+                DataBuffer dataBuffer = DataBufferUtil.readBuffer(context.getDataBufferFactory(), channel, size);
+                context.status(httpResponseStatus)
+                        .header(CONTENT_TYPE, contentType)
+                        .body(dataBuffer);
             }
         }
     }
@@ -381,36 +345,36 @@ public abstract class AbstractResourceHandler implements HttpHandler {
     protected void send(InputStream inputStream,
                         HttpResponseStatus httpResponseStatus,
                         String contentType,
-                        HttpResponseBuilder responseBuilder,
+                        HttpRouterContext context,
                         long offset,
                         long size) throws IOException {
         if (inputStream == null) {
             logger.log(Level.WARNING, "inputstream is null, generating not found");
-            responseBuilder.setResponseStatus(HttpResponseStatus.NOT_FOUND).build();
+            context.status(HttpResponseStatus.NOT_FOUND);
         } else {
             long n = inputStream.skip(offset);
             try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
-                DataBuffer dataBuffer = DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
-                responseBuilder
-                        .setResponseStatus(httpResponseStatus)
-                        .setContentType(contentType)
-                        .write(dataBuffer);
+                DataBuffer dataBuffer = DataBufferUtil.readBuffer(context.getDataBufferFactory(), channel, size);
+                context.status(httpResponseStatus)
+                        .header(CONTENT_TYPE, contentType)
+                        .body(dataBuffer);
             }
         }
     }
 
-    private DataBuffer readBuffer(HttpResponseBuilder responseBuilder, URL url, long offset, long size) throws IOException, URISyntaxException {
+    private DataBuffer readBuffer(DataBufferFactory factory, URL url, long offset, long size)
+            throws IOException, URISyntaxException {
         if ("file".equals(url.getScheme())) {
             Path path = Paths.get(url.toURI());
             try (SeekableByteChannel channel = Files.newByteChannel(path)) {
                 channel.position(offset);
-                return DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
+                return DataBufferUtil.readBuffer(factory, channel, size);
             }
         } else {
             try (InputStream inputStream = url.openStream()) {
                 long n = inputStream.skip(offset);
                 try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
-                    return DataBufferUtil.readBuffer(responseBuilder.getDataBufferFactory(), channel, size);
+                    return DataBufferUtil.readBuffer(factory, channel, size);
                 }
             }
         }

@@ -4,7 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.server.application.Application;
-import org.xbib.net.http.server.HttpServerContext;
+import org.xbib.net.http.server.route.HttpRouterContext;
 
 import java.io.IOException;
 
@@ -19,29 +19,29 @@ class GroovyHttpResonseStatusTemplateResource extends GroovyTemplateResource {
     private final String message;
 
     protected GroovyHttpResonseStatusTemplateResource(GroovyTemplateResourceHandler handler,
-                                                      HttpServerContext httpServerContext,
+                                                      HttpRouterContext httpRouterContext,
                                                       String indexFileName,
                                                       HttpResponseStatus httpResponseStatus,
                                                       String message) throws IOException {
-        super(handler, httpServerContext);
+        super(handler, httpRouterContext);
         this.indexFileName = indexFileName;
         this.httpResponseStatus = httpResponseStatus;
         this.message = message;
     }
 
     @Override
-    public void render(HttpServerContext httpServerContext) throws IOException {
+    public void render(HttpRouterContext httpRouterContext) throws IOException {
         logger.log(Level.FINEST, "rendering HTTP status by Groovy");
-        httpServerContext.getAttributes().put("_status", httpResponseStatus);
-        httpServerContext.getAttributes().put("_message", message);
-        httpServerContext.getAttributes().put("_resource", this);
-        Application application = httpServerContext.getAttributes().get(Application.class, "application");
+        httpRouterContext.getAttributes().put("_status", httpResponseStatus);
+        httpRouterContext.getAttributes().put("_message", message);
+        httpRouterContext.getAttributes().put("_resource", this);
+        Application application = httpRouterContext.getAttributes().get(Application.class, "application");
         GroovyMarkupTemplateHandler groovyMarkupTemplateHandler = new GroovyMarkupTemplateHandler(application);
         logger.log(Level.FINEST, "handle groovyMarkupTemplateHandler");
-        groovyMarkupTemplateHandler.handle(httpServerContext);
-        super.render(httpServerContext);
+        groovyMarkupTemplateHandler.handle(httpRouterContext);
+        super.render(httpRouterContext);
         GroovyTemplateRenderer groovyTemplateRenderer = new GroovyTemplateRenderer();
-        groovyTemplateRenderer.handle(httpServerContext);
+        groovyTemplateRenderer.handle(httpRouterContext);
     }
 
     @Override
