@@ -24,7 +24,6 @@ import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.cookie.CookieSignatureException;
 import org.xbib.net.http.server.cookie.CookieSignatureUtil;
-import org.xbib.net.http.server.persist.Codec;
 
 public class OutgoingSessionHandler implements HttpHandler {
 
@@ -37,8 +36,6 @@ public class OutgoingSessionHandler implements HttpHandler {
     private final String sessionCookieName;
 
     private final Duration sessionDuration;
-
-    private final Codec<Session> sessionCodec;
 
     private final Set<String> suffixes;
 
@@ -55,7 +52,6 @@ public class OutgoingSessionHandler implements HttpHandler {
     public OutgoingSessionHandler(String sessionSecret,
                                   String sessionCookieAlgorithm,
                                   String sessionCookieName,
-                                  Codec<Session> sessionCodec,
                                   Set<String> suffixes,
                                   String sessionUserName,
                                   String sessionEffectiveUserName,
@@ -66,7 +62,6 @@ public class OutgoingSessionHandler implements HttpHandler {
         this.sessionSecret = sessionSecret;
         this.sessionCookieAlgorithm = sessionCookieAlgorithm;
         this.sessionCookieName = sessionCookieName;
-        this.sessionCodec = sessionCodec;
         this.suffixes = suffixes;
         this.sessionUserName = sessionUserName;
         this.sessionEffectiveUserName = sessionEffectiveUserName;
@@ -113,17 +108,16 @@ public class OutgoingSessionHandler implements HttpHandler {
                         session.put(sessionEffectiveUserName, userProfile.getEffectiveUserId());
                     }
                 }
-                sessionCodec.write(session.id(), session);
                 Cookie cookie = encodeCookie(session, host, path);
                 if (cookie != null) {
                     cookieBox.add(cookie);
                 }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.getMessage(), e);
-                throw new HttpException("unable to create session cookie", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                throw new HttpException("unable to create session data for cookie", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        logger.log(Level.FINEST, "outgoing cookies = " + cookieBox);
+        logger.log(Level.FINEST, "prepared outgoing cookies = " + cookieBox);
         context.getAttributes().put("outgoingcookies", cookieBox);
     }
 

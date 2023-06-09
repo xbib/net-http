@@ -108,9 +108,15 @@ public class BaseHttpRouter implements HttpRouter {
         try {
             route(application, httpRouterContext, httpRouteResolverResults);
         } finally {
-            application.onClose(httpRouterContext);
-            // outgoing cookie/session
             httpRouterContext.getCloseHandlers().forEach(h -> {
+                try {
+                    h.handle(httpRouterContext);
+                } catch (Exception e) {
+                    routeToErrorHandler(httpRouterContext, e);
+                }
+            });
+            application.onClose(httpRouterContext);
+            httpRouterContext.getReleaseHandlers().forEach(h -> {
                 try {
                     h.handle(httpRouterContext);
                 } catch (Exception e) {

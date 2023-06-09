@@ -43,19 +43,6 @@ public class JdkClientTest {
         logger.log(Level.INFO, response.body());
     }
 
-    @Test
-    void testHebisGetRequest() throws Exception {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .build();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("https://hebis.rz.uni-frankfurt.de/HEBCGI/vuefl_recv_data.pl"))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        logger.log(Level.INFO, Integer.toString(response.statusCode()));
-        logger.log(Level.INFO, response.body());
-    }
-
     private static HttpRequest.BodyPublisher buildFormDataFromMap(Map<String, Object> data) {
         var builder = new StringBuilder();
         for (Map.Entry<String, Object> entry : data.entrySet()) {

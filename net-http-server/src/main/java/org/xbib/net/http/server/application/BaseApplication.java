@@ -1,6 +1,5 @@
 package org.xbib.net.http.server.application;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +29,7 @@ import org.xbib.net.http.server.render.HttpResponseRenderer;
 import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.session.IncomingSessionHandler;
 import org.xbib.net.http.server.session.OutgoingSessionHandler;
+import org.xbib.net.http.server.session.PersistSessionHandler;
 import org.xbib.net.http.server.session.Session;
 import org.xbib.net.http.server.session.memory.MemoryPropertiesSessionCodec;
 import org.xbib.net.http.server.validate.HttpRequestValidator;
@@ -149,7 +149,8 @@ public class BaseApplication implements Application {
             Codec<Session> sessionCodec = newSessionCodec(httpRouterContext);
             httpRouterContext.getAttributes().put("sessioncodec", sessionCodec);
             httpRouterContext.addOpenHandler(newIncomingSessionHandler(sessionCodec));
-            httpRouterContext.addCloseHandler(newOutgoingSessionHandler(sessionCodec));
+            httpRouterContext.addCloseHandler(newOutgoingSessionHandler());
+            httpRouterContext.addReleaseHandler(newPersistSessionHandler(sessionCodec));
         }
         httpRouterContext.addCloseHandler(newOutgoingCookieHandler());
         return httpRouterContext;
@@ -196,12 +197,11 @@ public class BaseApplication implements Application {
                 () -> RandomUtil.randomString(16));
     }
 
-    protected HttpHandler newOutgoingSessionHandler(Codec<Session> sessionCodec) {
+    protected HttpHandler newOutgoingSessionHandler() {
         return new OutgoingSessionHandler(
                 getSecret(),
                 "HmacSHA1",
                 sessionName,
-                sessionCodec,
                 getStaticFileSuffixes(),
                 "user_id",
                 "e_user_id",
@@ -210,6 +210,10 @@ public class BaseApplication implements Application {
                 false,
                 SameSite.LAX
         );
+    }
+
+    protected HttpHandler newPersistSessionHandler(Codec<Session> sessionCodec) {
+        return new PersistSessionHandler(sessionCodec);
     }
 
     @Override

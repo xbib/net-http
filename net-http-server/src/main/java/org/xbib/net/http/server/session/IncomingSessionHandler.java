@@ -71,6 +71,7 @@ public class IncomingSessionHandler implements HttpHandler {
         if (suffix != null && suffixes.contains(suffix)) {
             return;
         }
+        Map<String, Object> payload = null;
         Session session = null;
         CookieBox cookieBox = context.getAttributes().get(CookieBox.class, "incomingcookies");
         if (cookieBox != null) {
@@ -78,13 +79,8 @@ public class IncomingSessionHandler implements HttpHandler {
                 if (cookie.name().equals(sessionCookieName)) {
                     if (session == null) {
                         try {
-                            Map<String, Object> payload = decodeCookie(cookie);
-                            logger.log(Level.FINER, "cookie decoded");
+                            payload = decodeCookie(cookie);
                             session = toSession(payload);
-                            UserProfile userProfile = newUserProfile(payload, session);
-                            if (userProfile != null) {
-                                context.getAttributes().put("userprofile", userProfile);
-                            }
                         } catch (CookieSignatureException e) {
                             // set exception in context to discard broken cookie later and render exception message
                             context.getAttributes().put("_throwable", e);
@@ -93,7 +89,7 @@ public class IncomingSessionHandler implements HttpHandler {
                             throw new HttpException("unable to create session", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
                         }
                     } else {
-                        logger.log(Level.WARNING, "received extra session cookie, something is wrong, ignoring");
+                        logger.log(Level.WARNING, "received extra session cookie of same name, something is wrong, ignoring");
                     }
                 }
             }
@@ -106,8 +102,14 @@ public class IncomingSessionHandler implements HttpHandler {
                 throw new HttpException("unable to create session", context, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         }
+        if (payload != null) {
+            UserProfile userProfile = newUserProfile(payload, session);
+            if (userProfile != null) {
+                context.getAttributes().put("userprofile", userProfile);
+            }
+        }
+        logger.log(Level.FINEST, "incoming session ID = " + session.id() + " keys = " + session.keySet());
         context.getAttributes().put("session", session);
-        logger.log(Level.FINEST, "incoming session " + session.id());
     }
 
     private Map<String, Object> decodeCookie(Cookie cookie) throws IOException,

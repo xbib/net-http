@@ -42,6 +42,8 @@ public class BaseHttpRouterContext implements HttpRouterContext {
 
     private final List<HttpHandler> closeHandlers;
 
+    private final List<HttpHandler> releaseeHandlers;
+
     private String contextPath;
 
     private URL contextURL;
@@ -63,6 +65,7 @@ public class BaseHttpRouterContext implements HttpRouterContext {
         this.httpResponseBuilder = httpResponseBuilder;
         this.openHandlers = new LinkedList<>();
         this.closeHandlers = new LinkedList<>();
+        this.releaseeHandlers = new LinkedList<>();
         this.attributes = new BaseAttributes();
         this.attributes.put("application", application);
         this.attributes.put("domain", domain);
@@ -89,6 +92,16 @@ public class BaseHttpRouterContext implements HttpRouterContext {
     @Override
     public List<HttpHandler> getCloseHandlers() {
         return closeHandlers;
+    }
+
+    @Override
+    public void addReleaseHandler(HttpHandler handler) {
+        this.releaseeHandlers.add(handler);
+    }
+
+    @Override
+    public List<HttpHandler> getReleaseHandlers() {
+        return releaseeHandlers;
     }
 
     @Override

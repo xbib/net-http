@@ -118,29 +118,6 @@ class Https1Test {
     }
 
     @Test
-    void testHebisGetRequest() throws Exception {
-        // we test HEBIS here with strange certificate setup and TLS 1.2 only
-        NettyHttpClientConfig config = new NettyHttpsClientConfig()
-                .setDebug(true);
-        try (NettyHttpClient client = NettyHttpClient.builder()
-                .setConfig(config)
-                .build()){
-            HttpRequest request = HttpRequest.post()
-                    .setURL("https://hebis.rz.uni-frankfurt.de/HEBCGI/vuefl_recv_data.pl")
-                    .setResponseListener(resp ->
-                            logger.log(Level.INFO,
-                                    "got response: " +
-                                            " status = " + resp.getStatus() +
-                                            " headers = " + resp.getHeaders() +
-                                            " body = " + resp.getBodyAsChars(StandardCharsets.UTF_8) +
-                                            " ssl = " + dumpCertificates((HttpsResponse) resp))
-                    )
-                    .build();
-            client.execute(request).get().close();
-        }
-    }
-
-    @Test
     void testSequentialRequests() throws Exception {
         NettyHttpClientConfig config = new NettyHttpsClientConfig()
                 .setDebug(true);

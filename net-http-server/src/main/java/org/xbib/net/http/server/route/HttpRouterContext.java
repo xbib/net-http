@@ -17,7 +17,6 @@ import org.xbib.net.http.cookie.Cookie;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpRequestBuilder;
-import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.application.Application;
 
 public interface HttpRouterContext {
@@ -32,13 +31,15 @@ public interface HttpRouterContext {
 
     List<HttpHandler> getCloseHandlers();
 
+    void addReleaseHandler(HttpHandler handler);
+
+    List<HttpHandler> getReleaseHandlers();
+
     HttpRequestBuilder getRequestBuilder();
 
     void setRequest(HttpRequest httpRequest);
 
     HttpRequest getRequest();
-
-    //HttpResponseBuilder getResponseBuilder();
 
     Attributes getAttributes();
 
