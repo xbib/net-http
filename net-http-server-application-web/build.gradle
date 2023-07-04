@@ -4,6 +4,7 @@ dependencies {
     api project(':net-http-server-netty-secure')
     api project(':net-http-server-application-config')
     api project(':net-http-template-groovy')
+    api project(':net-http-j2html')
     api libs.jdbc.query
     implementation libs.webjars.bootstrap
     implementation libs.webjars.jquery
@@ -12,7 +13,7 @@ dependencies {
 }
 
 application {
-    mainClass.set('org.xbib.net.http.server.application.web.Bootstrap')
+    mainClass.set('org.xbib.net.http.server.application.web.j2html.Bootstrap')
     applicationDefaultJvmArgs = [
             '-Dfile.encoding=UTF-8',
             '-Duser.language=de',

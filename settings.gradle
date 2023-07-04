@@ -28,6 +28,7 @@ dependencyResolutionManagement {
             library('webjars-bootstrap', 'org.webjars', 'bootstrap').version('5.2.3')
             library('webjars-jquery', 'org.webjars', 'jquery').version('3.6.4')
             library('webjars-fontawesome', 'org.webjars', 'font-awesome').version('6.3.0')
+            library('j2html', 'com.j2html', 'j2html').version('1.6.0')
             library('net', 'org.xbib', 'net').versionRef('net')
             library('net-mime', 'org.xbib', 'net-mime').versionRef('net')
             library('net-security', 'org.xbib', 'net-security').versionRef('net')
@@ -61,6 +62,7 @@ include 'net-http-server-nio'
 include 'net-http-server-simple'
 include 'net-http-server-simple-secure'
 include 'net-http-template-groovy'
+include 'net-http-j2html'
 include 'net-http-server-application-web'
 include 'net-http-server-application-config'
 include 'net-http-server-application-database'

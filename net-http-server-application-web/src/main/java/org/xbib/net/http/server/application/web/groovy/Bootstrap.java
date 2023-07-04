@@ -1,8 +1,9 @@
-package org.xbib.net.http.server.application.web;
+package org.xbib.net.http.server.application.web.groovy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import org.xbib.config.ConfigLoader;
@@ -14,6 +15,9 @@ import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
+import org.xbib.net.http.j2html.J2HtmlResourceHandler;
+import org.xbib.net.http.j2html.J2HtmlService;
+import org.xbib.net.http.server.application.web.WebApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
 import org.xbib.net.http.server.domain.BaseHttpSecurityDomain;
 import org.xbib.net.http.server.domain.HttpSecurityDomain;
@@ -39,7 +43,6 @@ import org.xbib.net.http.template.groovy.GroovyInternalServerErrorHandler;
 import org.xbib.net.http.template.groovy.GroovyHttpStatusHandler;
 import org.xbib.net.http.template.groovy.GroovyTemplateResourceHandler;
 import org.xbib.net.http.template.groovy.GroovyTemplateService;
-import org.xbib.net.mime.stream.Hex;
 import org.xbib.settings.Settings;
 
 public final class Bootstrap {
@@ -164,7 +167,7 @@ public final class Bootstrap {
                                 .setHandler(ctx -> {
                                     ctx.status(HttpResponseStatus.OK)
                                             .header(HttpHeaderNames.CONTENT_TYPE, "image/x-icon")
-                                            .body(NettyDataBufferFactory.getInstance().wrap(Hex.fromHex(hexFavIcon)))
+                                            .body(NettyDataBufferFactory.getInstance().wrap(fromHex(hexFavIcon)))
                                             .done();
                                 })
                                 .build())
@@ -173,6 +176,11 @@ public final class Bootstrap {
                                 .setHandler(new ClassLoaderResourceHandler(Bootstrap.class.getClassLoader(), "META-INF/resources/"))
                                 .build())
                         .addService(httpService)
+                        .addService(J2HtmlService.builder()
+                                .setPrefix("/j2html")
+                                .setPath("glob:**")
+                                .setHandler(new J2HtmlResourceHandler())
+                                .build())
                         .addService(GroovyTemplateService.builder()
                                 .setTemplateName("index.gtpl")
                                 .setSecurityDomain(securityDomain)
@@ -205,5 +213,66 @@ public final class Bootstrap {
 
 
     private static final String hexFavIcon =
-            "00000100010010100000010020006804000016000000280000001000000020000000010020000000000040040000130b0000130b0000000000000000000000000000000000000000000000000000000000005140322f62524a536050475f5140322f5140320c000000000000000000000000000000000000000000000000000000000000000000000000fffffe40b1a9a5c76f605bff6f605bff6f605bff6f605bff6b5b55f38f7d71ff978473bf877465100000000000000000000000000000000000000000fffffe8ff2eeeafff2f0eeffb7b0adff786a65ff6f605bff6f605bff6f605bff6f605bff72625af77f6d60bf00000000000000000000000000000000fffffe8fd9ccc0fffbfaf9fffbfaf8fffbfaf8fff6f5f5ff9c928eff6f605bff786a65ff6f605bff6f605bff716159ff6d5d4f9f0000000000000000fffffe40e7e0d8ffcfbfb2ffc4b2a0ffcebdafffccbbabffe1d6ceffe7ded7ffd2cdccff786a65ff6f605bff6f605bff6c5c54ff6a5a4ffb6050425000000000faf9f6afd3c5b8ffd4c6baffcfc1b2ffd5c7bbffcab9a9ffe7ded7fff2f0efff786a65ff6f605bff6f605bff6f605bff6c5c53ff6b5b53fb5d4d3fdf00000000e9e2dbffd8ccc0ffdcd1c5ffdcd1c6ffd4c7b9ffdacec3ffffffffffd2cdccff6f605bff6f605bff6f605bff6f605bff6a5a4fff6b5b52ff5b4b3eef53443660ece7e0ffdbd0c5ffe0d6ccffe9e2d9ffe3dad1fff1ece8ffffffffffc0b9b7ff6f605bff6f605bff6f605bff6f605bff685749ff6a5a4fff5e4e43cf5142348fefe9e3ffe0d7ccffe9e1d9ffeae3dbffe3dbd0fff4f0ecffffffffffdbd7d6ff6f605bff6f605bff6f605bff6d5e56ff675648ff6a5a4fff5e4f44af514233bfefeae4ffe8e0d7ffebe5ddffede8dfffebe5dcfff2eee8ffffffffffffffffff817470ff6f605bff6f605aff69594dff685749ff6b5b52ff5c4d429f5142338ff9f7f4afeae3dbffe7e1d6ffece7ddffefebe3fff1ece7ffffffffffffffffffdbd7d6ff6f605bff6a5a4fff68574bff6a5a50ff6b5b54f7554638574f403150fffffe40f1ede7ffece7dfffebe5dcffeae3dbfffbf9f7fffffffffffffffffff8f5f3ff83756dff69584dff69584cff6b5b52ff675750af000000004e3f304000000000fcfbf99fede7e0ffe4dbd1fff6f3effffffffffff9f8f6ffe1d7ceffdbcfc5ff9b8a7cff68574aff6a594eff6b5b54e751403218000000004e3f30100000000000000000fbfaf89fece6dfffeee9e3ffe4dbd2ffd8cbbfffd8ccc0ffcdbcadff6f5e52ff6a5a50ff6b5b54e75d4d4328000000000000000000000000000000000000000000000000fffffe60f6f4f0cff1ece7ffe2d9d0ffdbcec3ffccc1b7ff6a5a52f7675750af51403218000000000000000000000000000000000000000000000000000000000000000000000000fffffe10fffffe40fffffe40fffffe205140320c000000000000000000000000000000000000000000000000f83f9407e0070000c0079807800300000001603f0001603f0000603f0000603f0000e13e0000e23e0000e23e0002e23e8002e23ec007e33ee00fe33ef83fe33";
+            "000001000100101000000100200068040000160000002800000010000000" +
+                    "200000000100200000000000000000000000000000000000000000000000" +
+                    "000099330000993300009933000099330000993300009933000099330000" +
+                    "993300009933000099330000993300009933000099330000993300009933" +
+                    "00009933000099330000993300009933000099330000993300ff993300ff" +
+                    "993300ff993300ff993300ff993300ff993300ff993300ff993300ff9933" +
+                    "0000993300009933000099330000993300009933000099330000993300ff" +
+                    "993300ff993300ff993300ff993300ff993300ff993300ff993300ff9933" +
+                    "00ff99330000993300009933000099330000993300009933000099330000" +
+                    "993300ff9933000099330000993300009933000099330000993300009933" +
+                    "00009933000099330000993300009933000099330000993300ff993300ff" +
+                    "99330000993300ff99330000993300ff993300ff993300ff993300ff9933" +
+                    "00ff993300ff993300ff993300ff993300ff9933000099330000993300ff" +
+                    "993300ff99330000993300ff99330000993300ff993300ff993300ff9933" +
+                    "00ff993300ff993300ff993300ff993300ff993300ff9933000000000000" +
+                    "993300ff993300ff00000000993300ff0000000000000000000000000000" +
+                    "00000000000000000000000000000000000099330000993300ff99330000" +
+                    "00000000993300ff993300ff00000000993300ff00000000000000000000" +
+                    "0000000000000000000000000000993300ff993300ff00000000993300ff" +
+                    "0000000000000000993300ff993300ff00000000993300ff993300009933" +
+                    "000099330000993300009933000099330000993300ff993300ff99330000" +
+                    "993300ff9933000000000000993300ff993300ff00000000993300ff9933" +
+                    "00009933000099330000993300009933000099330000993300ff993300ff" +
+                    "99330000993300ff9933000000000000993300ff993300ff000000009933" +
+                    "00ff993300009933000099330000993300009933000099330000993300ff" +
+                    "993300ff99330000993300ff9933000000000000993300ff993300ff0000" +
+                    "000099330000993300009933000099330000993300009933000099330000" +
+                    "993300ff993300ff99330000993300ff9933000000000000993300ff9933" +
+                    "00ff00000000993300ff993300ff993300ff993300ff993300ff993300ff" +
+                    "993300ff993300ff993300ff99330000993300ff99330000000000009933" +
+                    "00ff993300ff000000009933000099330000993300009933000099330000" +
+                    "993300009933000099330000993300009933000099330000993300000000" +
+                    "0000993300ff993300ff993300ff993300ff993300ff993300ff993300ff" +
+                    "993300ff993300ff993300ff993300ff993300ff99330000993300009933" +
+                    "000000000000000000000000000000000000993300009933000099330000" +
+                    "993300009933000099330000993300009933000099330000993300009933" +
+                    "000099330000ffff0000f0070000f0070000f7ff00009401000094010000" +
+                    "97fd000097e5000097e5000097e5000097e500009fe50000900500009fff" +
+                    "000080070000ffff0000";
+
+
+    private static byte[] fromHex(String hex) {
+        Objects.requireNonNull(hex);
+        int len = hex.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) fromHex(hex.charAt(i), hex.charAt(i + 1));
+        }
+        return data;
+    }
+
+    private static int fromHex(int b1, int b2) {
+        int i1 = Character.digit(b1, 16);
+        if (i1 == -1) {
+            throw new IllegalArgumentException("invalid character in hexadecimal: " + b1);
+        }
+        int i2 = Character.digit(b2, 16);
+        if (i2 == -1) {
+            throw new IllegalArgumentException("invalid character in hexadecimal: " + b2);
+        }
+        return (i1 << 4) + i2;
+    }
 }
