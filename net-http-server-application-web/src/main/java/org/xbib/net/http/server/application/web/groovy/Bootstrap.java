@@ -15,8 +15,6 @@ import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpResponseStatus;
 import org.xbib.net.http.HttpVersion;
-import org.xbib.net.http.j2html.J2HtmlResourceHandler;
-import org.xbib.net.http.j2html.J2HtmlService;
 import org.xbib.net.http.server.application.web.WebApplication;
 import org.xbib.net.http.server.domain.BaseHttpDomain;
 import org.xbib.net.http.server.domain.BaseHttpSecurityDomain;
@@ -155,6 +153,7 @@ public final class Bootstrap {
                 .build();
 
         HttpRouter httpRouter = BaseHttpRouter.builder()
+                .setPrefix("/")
                 .setHandler(400, new GroovyHttpStatusHandler(HttpResponseStatus.BAD_REQUEST, "Bad request", "400.gtpl"))
                 .setHandler(401, new GroovyHttpStatusHandler(HttpResponseStatus.UNAUTHORIZED, "Unauthorized", "401.gtpl"))
                 .setHandler(403, new GroovyHttpStatusHandler(HttpResponseStatus.FORBIDDEN, "Forbidden", "403.gtpl"))
@@ -176,11 +175,6 @@ public final class Bootstrap {
                                 .setHandler(new ClassLoaderResourceHandler(Bootstrap.class.getClassLoader(), "META-INF/resources/"))
                                 .build())
                         .addService(httpService)
-                        .addService(J2HtmlService.builder()
-                                .setPrefix("/j2html")
-                                .setPath("glob:**")
-                                .setHandler(new J2HtmlResourceHandler())
-                                .build())
                         .addService(GroovyTemplateService.builder()
                                 .setTemplateName("index.gtpl")
                                 .setSecurityDomain(securityDomain)
