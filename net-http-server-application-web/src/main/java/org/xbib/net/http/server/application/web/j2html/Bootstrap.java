@@ -197,7 +197,6 @@ public final class Bootstrap {
         return 0;
     }
 
-
     private static final String hexFavIcon =
             "000001000100101000000100200068040000160000002800000010000000" +
                     "200000000100200000000000000000000000000000000000000000000000" +

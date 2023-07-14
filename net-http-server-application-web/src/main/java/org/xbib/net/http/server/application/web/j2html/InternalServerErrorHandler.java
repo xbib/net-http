@@ -3,7 +3,6 @@ package org.xbib.net.http.server.application.web.j2html;
 import org.xbib.net.Attributes;
 import org.xbib.net.Resource;
 import org.xbib.net.http.j2html.J2HtmlResourceHandler;
-import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.resource.HtmlTemplateResourceHandler;
 import org.xbib.net.http.server.route.HttpRouterContext;
 import org.xbib.net.util.ExceptionFormatter;
@@ -30,7 +29,8 @@ public class InternalServerErrorHandler extends J2HtmlResourceHandler {
         }
 
         @Override
-        protected String render(Application application, Attributes attributes) {
+        protected String renderBody(HttpRouterContext httpRouterContext) {
+            Attributes attributes = httpRouterContext.getAttributes();
             String message = attributes.get(String.class, "_message");
             Throwable throwable = attributes.get(Throwable.class, "_throwable");
             String stackTrace = ExceptionFormatter.format(throwable);

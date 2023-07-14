@@ -5,6 +5,7 @@ dependencies {
     api project(':net-http-server-application-config')
     api project(':net-http-template-groovy')
     api project(':net-http-j2html')
+    api project(':net-http-htmlflow')
     api libs.jdbc.query
     implementation libs.webjars.bootstrap
     implementation libs.webjars.jquery
