@@ -55,7 +55,7 @@ public class HtmlTemplateResource implements HttpServerResource {
         this.application = httpRouterContext.getAttributes().get(Application.class, "application");
         Objects.requireNonNull(application);
         this.negotiateLocale = application.getSettings().getAsBoolean("negotiateLocale", false);
-        this.responseBuilder = httpRouterContext.getAttributes().get(HttpResponseBuilder.class, "response");
+        this.responseBuilder = httpRouterContext.getAttributes().get(HttpResponseBuilder.class, "responsebuilder");
         Objects.requireNonNull(responseBuilder);
         Path root = templateResourceHandler.getRoot();
         root = root != null ? root : application.getHome();
