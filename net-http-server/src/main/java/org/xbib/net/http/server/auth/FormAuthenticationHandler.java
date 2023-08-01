@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.Parameter;
+import org.xbib.net.ParameterException;
 import org.xbib.net.SecurityRealm;
 import org.xbib.net.URL;
 import org.xbib.net.UserProfile;
@@ -59,15 +60,17 @@ public class FormAuthenticationHandler extends LoginAuthenticationHandler implem
             prepareFormAuthentication(context);
             return;
         }
-        String username = parameter.getAsString(usernameParameter, Parameter.Domain.FORM);
-        String password = parameter.getAsString(passwordParameter, Parameter.Domain.FORM);
-        logger.log(Level.FINE, "username and password found, ready for authentication");
         try {
+            String username = parameter.getAsString(usernameParameter, Parameter.Domain.FORM);
+            String password = parameter.getAsString(passwordParameter, Parameter.Domain.FORM);
+            logger.log(Level.FINE, "username and password found, ready for authentication");
             authenticate(userProfile, username, password, context.getRequest());
             logger.log(Level.FINE, "successful authentication");
             return;
+        } catch (ParameterException e) {
+            logger.log(Level.SEVERE, "parameter error");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "authentication error for " + username);
+            logger.log(Level.SEVERE, "authentication error");
         }
         prepareFormAuthentication(context);
     }

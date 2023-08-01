@@ -74,7 +74,7 @@ public class NettyHttpsServerTest {
                                             " SNI host = " + ctx.getRequest().as(HttpsRequest.class).getSNIHost() +
                                             " SSL peer host = " + ctx.getRequest().as(HttpsRequest.class).getSSLSession() +
                                             " base URL = " + ctx.getRequest().getBaseURL() +
-                                            " parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " parameter = " + ctx.getRequest().getParameter().toString() +
                                             " attributes = " + ctx.getAttributes() +
                                             " local address = " + ctx.getRequest().getLocalAddress() +
                                             " remote address = " + ctx.getRequest().getRemoteAddress());
@@ -152,7 +152,7 @@ public class NettyHttpsServerTest {
                                             " SNI host = " + ctx.getRequest().as(HttpsRequest.class).getSNIHost() +
                                             " SSL session = " + ctx.getRequest().as(HttpsRequest.class).getSSLSession() +
                                             " base URL = " + ctx.getRequest().getBaseURL() +
-                                            " parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " parameter = " + ctx.getRequest().getParameter().toString() +
                                             " attributes = " + ctx.getAttributes() +
                                             " local address = " + ctx.getRequest().getLocalAddress() +
                                             " remote address = " + ctx.getRequest().getRemoteAddress());

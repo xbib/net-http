@@ -3,7 +3,6 @@ package org.xbib.net.http.netty.test;
 import io.netty.bootstrap.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.xbib.net.NetworkClass;
-import org.xbib.net.Parameter;
 import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
@@ -58,13 +57,10 @@ class NettyHttpServerByteOrderMarkTest {
                                     logger.log(Level.FINEST, "handler starting");
                                     String content = ctx.getRequestBuilder().getBodyAsChars(StandardCharsets.UTF_8).toString();
                                     logger.log(Level.FINEST, "got content = " + content);
-                                    logger.log(Level.FINEST, "got FORM params op = " + ctx.getRequest().getParameter().getAll("op", Parameter.Domain.FORM));
-                                    logger.log(Level.FINEST, "got FORM params key = " + ctx.getRequest().getParameter().getAll("key", Parameter.Domain.FORM));
-                                    logger.log(Level.FINEST, "got FORM params query = " + ctx.getRequest().getParameter().getAll("query", Parameter.Domain.FORM));
                                     ctx.status(HttpResponseStatus.OK)
                                             .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .charset(StandardCharsets.UTF_8)
-                                            .body("parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            .body("parameter = " + ctx.getRequest().getParameter().toString() +
                                             " local address = " + ctx.getRequest().getLocalAddress() +
                                             " remote address = " + ctx.getRequest().getRemoteAddress() +
                                             " attributes = " + ctx.getAttributes() +

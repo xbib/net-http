@@ -167,7 +167,7 @@ public class BaseHttpRouteResolverTest {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
-            assertEquals("[token=abcdef]", r.getParameter().allToString());
+            assertEquals("[token=abcdef]", r.getParameter().toString());
             atomicInteger.incrementAndGet();
         });
         assertEquals(1, atomicInteger.get());
@@ -183,7 +183,7 @@ public class BaseHttpRouteResolverTest {
         AtomicInteger atomicInteger = new AtomicInteger(0);
         resolver.resolve(route, r -> {
             assertEquals(1, r.getValue());
-            assertEquals("[token=abcdef, key=123456]", r.getParameter().allToString());
+            assertEquals("[token=abcdef, key=123456]", r.getParameter().toString());
             atomicInteger.incrementAndGet();
         });
         assertEquals(1, atomicInteger.get());

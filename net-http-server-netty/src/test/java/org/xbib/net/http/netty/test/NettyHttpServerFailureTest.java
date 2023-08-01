@@ -56,7 +56,7 @@ public class NettyHttpServerFailureTest {
                                             .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .charset(StandardCharsets.UTF_8)
                                             .body("domain" +
-                                                    " parameter = " + ctx.getRequest().getParameter().allToString() +
+                                                    " parameter = " + ctx.getRequest().getParameter().toString() +
                                                     " local address = " + ctx.getRequest().getLocalAddress() +
                                                     " remote address = " + ctx.getRequest().getRemoteAddress() +
                                                     " attributes = " + ctx.getAttributes());

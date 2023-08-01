@@ -248,17 +248,13 @@ public class BaseHttpRouter implements HttpRouter {
             cookieBox.forEach(c -> cookieParameterBuilder.add(c.name(), c.value()));
         }
         Parameter queryParameter = url.getQueryParams();
-        logger.log(Level.FINER, "adding query parameters = " + queryParameter.getDomain() + " " + queryParameter.allToString());
         parameterBuilder.add(queryParameter);
         Parameter formParameter = formParameterBuilder.build();
-        logger.log(Level.FINER, "adding form parameters = " + formParameter.getDomain() + " " + formParameter.allToString());
         parameterBuilder.add(formParameter);
         Parameter cookieParameter = cookieParameterBuilder.build();
-        logger.log(Level.FINER, "adding cookie parameters = " + cookieParameter.getDomain() + " " + cookieParameter.allToString());
         parameterBuilder.add(cookieParameter);
         if (pathResolverResult != null) {
             Parameter pathParameter = pathResolverResult.getParameter();
-            logger.log(Level.FINER, "adding path parameters = " + pathParameter.getDomain() + " " + pathParameter.allToString());
             parameterBuilder.add(pathParameter);
         }
         httpRequestBuilder.setParameter(parameterBuilder.build());

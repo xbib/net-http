@@ -55,7 +55,7 @@ public class NettyHttpServerMultiRequestLoadTest {
                                             .charset(StandardCharsets.UTF_8)
                                             .body("domain: " +
                                             " base URL = " + ctx.getRequest().getBaseURL() +
-                                            " parameter = " + ctx.getRequest().getParameter().allToString() +
+                                            " parameter = " + ctx.getRequest().getParameter().toString() +
                                             " attributes = " + ctx.getAttributes() +
                                             " local address = " + ctx.getRequest().getLocalAddress() +
                                             " remote address = " + ctx.getRequest().getRemoteAddress())

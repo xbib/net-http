@@ -1,6 +1,7 @@
 package org.xbib.net.http.template.groovy;
 
 import groovy.text.markup.BaseTemplate;
+import org.xbib.net.ParameterException;
 import org.xbib.net.http.server.application.BaseApplicationModule;
 import org.xbib.net.http.server.application.Application;
 import org.xbib.net.http.server.HttpRequest;
@@ -60,9 +61,13 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
 
     @Override
     public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
-        httpRouterContext.getAttributes().put("request", httpRequest);
-        httpRouterContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
-        application.getModules().forEach(module -> httpRouterContext.getAttributes().put(module.getName(), module));
+        try {
+            httpRouterContext.getAttributes().put("request", httpRequest);
+            httpRouterContext.getAttributes().put("params", httpRequest.getParameter().asSingleValuedMap());
+            application.getModules().forEach(module -> httpRouterContext.getAttributes().put(module.getName(), module));
+        } catch (ParameterException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
