@@ -15,4 +15,11 @@ public class Task<T> extends FutureTask<T> {
     public Callable<T> getCallable() {
         return callable;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(super.toString());
+        return sb.toString();
+    }
 }

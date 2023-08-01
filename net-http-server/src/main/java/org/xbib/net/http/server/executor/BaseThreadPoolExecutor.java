@@ -1,5 +1,7 @@
 package org.xbib.net.http.server.executor;
 
+import org.xbib.net.util.ExceptionFormatter;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -43,7 +45,6 @@ public class BaseThreadPoolExecutor extends ThreadPoolExecutor {
         logger.log(Level.FINEST, () -> "after execute of " + runnable);
         if (terminationCause != null) {
             logger.log(Level.SEVERE, terminationCause.getMessage(), terminationCause);
-            return;
         }
     }
 }
