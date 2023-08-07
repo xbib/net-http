@@ -52,7 +52,7 @@ public class BaseApplication implements Application {
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
-        this.sessionName = getSettings().get("session.name", "SESS");
+        this.sessionName = builder.settings.get("session.name", "SESS");
         this.httpResponseRenderer = newResponseRenderer();
         this.applicationModuleList = new ArrayList<>();
         for (Map.Entry<String, Settings> entry : builder.settings.getGroups("module").entrySet()) {

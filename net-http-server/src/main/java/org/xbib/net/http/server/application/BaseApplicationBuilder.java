@@ -32,6 +32,10 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     private static final Set<String> DEFAULT_SUFFIXES =
             Set.of("css", "js", "ico", "png", "jpg", "jpeg", "gif", "woff2");
 
+    private String name;
+
+    private String profile;
+
     protected ClassLoader classLoader;
 
     protected Path home;
@@ -61,34 +65,17 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     protected HttpRouter httpRouter;
 
     protected BaseApplicationBuilder() {
-        this.classLoader = getClass().getClassLoader();
-        this.home = Paths.get(System.getProperties().containsKey("application.home") ? System.getProperty("application.home") : ".");
-        this.contextPath = "/";
-        this.secret = "secret";
         this.sessionsEnabled = true;
-        this.locale = Locale.getDefault();
-        this.zoneId = ZoneId.systemDefault();
-        this.mimeTypeService = new MimeTypeService();
-        String name = System.getProperty("application.name");
-        if (name == null) {
-            name = "application";
-        }
-        String profile = System.getProperty("application.profile");
-        if (profile == null) {
-            profile = "developer";
-        }
-        this.configParams = new ConfigParams()
-                .withDirectoryName(name)
-                .withFileNamesWithoutSuffix(profile)
-                .withSystemEnvironment()
-                .withSystemProperties();
-        this.configLoader = ConfigLoader.getInstance()
-                .withLogger(bootLogger);
-        this.settings = configLoader.load(configParams);
-        if (staticFileSuffixes == null) {
-            staticFileSuffixes = DEFAULT_SUFFIXES;
-        }
-        this.executor = BaseExecutor.builder().build();
+    }
+
+    public BaseApplicationBuilder setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public BaseApplicationBuilder setProfile(String profile) {
+        this.profile = profile;
+        return this;
     }
 
     public BaseApplicationBuilder setSettings(Settings settings) {
@@ -159,6 +146,49 @@ public class BaseApplicationBuilder implements ApplicationBuilder {
     @Override
     public Application build() {
         Objects.requireNonNull(httpRouter, "http router must not be null");
+        if (this.classLoader == null) {
+            this.classLoader = getClass().getClassLoader();
+        }
+        if (this.home == null) {
+            this.home = Paths.get(System.getProperty("application.home", "."));
+        }
+        if (this.contextPath == null) {
+            this.contextPath = "/";
+        }
+        if (this.secret == null) {
+            this.secret = "secret";
+        }
+        if (this.locale == null) {
+            this.locale = Locale.getDefault();
+        }
+        if (this.zoneId == null) {
+            this.zoneId = ZoneId.systemDefault();
+        }
+        if (name == null) {
+            name = System.getProperty("application.name", "application");
+        }
+        if (profile == null) {
+            profile = System.getProperty("application.profile", "developer");
+        }
+        if (this.settings == null) {
+            this.configParams = new ConfigParams()
+                    .withDirectoryName(name)
+                    .withFileNamesWithoutSuffix(profile)
+                    .withSystemEnvironment()
+                    .withSystemProperties();
+            this.configLoader = ConfigLoader.getInstance()
+                    .withLogger(bootLogger);
+            this.settings = configLoader.load(configParams);
+        }
+        if (this.mimeTypeService == null) {
+            this.mimeTypeService = new MimeTypeService();
+        }
+        if (this.staticFileSuffixes == null) {
+            this.staticFileSuffixes = DEFAULT_SUFFIXES;
+        }
+        if (executor == null) {
+            this.executor = BaseExecutor.builder().build();
+        }
         return new BaseApplication(this);
     }
 }

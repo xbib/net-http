@@ -54,6 +54,7 @@ public class WebApplicationBuilder extends BaseApplicationBuilder {
 
     @Override
     public WebApplication build() {
+        super.build();
         return new WebApplication(this);
     }
 }
