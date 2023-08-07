@@ -52,11 +52,11 @@ public interface HttpResponseBuilder {
 
     HttpResponseBuilder setResponseId(Long responseId);
 
-    HttpResponseBuilder write(String body);
-
-    HttpResponseBuilder write(CharBuffer charBuffer, Charset charset);
+    HttpResponseBuilder write(byte[] bytes);
 
     HttpResponseBuilder write(DataBuffer dataBuffer);
+
+    HttpResponseBuilder write(CharBuffer charBuffer, Charset charset);
 
     HttpResponseBuilder write(InputStream inputStream, int bufferSize);
 

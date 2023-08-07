@@ -71,7 +71,7 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
 
     protected Charset charset;
 
-    protected String body;
+    protected byte[] bytes;
 
     protected CharBuffer charBuffer;
 
@@ -260,11 +260,9 @@ public abstract class BaseHttpResponseBuilder implements HttpResponseBuilder {
     }
 
     @Override
-    public BaseHttpResponseBuilder write(String body) {
-        if (body != null && this.body == null) {
-            this.body = body;
-        } else {
-            logger.log(Level.WARNING, "cannot write more than one body");
+    public BaseHttpResponseBuilder write(byte[] bytes) {
+        if (bytes != null) {
+            this.bytes = bytes;
         }
         return this;
     }

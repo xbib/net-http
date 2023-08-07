@@ -30,7 +30,6 @@ import java.io.UncheckedIOException;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -127,8 +126,8 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     @Override
     public HttpResponse build() {
         Objects.requireNonNull(ctx);
-        if (body != null) {
-            internalStringWrite(body);
+        if (bytes != null) {
+            internalByteWrite(bytes);
         } else if (charBuffer != null && charset != null) {
             internalBufferWrite(charBuffer, charset);
         } else if (dataBuffer != null) {
@@ -155,8 +154,8 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         super.release();
     }
 
-    private void internalStringWrite(String body) {
-        internalBufferWrite(dataBufferFactory.wrap(StandardCharsets.UTF_8.encode(body)));
+    private void internalByteWrite(byte[] bytes) {
+        internalBufferWrite(dataBufferFactory.wrap(bytes));
     }
 
     private void internalBufferWrite(DataBuffer dataBuffer) {

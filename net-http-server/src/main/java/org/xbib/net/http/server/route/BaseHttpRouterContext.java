@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
@@ -234,20 +235,26 @@ public class BaseHttpRouterContext implements HttpRouterContext {
     }
 
     @Override
-    public BaseHttpRouterContext body(String string) throws IOException {
-        httpResponseBuilder.write(string);
-        return this;
-    }
-
-    @Override
-    public BaseHttpRouterContext body(CharBuffer charBuffer, Charset charset) throws IOException {
-        httpResponseBuilder.write(charBuffer, charset);
+    public BaseHttpRouterContext body(byte[] bytes) throws IOException {
+        httpResponseBuilder.write(bytes);
         return this;
     }
 
     @Override
     public BaseHttpRouterContext body(DataBuffer dataBuffer) throws IOException {
         httpResponseBuilder.write(dataBuffer);
+        return this;
+    }
+
+    @Override
+    public BaseHttpRouterContext body(String string) throws IOException {
+        httpResponseBuilder.write(CharBuffer.wrap(string), StandardCharsets.UTF_8);
+        return this;
+    }
+
+    @Override
+    public BaseHttpRouterContext body(CharBuffer charBuffer, Charset charset) throws IOException {
+        httpResponseBuilder.write(charBuffer, charset);
         return this;
     }
 

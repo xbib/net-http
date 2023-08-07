@@ -157,7 +157,7 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
         if (url.getFragment() != null) {
             sb.append('#').append(url.getFragment());
         }
-        if (sb.length() == 0) {
+        if (sb.isEmpty()) {
             sb.append('/');
         }
         return sb.toString();
@@ -170,12 +170,6 @@ public abstract class DefaultMarkupTemplate extends BaseTemplate {
             builder.add(entry.getKey(), entry.getValue());
         }
         return uriTemplate.toURL(builder.build()).toString();
-    }
-
-    public void write(String string) {
-        if (string != null) {
-            responseBuilder.write(string);
-        }
     }
 
     public void writeBytes(byte[] bytes) {

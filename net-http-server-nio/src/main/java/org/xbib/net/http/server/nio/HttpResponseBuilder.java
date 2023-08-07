@@ -38,8 +38,8 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
     public HttpResponse build() {
         Objects.requireNonNull(outputStream);
         try {
-            if (body != null) {
-                internalWrite(body);
+            if (bytes != null) {
+                internalWrite(bytes);
             } else if (charBuffer != null && charset != null) {
                 internalWrite(charBuffer, charset);
             } else if (dataBuffer != null) {
@@ -73,20 +73,11 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
         outputStream.close();
     }
 
-    void internalWrite(String string) throws IOException {
-        if (string == null) {
+    void internalWrite(byte[] bytes) throws IOException {
+        if (bytes == null) {
             internalFlush();
         } else {
-            write(dataBufferFactory.wrap(StandardCharsets.UTF_8.encode(string)));
-        }
-    }
-
-    void internalWrite(CharBuffer charBuffer, Charset charset) throws IOException {
-        if (charBuffer == null) {
-            internalFlush();
-        } else {
-            Objects.requireNonNull(charset);
-            write(dataBufferFactory.wrap(charset.encode(charBuffer)));
+            write(dataBufferFactory.wrap(bytes));
         }
     }
 
@@ -100,6 +91,15 @@ public class HttpResponseBuilder extends BaseHttpResponseBuilder {
             while (byteBuffer.hasRemaining()) {
                 channel.write(byteBuffer);
             }
+        }
+    }
+
+    void internalWrite(CharBuffer charBuffer, Charset charset) throws IOException {
+        if (charBuffer == null) {
+            internalFlush();
+        } else {
+            Objects.requireNonNull(charset);
+            write(dataBufferFactory.wrap(charset.encode(charBuffer)));
         }
     }
 

@@ -7,6 +7,8 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
+
+import org.xbib.net.Attributes;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
@@ -40,6 +42,8 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
 
     Collection<ApplicationModule> getModules();
 
+    Attributes getAttributes();
+
     HttpRouterContext createContext(HttpDomain domain,
                                     HttpRequestBuilder httpRequestBuilder,
                                     HttpResponseBuilder httpResponseBuilder);
@@ -54,5 +58,6 @@ public interface Application extends SessionListener, Resolver<Path>, Closeable 
 
     HttpRouter getRouter();
 
+    @Override
     void close() throws IOException;
 }

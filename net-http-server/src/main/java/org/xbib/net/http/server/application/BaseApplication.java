@@ -14,8 +14,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.xbib.net.Attributes;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.cookie.SameSite;
+import org.xbib.net.http.server.auth.BaseAttributes;
 import org.xbib.net.http.server.route.BaseHttpRouterContext;
 import org.xbib.net.http.server.HttpHandler;
 import org.xbib.net.http.server.HttpRequestBuilder;
@@ -48,12 +50,15 @@ public class BaseApplication implements Application {
 
     private final HttpResponseRenderer httpResponseRenderer;
 
+    private final Attributes attributes;
+
     protected List<ApplicationModule> applicationModuleList;
 
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
         this.sessionName = builder.settings.get("session.name", "SESS");
         this.httpResponseRenderer = newResponseRenderer();
+        this.attributes = newAttributes();
         this.applicationModuleList = new ArrayList<>();
         for (Map.Entry<String, Settings> entry : builder.settings.getGroups("module").entrySet()) {
             String moduleName = entry.getKey();
@@ -130,6 +135,11 @@ public class BaseApplication implements Application {
     }
 
     @Override
+    public Attributes getAttributes() {
+        return attributes;
+    }
+
+    @Override
     public Collection<HttpDomain> getDomains() {
         return builder.httpRouter.getDomains();
     }
@@ -180,6 +190,10 @@ public class BaseApplication implements Application {
 
     protected HttpResponseRenderer newResponseRenderer() {
         return new HttpResponseRenderer();
+    }
+
+    protected Attributes newAttributes() {
+        return new BaseAttributes();
     }
 
     protected Codec<Session> newSessionCodec(HttpRouterContext httpRouterContext) {

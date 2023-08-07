@@ -81,11 +81,13 @@ public interface HttpRouterContext {
 
     HttpRouterContext cookie(Cookie cookie);
 
+    HttpRouterContext body(byte[] bytes) throws IOException;
+
+    HttpRouterContext body(DataBuffer dataBuffer) throws IOException;
+
     HttpRouterContext body(String string) throws IOException;
 
     HttpRouterContext body(CharBuffer charBuffer, Charset charset) throws IOException;
-
-    HttpRouterContext body(DataBuffer dataBuffer) throws IOException;
 
     HttpRouterContext body(InputStream inputStream, int bufferSize) throws IOException;
 
