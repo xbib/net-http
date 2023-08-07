@@ -1,7 +1,5 @@
-import org.xbib.net.http.server.application.ApplicationModule;
 
 module org.xbib.net.http.server {
-    uses ApplicationModule;
     uses org.xbib.config.ConfigLogger;
     exports org.xbib.net.http.server;
     exports org.xbib.net.http.server.application;
