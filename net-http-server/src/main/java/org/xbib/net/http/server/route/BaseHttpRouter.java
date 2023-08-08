@@ -209,13 +209,16 @@ public class BaseHttpRouter implements HttpRouter {
         if (mimeType != null) {
             charset = getCharset(mimeType, charset);
         }
-        ParameterBuilder parameterBuilder = Parameter.builder().charset(charset);
+        ParameterBuilder parameterBuilder = Parameter.builder()
+                .domain(Parameter.Domain.QUERY)
+                .charset(charset);
         // helper URL to collect parameters in request URI
         URL url = URL.builder()
                 .charset(charset, CodingErrorAction.REPLACE)
                 .path(httpRequestBuilder.getRequestURI())
                 .build();
-        ParameterBuilder formParameterBuilder = Parameter.builder().domain(Parameter.Domain.FORM)
+        ParameterBuilder formParameterBuilder = Parameter.builder()
+                .domain(Parameter.Domain.FORM)
                 .enableDuplicates();
         // https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4
         if (HttpMethod.POST.equals(httpRequestBuilder.getMethod()) &&
@@ -243,7 +246,8 @@ public class BaseHttpRouter implements HttpRouter {
             }
         }
         CookieBox cookieBox = httpRouterContext.getAttributes().get(CookieBox.class, "incomingcookies");
-        ParameterBuilder cookieParameterBuilder = Parameter.builder().domain(Parameter.Domain.COOKIE);
+        ParameterBuilder cookieParameterBuilder = Parameter.builder()
+                .domain(Parameter.Domain.COOKIE);
         if (cookieBox != null) {
             cookieBox.forEach(c -> cookieParameterBuilder.add(c.name(), c.value()));
         }
