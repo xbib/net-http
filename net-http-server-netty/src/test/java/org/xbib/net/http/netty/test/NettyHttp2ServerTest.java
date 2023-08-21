@@ -52,9 +52,7 @@ public class NettyHttp2ServerTest {
                                             .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .charset(StandardCharsets.UTF_8)
                                             .body("Hello, here is my response: " +
-                                                    ctx.getRequest().getParameter() + " " +
-                                                    ctx.getRequest().getLocalAddress() +  " " +
-                                                    ctx.getRequest().getRemoteAddress())
+                                                    ctx.getRequest().asJson())
                                             .done();
                                 })
                                 .build())

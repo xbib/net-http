@@ -1,6 +1,9 @@
 package org.xbib.net.http.netty.test;
 
 import io.netty.bootstrap.Bootstrap;
+
+import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import org.junit.jupiter.api.Test;
@@ -9,7 +12,9 @@ import org.xbib.net.URL;
 import org.xbib.net.http.HttpAddress;
 import org.xbib.net.http.HttpHeaderNames;
 import org.xbib.net.http.HttpHeaderValues;
+import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpResponseStatus;
+import org.xbib.net.http.client.HttpRequestBuilder;
 import org.xbib.net.http.client.netty.HttpRequest;
 import org.xbib.net.http.client.netty.NettyHttpClient;
 import org.xbib.net.http.client.netty.NettyHttpClientConfig;
@@ -22,6 +27,7 @@ import org.xbib.net.http.server.route.HttpRouter;
 import org.xbib.net.http.server.service.BaseHttpService;
 import org.xbib.net.http.server.netty.NettyHttpServer;
 import org.xbib.net.http.server.netty.NettyHttpServerConfig;
+import org.xbib.net.util.JsonUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
@@ -50,11 +56,7 @@ public class NettyHttpServerTest {
                                     ctx.status(HttpResponseStatus.OK)
                                             .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
                                             .charset(StandardCharsets.UTF_8)
-                                            .body("domain" +
-                                                    " parameter = " + ctx.getRequest().getParameter().toString() +
-                                                    " local address = " + ctx.getRequest().getLocalAddress() +
-                                                    " remote address = " + ctx.getRequest().getRemoteAddress() +
-                                                    " attributes = " + ctx.getAttributes())
+                                            .body(ctx.getRequest().asJson())
                                             .done();
                                 })
                                 .build())
@@ -81,10 +83,19 @@ public class NettyHttpServerTest {
                 HttpRequest request = HttpRequest.get()
                         .setURL(url)
                         .setResponseListener(resp -> {
+                            String body = resp.getBodyAsChars(StandardCharsets.UTF_8).toString();
                             logger.log(Level.INFO, "got response:" +
                                     " status = " + resp.getStatus() +
                                     " header = " + resp.getHeaders() +
-                                    " body = " + resp.getBodyAsChars(StandardCharsets.UTF_8));
+                                    " body = " + body);
+                            try {
+                                Map<String, Object> map = JsonUtil.toMap(body);
+                                org.xbib.net.http.server.netty.HttpRequest httpRequest = org.xbib.net.http.server.netty.HttpRequest.builder()
+                                                .parse(map).build();
+                                logger.log(Level.INFO, "parsed http request = " + httpRequest.asJson());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                             received.set(true);
                         })
                         .build();

@@ -43,4 +43,6 @@ public interface HttpRequest extends Request {
     List<Message> getMessages();
 
     Attributes getAttributes();
+
+    String asJson();
 }

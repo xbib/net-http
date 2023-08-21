@@ -6,7 +6,7 @@ dependencyResolutionManagement {
             version('groovy', '4.0.13')
             version('netty', '4.1.96.Final')
             version('netty-tcnative', '2.0.61.Final')
-            version('datastructures', '2.3.0')
+            version('datastructures', '2.3.1')
             version('config', '5.0.3')
             version('net', '3.3.3')
             library('junit-jupiter-api', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('junit')

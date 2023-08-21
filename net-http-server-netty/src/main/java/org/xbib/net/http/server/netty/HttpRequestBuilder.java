@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xbib.net.Parameter;
@@ -31,6 +32,11 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     protected CharBuffer charBuffer;
 
     protected HttpRequestBuilder() {
+    }
+
+    public HttpRequestBuilder parse(Map<String, Object> map) {
+        super.parse(map);
+        return this;
     }
 
     public HttpRequestBuilder setHttpRequest(io.netty.handler.codec.http.HttpRequest httpRequest) {
