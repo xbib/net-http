@@ -11,13 +11,23 @@ public interface ApplicationModule {
 
     void onOpen(HttpRouterContext httpRouterContext);
 
+    void onSuccess(HttpRouterContext httpRouterContext);
+
+    void onFail(HttpRouterContext httpRouterContext, Throwable throwable);
+
     void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest);
 
-    void onClose(HttpRouterContext httpRouterContext);
+    void onSuccess(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest);
+
+    void onFail(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest, Throwable throwable);
 
     void onOpen(Session session);
 
-    void onClose(Session session);
+    void onSuccess(Session session);
 
-    void onClose();
+    void onFail(Session session, Throwable throwable);
+
+    void onSuccess();
+
+    void onFail(Throwable throwable);
 }

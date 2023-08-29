@@ -54,6 +54,8 @@ public class BaseApplication implements Application {
 
     protected List<ApplicationModule> applicationModuleList;
 
+    private Throwable throwable;
+
     protected BaseApplication(BaseApplicationBuilder builder) {
         this.builder = builder;
         this.sessionName = builder.settings.get("session.name", "SESS");
@@ -240,26 +242,38 @@ public class BaseApplication implements Application {
     @Override
     public void onDestroy(Session session) {
         logger.log(Level.FINER, "session name = " + sessionName + " destroyed = " + session);
-        applicationModuleList.forEach(module -> module.onClose(session));
+        if (throwable != null) {
+            applicationModuleList.forEach(module -> module.onFail(session, throwable));
+        } else {
+            applicationModuleList.forEach(module -> module.onSuccess(session));
+        }
     }
 
     @Override
     public void onOpen(HttpRouterContext httpRouterContext) {
+        this.throwable = null;
         try {
             // call modules after request/cookie/session setup
             applicationModuleList.forEach(module -> module.onOpen(httpRouterContext));
         } catch (Throwable t) {
+            this.throwable = t;
+            applicationModuleList.forEach(module -> module.onFail(httpRouterContext, t));
             builder.httpRouter.routeToErrorHandler(httpRouterContext, t);
-            httpRouterContext.fail();
+            httpRouterContext.fail(t);
         }
     }
 
     @Override
     public void onClose(HttpRouterContext httpRouterContext) {
         try {
-            // call modules before session/cookie
-            applicationModuleList.forEach(module -> module.onClose(httpRouterContext));
+            if (throwable != null) {
+                applicationModuleList.forEach(module -> module.onFail(httpRouterContext, throwable));
+            } else {
+                applicationModuleList.forEach(module -> module.onSuccess(httpRouterContext));
+            }
         } catch (Throwable t) {
+            this.throwable = t;
+            applicationModuleList.forEach(module -> module.onFail(httpRouterContext, t));
             builder.httpRouter.routeToErrorHandler(httpRouterContext, t);
         } finally {
             try {
@@ -307,7 +321,11 @@ public class BaseApplication implements Application {
         // stop dispatching and stop dispatched requests
         applicationModuleList.forEach(module -> {
             logger.log(Level.FINE, "application closing module " + module);
-            module.onClose();
+            if (throwable != null) {
+                module.onFail(throwable);
+            } else {
+                module.onSuccess();
+            }
         });
         logger.log(Level.INFO, "application closed");
     }

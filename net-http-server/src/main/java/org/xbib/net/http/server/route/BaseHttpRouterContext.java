@@ -53,7 +53,7 @@ public class BaseHttpRouterContext implements HttpRouterContext {
 
     private boolean done;
 
-    private boolean failed;
+    private Throwable throwable;
 
     private boolean next;
 
@@ -201,12 +201,17 @@ public class BaseHttpRouterContext implements HttpRouterContext {
 
     @Override
     public boolean isFailed() {
-        return failed;
+        return throwable != null;
     }
 
     @Override
-    public void fail() {
-        this.failed = true;
+    public void fail(Throwable throwable) {
+        this.throwable = throwable;
+    }
+
+    @Override
+    public Throwable getFail() {
+        return throwable;
     }
 
     public void next() {

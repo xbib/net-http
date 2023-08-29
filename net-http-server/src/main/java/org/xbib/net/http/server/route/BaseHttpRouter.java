@@ -36,6 +36,7 @@ import org.xbib.net.http.server.HttpRequest;
 import org.xbib.net.http.server.HttpRequestBuilder;
 import org.xbib.net.http.server.HttpResponseBuilder;
 import org.xbib.net.http.server.application.Application;
+import org.xbib.net.http.server.application.ApplicationModule;
 import org.xbib.net.http.server.domain.HttpDomain;
 import org.xbib.net.http.server.handler.InternalServerErrorHandler;
 import org.xbib.net.http.server.service.HttpService;
@@ -140,15 +141,19 @@ public class BaseHttpRouter implements HttpRouter {
             return;
         }
         for (HttpRouteResolver.Result<HttpService> httpRouteResolverResult : httpRouteResolverResults) {
+            HttpService httpService = null;
+            HttpRequest httpRequest = null;
             try {
                 // first: create the final request
                 setResolverResult(httpRouterContext, httpRouteResolverResult);
-                HttpService httpService = httpRouteResolverResult.getValue();
-                HttpRequest httpRequest = httpRouterContext.getRequest();
-                application.getModules().forEach(module -> module.onOpen(httpRouterContext, httpService, httpRequest));
+                httpService = httpRouteResolverResult.getValue();
+                httpRequest = httpRouterContext.getRequest();
+                for (ApplicationModule module : application.getModules()) {
+                    module.onOpen(httpRouterContext, httpService, httpRequest);
+                }
                 // second: security check, authentication etc.
                 if (httpService.getSecurityDomain() != null) {
-                    logger.log(Level.FINEST, () -> "handling security domain service " + httpService);
+                    logger.log(Level.FINEST, "handling security domain service " + httpService);
                     for (HttpHandler httpHandler : httpService.getSecurityDomain().getHandlers()) {
                         logger.log(Level.FINEST, () -> "handling security domain handler " + httpHandler);
                         httpHandler.handle(httpRouterContext);
@@ -159,14 +164,26 @@ public class BaseHttpRouter implements HttpRouter {
                 }
                 // after security checks, accept service, open and execute service
                 httpRouterContext.getAttributes().put("service", httpService);
-                logger.log(Level.FINEST, () -> "handling service " + httpService);
+                logger.log(Level.FINEST, "handling service " + httpService);
                 httpService.handle(httpRouterContext);
                 // if service signals that work is done, break
                 if (httpRouterContext.isDone() || httpRouterContext.isFailed()) {
+                    for (ApplicationModule module : application.getModules()) {
+                        module.onSuccess(httpRouterContext, httpService, httpRequest);
+                    }
+                    break;
+                }
+                if (httpRouterContext.isFailed()) {
+                    for (ApplicationModule module : application.getModules()) {
+                        module.onFail(httpRouterContext, httpService, httpRequest, httpRouterContext.getFail());
+                    }
                     break;
                 }
             } catch (HttpException e) {
                 logger.log(Level.SEVERE, e.getMessage(), e);
+                for (ApplicationModule module : application.getModules()) {
+                    module.onFail(httpRouterContext, httpService, httpRequest, httpRouterContext.getFail());
+                }
                 routeException(e);
                 break;
             } catch (Throwable t) {
@@ -330,7 +347,7 @@ public class BaseHttpRouter implements HttpRouter {
     @Override
     public void routeToErrorHandler(HttpRouterContext httpRouterContext, Throwable t) {
         httpRouterContext.getAttributes().put("_throwable", t);
-        httpRouterContext.fail();
+        httpRouterContext.fail(t);
         routeStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR, httpRouterContext);
     }
 

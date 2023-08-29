@@ -30,11 +30,23 @@ public abstract class BaseApplicationModule implements ApplicationModule {
     }
 
     @Override
+    public void onSuccess(HttpRouterContext httpRouterContext) {
+    }
+
+    @Override
+    public void onFail(HttpRouterContext httpRouterContext, Throwable throwable) {
+    }
+
+    @Override
     public void onOpen(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
     }
 
     @Override
-    public void onClose(HttpRouterContext httpRouterContext) {
+    public void onSuccess(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest) {
+    }
+
+    @Override
+    public void onFail(HttpRouterContext httpRouterContext, HttpService httpService, HttpRequest httpRequest, Throwable throwable) {
     }
 
     @Override
@@ -42,10 +54,18 @@ public abstract class BaseApplicationModule implements ApplicationModule {
     }
 
     @Override
-    public void onClose(Session session) {
+    public void onSuccess(Session session) {
     }
 
     @Override
-    public void onClose() {
+    public void onFail(Session session, Throwable throwable) {
+    }
+
+    @Override
+    public void onSuccess() {
+    }
+
+    @Override
+    public void onFail(Throwable throwable) {
     }
 }

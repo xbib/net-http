@@ -49,7 +49,9 @@ public interface HttpRouterContext {
 
     void reset();
 
-    void fail();
+    void fail(Throwable throwable);
+
+    Throwable getFail();
 
     boolean isFailed();
 

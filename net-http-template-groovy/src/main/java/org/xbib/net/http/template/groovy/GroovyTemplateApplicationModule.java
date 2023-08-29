@@ -71,7 +71,16 @@ public class GroovyTemplateApplicationModule extends BaseApplicationModule {
     }
 
     @Override
-    public void onClose(HttpRouterContext httpRouterContext) {
+    public void onSuccess(HttpRouterContext httpRouterContext) {
+        try {
+            groovyTemplateRenderer.handle(httpRouterContext);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void onFail(HttpRouterContext httpRouterContext, Throwable throwable) {
         try {
             groovyTemplateRenderer.handle(httpRouterContext);
         } catch (IOException e) {
