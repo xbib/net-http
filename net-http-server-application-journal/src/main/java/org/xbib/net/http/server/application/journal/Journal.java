@@ -60,7 +60,7 @@ public class Journal {
         writeLock.lock();
         Path path = journalPath.resolve("success").resolve(stamp + ".request");
         Files.createDirectories(path.getParent());
-        Files.move(journalPath.resolve(stamp), path);
+        Files.move(journalPath.resolve(stamp + ".log"), path);
         try (OutputStream outputStream = Files.newOutputStream(journalPath.resolve("success").resolve(stamp + ".response"), StandardOpenOption.CREATE)) {
             outputStream.write(response.getBytes(StandardCharsets.UTF_8));
         } finally {
@@ -73,7 +73,7 @@ public class Journal {
         writeLock.lock();
         Path path = journalPath.resolve("fail").resolve(stamp + ".request");
         Files.createDirectories(path.getParent());
-        Files.move(journalPath.resolve(stamp), path);
+        Files.move(journalPath.resolve(stamp + ".log"), path);
         // save throwable in extra file
         try (OutputStream outputStream = Files.newOutputStream(journalPath.resolve("fail").resolve(stamp + ".exception"), StandardOpenOption.CREATE)) {
             outputStream.write(ExceptionFormatter.format(t).getBytes(StandardCharsets.UTF_8));
