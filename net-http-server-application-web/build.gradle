@@ -10,7 +10,7 @@ dependencies {
     implementation libs.webjars.bootstrap
     implementation libs.webjars.jquery
     implementation libs.webjars.fontawesome
-    runtimeOnly libs.net.bouncycastle
+    testRuntimeOnly libs.net.bouncycastle
 }
 
 application {
