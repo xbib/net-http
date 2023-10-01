@@ -129,6 +129,12 @@ public class HttpRequestBuilder extends BaseHttpRequestBuilder {
     }
 
     @Override
+    public HttpRequestBuilder content(byte[] bytes, String contentType) {
+        super.content(bytes, contentType);
+        return this;
+    }
+
+    @Override
     public HttpRequestBuilder setFollowRedirect(boolean followRedirect) {
         super.setFollowRedirect(followRedirect);
         return this;
