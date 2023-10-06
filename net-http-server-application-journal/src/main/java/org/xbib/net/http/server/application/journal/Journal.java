@@ -109,17 +109,19 @@ public class Journal {
         writeLock.lock();
         PathMatcher pathMatcher = journalPath.getFileSystem().getPathMatcher("glob:*.request");
         try {
-            Files.walkFileTree(journalPath.resolve("success"), EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult visitFile(Path p, BasicFileAttributes a) throws IOException {
-                    if ((Files.isRegularFile(p) && pathMatcher.matches(p.getFileName()))) {
-                        if (Files.getLastModifiedTime(p).toInstant().isBefore(instant)) {
-                            Files.delete(p);
+            if (Files.exists(journalPath.resolve("success"))) {
+                Files.walkFileTree(journalPath.resolve("success"), EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path p, BasicFileAttributes a) throws IOException {
+                        if ((Files.isRegularFile(p) && pathMatcher.matches(p.getFileName()))) {
+                            if (Files.getLastModifiedTime(p).toInstant().isBefore(instant)) {
+                                Files.delete(p);
+                            }
                         }
+                        return FileVisitResult.CONTINUE;
                     }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+                });
+            }
         } finally {
             writeLock.unlock();
         }
@@ -130,17 +132,19 @@ public class Journal {
         writeLock.lock();
         PathMatcher pathMatcher = journalPath.getFileSystem().getPathMatcher("glob:*.request");
         try {
-            Files.walkFileTree(journalPath.resolve("fail"), EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult visitFile(Path p, BasicFileAttributes a) throws IOException {
-                    if ((Files.isRegularFile(p) && pathMatcher.matches(p.getFileName()))) {
-                        if (Files.getLastModifiedTime(p).toInstant().isBefore(instant)) {
-                            Files.delete(p);
+            if (Files.exists(journalPath.resolve("fail"))) {
+                Files.walkFileTree(journalPath.resolve("fail"), EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path p, BasicFileAttributes a) throws IOException {
+                        if ((Files.isRegularFile(p) && pathMatcher.matches(p.getFileName()))) {
+                            if (Files.getLastModifiedTime(p).toInstant().isBefore(instant)) {
+                                Files.delete(p);
+                            }
                         }
+                        return FileVisitResult.CONTINUE;
                     }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+                });
+            }
         } finally {
             writeLock.unlock();
         }
