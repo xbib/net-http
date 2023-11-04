@@ -34,6 +34,7 @@ dependencyResolutionManagement {
             library('net-security', 'org.xbib', 'net-security').versionRef('net')
             library('net-bouncycastle', 'org.xbib', 'net-bouncycastle').versionRef('net')
             library('datastructures-common', 'org.xbib', 'datastructures-common').versionRef('datastructures')
+            library('datastructures-tiny', 'org.xbib', 'datastructures-tiny').versionRef('datastructures')
             library('datastructures-json-tiny', 'org.xbib', 'datastructures-json-tiny').versionRef('datastructures')
             library('datastructures-yaml-tiny', 'org.xbib', 'datastructures-yaml-tiny').versionRef('datastructures')
             library('config', 'org.xbib', 'config').versionRef('datastructures')

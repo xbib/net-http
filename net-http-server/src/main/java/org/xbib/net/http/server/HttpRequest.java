@@ -3,6 +3,7 @@ package org.xbib.net.http.server;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
+import org.xbib.datastructures.common.MultiMap;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.Request;
@@ -45,4 +46,6 @@ public interface HttpRequest extends Request {
     Attributes getAttributes();
 
     String asJson();
+
+    MultiMap<String, Object> asMultiMap();
 }

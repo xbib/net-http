@@ -3,5 +3,6 @@ dependencies {
     api libs.config
     implementation libs.settings.datastructures.json
     implementation libs.settings.datastructures.yaml
+    implementation libs.datastructures.tiny
     implementation libs.datastructures.json.tiny
 }

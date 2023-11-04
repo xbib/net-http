@@ -2,26 +2,40 @@ package org.xbib.net.http.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.nio.charset.UnmappableCharacterException;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.xbib.datastructures.common.MultiMap;
 import org.xbib.datastructures.common.Pair;
+import org.xbib.datastructures.json.tiny.Json;
 import org.xbib.datastructures.json.tiny.JsonBuilder;
+import org.xbib.datastructures.tiny.TinyList;
+import org.xbib.datastructures.tiny.TinyMultiMap;
 import org.xbib.net.Attributes;
 import org.xbib.net.Parameter;
 import org.xbib.net.ParameterException;
+import org.xbib.net.PercentDecoder;
 import org.xbib.net.URL;
+import org.xbib.net.http.HttpHeaderNames;
+import org.xbib.net.http.HttpHeaderValues;
 import org.xbib.net.http.HttpHeaders;
 import org.xbib.net.http.HttpMethod;
 import org.xbib.net.http.HttpVersion;
 import org.xbib.net.http.server.auth.BaseAttributes;
 import org.xbib.net.http.server.route.HttpRouterContext;
+import org.xbib.net.util.ExceptionFormatter;
 
 public abstract class BaseHttpRequest implements HttpRequest {
+
+    private static final Logger logger = Logger.getLogger(BaseHttpRequest.class.getName());
 
     protected final BaseHttpRequestBuilder builder;
 
@@ -157,7 +171,7 @@ public abstract class BaseHttpRequest implements HttpRequest {
             jsonBuilder.buildKey("sequenceid").buildValue(builder.sequenceId);
             jsonBuilder.buildKey("streamid").buildValue(builder.streamId);
             jsonBuilder.buildKey("requestid").buildValue(builder.requestId);
-            // body may be large
+            // body may be large, skip it
             //jsonBuilder.buildKey("encoding").buildValue("ISO-8859-1");
             //jsonBuilder.buildKey("body").buildValue(StandardCharsets.ISO_8859_1.decode(builder.getBody()).toString());
             jsonBuilder.endMap();
@@ -165,5 +179,84 @@ public abstract class BaseHttpRequest implements HttpRequest {
             // ignore
         }
         return jsonBuilder.build();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public MultiMap<String, Object> asMultiMap() {
+        PercentDecoder percentDecoder = new PercentDecoder();
+        MultiMap<String, Object> multiMap = new ParameterMap();
+        String contentType = getHeaders().get(HttpHeaderNames.CONTENT_TYPE);
+        if (getMethod() == HttpMethod.POST &&
+                contentType != null && contentType.contains(HttpHeaderValues.APPLICATION_JSON)) {
+            String bodyAsChars = getBodyAsChars(StandardCharsets.UTF_8).toString();
+            Map<String, Object> map = Json.toMap(bodyAsChars);
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getValue() instanceof Iterable) {
+                    multiMap.putAll(entry.getKey(), (Iterable<Object>) entry.getValue());
+                } else {
+                    multiMap.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        try {
+            toMultiMapEntry(getParameter().get(Parameter.Domain.PATH),
+                    percentDecoder,
+                    false,
+                    multiMap);
+            toMultiMapEntry(getParameter().get(Parameter.Domain.FORM),
+                    percentDecoder,
+                    HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.equals(contentType),
+                    multiMap);
+            toMultiMapEntry(getParameter().get(Parameter.Domain.QUERY),
+                    percentDecoder,
+                    HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.equals(contentType),
+                    multiMap);
+        } catch (ParameterException e) {
+            logger.log(Level.WARNING, e.getMessage(), ExceptionFormatter.format(e));
+        }
+        return multiMap;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void toMultiMapEntry(Parameter parameter,
+                                        PercentDecoder percentDecoder,
+                                        boolean isFormEncoded,
+                                        MultiMap<String, Object> multiMap) {
+        for (Pair<String, Object> entry : parameter) {
+            try {
+                List<Object> list;
+                Object value = entry.getValue();
+                if (value instanceof List) {
+                    list = (List<Object>) value;
+                } else if (value != null) {
+                    list = List.of(value);
+                } else {
+                    list = List.of();
+                }
+                for (Object object : list) {
+                    String string = object.toString();
+                    if (isFormEncoded) {
+                        string = string.replace('+', ' ');
+                    }
+                    multiMap.put(entry.getKey(), percentDecoder.decode(string));
+                }
+            } catch (MalformedInputException | UnmappableCharacterException e) {
+                logger.log(Level.WARNING, "unable to percent decode parameter: " +
+                        entry.getKey() + "=" + entry.getValue());
+            }
+        }
+    }
+
+    private static class ParameterMap extends TinyMultiMap<String, Object> {
+
+        public ParameterMap() {
+        }
+
+        @Override
+        protected Collection<Object> newValues() {
+            // keep values with multiple occurences
+            return TinyList.builder();
+        }
     }
 }
