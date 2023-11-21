@@ -70,7 +70,7 @@ public class ByteArray {
         if (newTotalSize >= capacity) {
             capacity = (int) (newTotalSize * (1 + factor));
         } else {
-            capacity *= (1 + factor);
+            capacity *= (int) (1 + factor);
         }
         source = Arrays.copyOf(source, capacity);
     }

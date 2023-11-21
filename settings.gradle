@@ -2,24 +2,17 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             version('gradle', '8.4')
-            version('junit', '5.10.0')
             version('groovy', '4.0.15')
-            version('netty', '4.1.100.Final')
+            version('netty', '4.1.101.Final')
             version('netty-tcnative', '2.0.62.Final')
             version('datastructures', '5.0.5')
             version('net', '4.0.0')
-            library('junit-jupiter-api', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('junit')
-            library('junit-jupiter-params', 'org.junit.jupiter', 'junit-jupiter-params').versionRef('junit')
-            library('junit-jupiter-engine', 'org.junit.jupiter', 'junit-jupiter-engine').versionRef('junit')
-            library('junit-jupiter-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').version('1.10.0')
-            library('hamcrest', 'org.hamcrest', 'hamcrest-library').version('2.2')
             library('netty-codec-http2', 'io.netty', 'netty-codec-http2').versionRef('netty')
             library('netty-handler', 'io.netty', 'netty-handler').versionRef('netty')
             library('netty-handler-proxy', 'io.netty', 'netty-handler-proxy').versionRef('netty')
             library('netty-epoll', 'io.netty', 'netty-transport-native-epoll').versionRef('netty')
             library('netty-kqueue', 'io.netty', 'netty-transport-native-kqueue').versionRef('netty')
             library('netty-boringssl', 'io.netty', 'netty-tcnative-boringssl-static').versionRef('netty-tcnative')
-            library('bouncycastle', 'org.bouncycastle', 'bcpkix-jdk18on').version('1.76') // test only
             library('conscrypt', 'org.conscrypt', 'conscrypt-openjdk-uber').version('2.5.2')
             library('jackson', 'com.fasterxml.jackson.core', 'jackson-databind').version('2.14.2')
             library('jna', 'net.java.dev.jna', 'jna').version('5.13.0')
@@ -42,7 +35,15 @@ dependencyResolutionManagement {
             library('settings-datastructures-yaml', 'org.xbib', 'settings-datastructures-yaml').versionRef('datastructures')
             library('jdbc-query', 'org.xbib', 'jdbc-query').version('1.3.0')
             library('jdbc-connection-pool', 'org.xbib', 'jdbc-connection-pool').version('1.3.0')
-            library('event', 'org.xbib', 'event').version('0.0.2')
+            library('event', 'org.xbib', 'event').version('0.0.6')
+        }
+        testLibs {
+            version('junit', '5.10.0')
+            library('junit-jupiter-api', 'org.junit.jupiter', 'junit-jupiter-api').versionRef('junit')
+            library('junit-jupiter-params', 'org.junit.jupiter', 'junit-jupiter-params').versionRef('junit')
+            library('junit-jupiter-engine', 'org.junit.jupiter', 'junit-jupiter-engine').versionRef('junit')
+            library('junit-jupiter-platform-launcher', 'org.junit.platform', 'junit-platform-launcher').version('1.10.0')
+            library('hamcrest', 'org.hamcrest', 'hamcrest-library').version('2.2')
         }
     }
 }

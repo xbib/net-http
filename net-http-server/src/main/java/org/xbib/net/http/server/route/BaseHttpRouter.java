@@ -135,7 +135,8 @@ public class BaseHttpRouter implements HttpRouter {
             return;
         }
         if (httpRouteResolverResults.isEmpty()) {
-            logger.log(Level.FINE, "route resolver results is empty, generating a not found message");
+            logger.log(Level.FINE, "route resolver results is empty for request " + httpRouterContext.getRequest()
+                    + ", generating a not found message");
             setResolverResult(httpRouterContext, null);
             routeStatus(NOT_FOUND, httpRouterContext);
             return;
