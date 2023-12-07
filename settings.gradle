@@ -6,7 +6,7 @@ dependencyResolutionManagement {
             version('netty', '4.1.101.Final')
             version('netty-tcnative', '2.0.62.Final')
             version('datastructures', '5.0.5')
-            version('net', '4.0.0')
+            version('net', '4.0.1')
             library('netty-codec-http2', 'io.netty', 'netty-codec-http2').versionRef('netty')
             library('netty-handler', 'io.netty', 'netty-handler').versionRef('netty')
             library('netty-handler-proxy', 'io.netty', 'netty-handler-proxy').versionRef('netty')
