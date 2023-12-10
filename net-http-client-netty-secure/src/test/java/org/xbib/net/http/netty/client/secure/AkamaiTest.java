@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.xbib.net.http.client.netty.HttpRequest;
 import org.xbib.net.http.client.netty.NettyHttpClient;
@@ -20,6 +21,7 @@ public class AkamaiTest {
      *
      * @throws IOException if test fails
      */
+    @Disabled("service is shut down")
     @Test
     void testAkamai() throws IOException {
         NettyHttpClientConfig config = new NettyHttpsClientConfig()
